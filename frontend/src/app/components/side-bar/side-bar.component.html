@@ -1,0 +1,54 @@
+<p>side-bar works!</p>
+<div class="sidebar" [class.collapsed]="collapsed">
+  <!-- Sidebar Header -->
+  <div class="sidebar-header">
+    <div class="header-content">
+      <div class="logo" [class.hidden]="collapsed">
+        <i class="fas fa-car text-blue-600"></i>
+        <span class="logo-text">{{ title }}</span>
+      </div>
+      <button class="toggle-btn" (click)="toggleSidebar()">
+        <i [class]="collapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li *ngFor="let item of menuItems" 
+          class="nav-item"
+          [class.active]="item.active">
+        <button 
+          class="nav-link"
+          (click)="selectMenuItem(item.id)"
+          [title]="collapsed ? item.label : ''">
+          
+          <i [class]="item.icon + ' nav-icon'"></i>
+          
+          <span class="nav-label" [class.hidden]="collapsed">
+            {{ item.label }}
+          </span>
+          
+          <span *ngIf="item.count && item.count > 0 && !collapsed" 
+                class="nav-count">
+            {{ item.count }}
+          </span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer" [class.hidden]="collapsed">
+    <div class="footer-content">
+      <p class="footer-text">Garage Management v1.0</p>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay for mobile -->
+<div class="sidebar-overlay" 
+     [class.active]="!collapsed" 
+     (click)="toggleSidebar()">
+</div>

@@ -1,0 +1,24 @@
+ <div class="mb-8">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-600">Step {{ currentStep }} of {{ totalSteps }}</span>
+        <span class="text-sm text-blue-600">{{ title }}</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2">
+        <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+             [style.width.%]="(currentStep / totalSteps) * 100"></div>
+      </div>
+      
+      <!-- Step circles -->
+      <div class="flex justify-center mt-4 space-x-2">
+        <button *ngFor="let step of steps; let i = index" 
+                class="w-8 h-8 rounded-full text-sm font-medium transition-colors text-white"
+                [class.bg-blue-600]="i + 1 === currentStep"
+                [class.text-white]="i + 1 <= currentStep"
+                [class.bg-green-500]="i + 1 < currentStep"
+                [class.bg-gray-200]="i + 1 > currentStep"
+                [class.text-gray-600]="i + 1 > currentStep"
+                (click)="onStepClick(i + 1)">
+          {{ i + 1 }}
+        </button>
+      </div>
+    </div>

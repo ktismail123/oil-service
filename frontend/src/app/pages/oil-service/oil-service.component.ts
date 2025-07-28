@@ -1,0 +1,591 @@
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+
+import { ApiService } from '../../services/api.service';
+import { BookingService } from '../../services/booking.service';
+import {
+  VehicleBrand,
+  VehicleModel,
+  OilType,
+  OilFilter,
+  Accessory,
+} from '../../models';
+
+import { ButtonComponent } from '../../shared/components/button/button.component';
+import { LoadingComponent } from '../../shared/components/loading/loading.component';
+import { FormFieldComponent } from '../../shared/components/form-field/form-field.component';
+import { StepIndicatorComponent } from '../../shared/components/step-indicator/step-indicator.component';
+import { distinctUntilChanged, filter } from 'rxjs';
+
+@Component({
+  selector: 'app-oil-service',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ButtonComponent,
+    LoadingComponent,
+    FormFieldComponent,
+    StepIndicatorComponent,
+  ],
+  templateUrl: './oil-service.component.html',
+  styleUrls: ['./oil-service.component.css'],
+})
+export class OilServiceComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private apiService = inject(ApiService);
+  private bookingService = inject(BookingService);
+  private router = inject(Router);
+
+  currentStep = signal(1);
+  totalSteps = signal(7);
+  isLoading = signal(false);
+  isSubmitting = signal(false);
+
+  brands = signal<VehicleBrand[]>([]);
+  models = signal<VehicleModel[]>([]);
+  oilTypes = signal<OilType[]>([]);
+  oilFilters = signal<OilFilter[]>([]);
+  accessories = signal<Accessory[]>([]);
+  selectedAccessories = signal<Accessory[]>([]);
+
+  // Simple validation flags for each step
+  step1Valid = signal(false);
+  step2Valid = signal(false);
+  step3Valid = signal(false);
+  step4Valid = signal(false);
+  step5Valid = signal(true); // optional
+  step6Valid = signal(true); // Accessories are optional
+  step7Valid = signal(false);
+
+  // Simple computed to check if current step is valid
+  canProceed = computed(() => {
+    switch (this.currentStep()) {
+      case 1:
+        return this.step1Valid();
+      case 2:
+        return this.step2Valid();
+      case 3:
+        return this.step3Valid();
+      case 4:
+        return this.step4Valid();
+      case 5:
+        return this.step5Valid();
+      case 6:
+        return this.step6Valid();
+      case 7:
+        return this.step7Valid();
+      default:
+        return false;
+    }
+  });
+
+  subtotal = computed(() => {
+    const result = this.calculateSubtotal();
+    return typeof result === 'number' ? result : 0;
+  });
+  vatAmount = computed(() => {
+    const sub = this.subtotal();
+    return typeof sub === 'number' ? (sub * 15) / 100 : 0;
+  });
+  totalAmount = computed(() => {
+    const sub = this.subtotal();
+    const vat = this.vatAmount();
+    return (
+      (typeof sub === 'number' ? sub : 0) + (typeof vat === 'number' ? vat : 0)
+    );
+  });
+
+  brandForm!: FormGroup;
+  modelForm!: FormGroup;
+  intervalForm!: FormGroup;
+  oilForm!: FormGroup;
+  filterForm!: FormGroup;
+  customerForm!: FormGroup;
+
+  serviceIntervals = [
+    { value: 5000, label: '5,000 KM' },
+    { value: 10000, label: '10,000 KM' },
+    { value: 0, label: 'Custom KM' },
+  ];
+
+  steps = [
+    'Brand',
+    'Model',
+    'Interval',
+    'Oil',
+    'Filter',
+    'Accessories',
+    'Summary',
+  ];
+
+  ngOnInit() {
+    this.initializeForms();
+    this.loadInitialData();
+  }
+
+  private initializeForms() {
+    this.brandForm = this.fb.group({
+      brandId: [''],
+      customBrand: [''],
+    });
+
+    this.modelForm = this.fb.group({
+      modelId: [''],
+      customModel: [''],
+    });
+
+    this.intervalForm = this.fb.group({
+      interval: [''],
+      customInterval: [''],
+    });
+
+    this.oilForm = this.fb.group({
+      oilTypeId: [''],
+      quantity: [4, [Validators.min(1), Validators.max(10)]],
+    });
+
+    this.filterForm = this.fb.group({
+      filterId: [''],
+    });
+
+    this.customerForm = this.fb.group({
+      name: ['', Validators.required],
+      mobile: ['', [Validators.required, Validators.pattern(/^\d{10,15}$/)]],
+      plateNumber: ['', Validators.required],
+    });
+
+    // Subscribe to customer form changes for step 7 validation
+    this.customerForm.valueChanges.subscribe(() => {
+      console.log(this.customerForm.controls?.['mobile'].value?.length);
+      // if(this.customerForm.controls?.['mobile'].value?.length == 10){
+      //   this.getUserDetails(this.customerForm.controls?.['mobile'].value)
+      // }
+      this.step7Valid.set(this.customerForm.valid);
+    });
+
+    this.customerForm
+      .get('mobile')
+      ?.valueChanges.pipe(
+        filter((value) => value?.length === 10),
+        distinctUntilChanged()
+      )
+      .subscribe((mobile) => {
+        this.getUserDetails(mobile);
+      });
+  }
+
+  private async loadInitialData() {
+    this.isLoading.set(true);
+    // oilTypes
+    try {
+      const [brands, filters, accessories] = await Promise.all([
+        this.apiService.getBrands().toPromise(),
+        // this.apiService.getOilTypes().toPromise(),
+        this.apiService.getOilFilters().toPromise(),
+        this.apiService.getAccessories('oil_service').toPromise(),
+      ]);
+      this.brands.set(brands || []);
+      // this.oilTypes.set(oilTypes || []);
+      this.oilFilters.set(filters || []);
+      this.accessories.set(
+        (accessories || []).map((acc) => ({ ...acc, quantity: 0 }))
+      );
+    } catch (error) {
+      console.error('Data loading failed:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  getUserDetails(mobile: number) {
+    this.apiService.checkCustomer(mobile.toString()).subscribe({
+      next: (res) => {
+        const result = res[0];
+        this.customerForm.patchValue({
+          name: result?.name || '',
+          plateNumber: result?.plate_number || '',
+        });
+      },
+    });
+  }
+
+  nextStep() {
+    if (!this.canProceed()) {
+      return;
+    }
+    if (this.currentStep() < this.totalSteps()) {
+      this.currentStep.update((step) => step + 1);
+
+      // Load models when moving to step 2
+      if (this.currentStep() === 2) {
+        const brandId = this.brandForm.get('brandId')?.value;
+        if (brandId) {
+          this.loadModels(brandId);
+        }
+      }
+
+      if(this.currentStep() === 4){
+        const intervell = this.intervalForm.get('interval')?.value;
+        if(intervell){
+          this.loadOilTypes(intervell);
+        }
+      }
+    }
+  }
+
+  prevStep() {
+    if (this.currentStep() > 1) {
+      this.currentStep.update((step) => step - 1);
+    }
+  }
+
+  // Step 1: Brand Selection
+  onBrandChange() {
+    const brandId = this.brandForm.get('brandId')?.value;
+    if (brandId) {
+      this.brandForm.get('customBrand')?.setValue('');
+      this.loadModels(brandId);
+      this.resetFromStep(2); // Reset subsequent steps
+    }
+    this.validateStep1();
+  }
+
+  onCustomBrandChange() {
+    const customBrand = this.brandForm.get('customBrand')?.value;
+    if (customBrand && customBrand.trim().length > 0) {
+      this.brandForm.get('brandId')?.setValue('');
+      this.models.set([]);
+      this.resetFromStep(2); // Reset subsequent steps
+    }
+    this.validateStep1();
+  }
+
+  private validateStep1() {
+    const brandId = this.brandForm.get('brandId')?.value;
+    const customBrand = this.brandForm.get('customBrand')?.value?.trim();
+    this.step1Valid.set(!!(brandId || customBrand));
+  }
+
+  // Step 2: Model Selection
+  onModelChange() {
+    this.validateStep2();
+  }
+
+  onCustomModelChange() {
+    const customModel = this.modelForm.get('customModel')?.value;
+    if (customModel && customModel.trim().length > 0) {
+      this.modelForm.get('modelId')?.setValue('');
+    }
+    this.validateStep2();
+  }
+
+  private validateStep2() {
+    const modelId = this.modelForm.get('modelId')?.value;
+    const customModel = this.modelForm.get('customModel')?.value?.trim();
+    this.step2Valid.set(!!(modelId || customModel));
+  }
+
+  private async loadModels(brandId: number) {
+    try {
+      const models = await this.apiService.getModels(brandId).toPromise();
+      this.models.set(models || []);
+    } catch (error) {
+      console.error('Model loading failed:', error);
+      this.models.set([]);
+    }
+  }
+
+  private async loadOilTypes(intervell: number) {
+    try {
+      const models = await this.apiService.getOilTypesByIntervell(intervell).toPromise();
+      this.oilTypes.set(models || []);
+    } catch (error) {
+      console.error('Oil Types loading failed:', error);
+      this.models.set([]);
+    }
+  }
+
+  // Step 3: Service Interval
+  onIntervalChange() {
+    const interval = this.intervalForm.get('interval')?.value;
+    const customControl = this.intervalForm.get('customInterval');
+
+    if (interval === 0) {
+      customControl?.setValidators([Validators.required, Validators.min(1)]);
+    } else {
+      customControl?.clearValidators();
+      customControl?.setValue('');
+    }
+    customControl?.updateValueAndValidity();
+    this.validateStep3();
+  }
+
+  private validateStep3() {
+    const interval = this.intervalForm.get('interval')?.value;
+    if (interval === 0) {
+      const customInterval = this.intervalForm.get('customInterval')?.value;
+      this.step3Valid.set(!!(customInterval && customInterval > 0));
+    } else {
+      this.step3Valid.set(!!interval);
+    }
+  }
+
+  // Step 4: Oil Type Selection
+  onOilTypeChange() {
+    this.validateStep4();
+  }
+
+  onOilQuantityChange() {
+    this.validateStep4();
+  }
+
+  private validateStep4() {
+    const oilTypeId = this.oilForm.get('oilTypeId')?.value;
+    const quantity = this.oilForm.get('quantity')?.value;
+    this.step4Valid.set(!!(oilTypeId && quantity && quantity > 0));
+  }
+
+  // Step 5: Filter Selection
+  onFilterChange() {
+    this.validateStep5();
+  }
+
+  private validateStep5() {
+    const filterId = this.filterForm.get('filterId')?.value;
+    // this.step5Valid.set(!!filterId);
+    this.step5Valid.set(true);
+  }
+
+  // Step 6: Accessories (Optional - always valid)
+  addAccessory(accessory: Accessory) {
+    const current = this.selectedAccessories();
+    const index = current.findIndex((a) => a.id === accessory.id);
+
+    if (index >= 0) {
+      const updated = [...current];
+      updated[index] = {
+        ...updated[index],
+        quantity: (updated[index].quantity || 0) + 1,
+      };
+      this.selectedAccessories.set(updated);
+    } else {
+      this.selectedAccessories.set([...current, { ...accessory, quantity: 1 }]);
+    }
+  }
+
+  removeAccessory(accessoryId: number) {
+    const current = this.selectedAccessories();
+    const index = current.findIndex((a) => a.id === accessoryId);
+
+    if (index >= 0) {
+      const updated = [...current];
+      if ((updated[index].quantity || 0) > 1) {
+        updated[index] = {
+          ...updated[index],
+          quantity: updated[index].quantity! - 1,
+        };
+      } else {
+        updated.splice(index, 1);
+      }
+      this.selectedAccessories.set(updated);
+    }
+  }
+
+  // Helper method to reset validation from a specific step
+  private resetFromStep(step: number) {
+    if (step <= 2) {
+      this.step2Valid.set(false);
+      this.modelForm.reset();
+    }
+    if (step <= 3) {
+      this.step3Valid.set(false);
+      this.intervalForm.reset();
+    }
+    if (step <= 4) {
+      this.step4Valid.set(false);
+      this.oilForm.patchValue({ oilTypeId: '', quantity: 4 });
+    }
+    if (step <= 5) {
+      this.step5Valid.set(true);
+      this.filterForm.reset();
+    }
+    if (step <= 6) {
+      this.selectedAccessories.set([]);
+    }
+    if (step <= 7) {
+      this.step7Valid.set(false);
+      this.customerForm.reset();
+    }
+  }
+
+  private calculateSubtotal(): number {
+    let total = 0;
+
+    try {
+      // Add oil cost
+      const oilTypeId = this.oilForm?.get('oilTypeId')?.value;
+      const oilQty = this.oilForm?.get('quantity')?.value || 0;
+
+      console.log('Oil calculation:', {
+        oilTypeId,
+        oilQty,
+        oilTypes: this.oilTypes(),
+      }); // Debug log
+
+      if (oilTypeId && oilQty > 0) {
+        const oil = this.oilTypes().find((o) => o.id == oilTypeId); // Use == instead of === for type flexibility
+        console.log('Found oil:', oil); // Debug log
+        if (oil && oil.price) {
+          const oilCost = Number(oil.price) * Number(oilQty);
+          total += oilCost;
+          console.log('Oil cost added:', oilCost); // Debug log
+        }
+      }
+
+      // Add filter cost
+      const filterId = this.filterForm?.get('filterId')?.value;
+
+      console.log('Filter calculation:', {
+        filterId,
+        filters: this.oilFilters(),
+      }); // Debug log
+
+      if (filterId) {
+        const filter = this.oilFilters().find((f) => f.id == filterId); // Use == instead of === for type flexibility
+        console.log('Found filter:', filter); // Debug log
+        if (filter && filter.price) {
+          const filterCost = Number(filter.price);
+          total += filterCost;
+          console.log('Filter cost added:', filterCost); // Debug log
+        }
+      }
+
+      // Add accessories cost
+      const accessories = this.selectedAccessories();
+      console.log('Accessories calculation:', accessories); // Debug log
+
+      if (accessories && Array.isArray(accessories)) {
+        accessories.forEach((acc) => {
+          if (acc && acc.price && acc.quantity) {
+            const accessoryCost = Number(acc.price) * Number(acc.quantity);
+            total += accessoryCost;
+            console.log(
+              'Accessory cost added:',
+              accessoryCost,
+              'for',
+              acc.name
+            ); // Debug log
+          }
+        });
+      }
+
+      console.log('Final total:', total); // Debug log
+    } catch (error) {
+      console.error('Error calculating subtotal:', error);
+      return 0;
+    }
+
+    return total || 0;
+  }
+
+  async submitBooking() {
+    if (!this.canProceed()) {
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    try {
+      const bookingData = {
+        customer: {
+          name: this.customerForm.get('name')?.value,
+          mobile: this.customerForm.get('mobile')?.value,
+        },
+        vehicle: {
+          brandId: this.brandForm.get('brandId')?.value,
+          customBrand: this.brandForm.get('customBrand')?.value,
+          modelId: this.modelForm.get('modelId')?.value,
+          customModel: this.modelForm.get('customModel')?.value,
+          plateNumber: this.customerForm.get('plateNumber')?.value,
+        },
+        service: {
+          type: 'oil_change' as const,
+          date: new Date().toISOString().split('T')[0],
+          time: new Date().toTimeString().split(' ')[0],
+          interval: this.getServiceInterval(),
+          oilTypeId: this.oilForm.get('oilTypeId')?.value,
+          oilQuantity: this.oilForm.get('quantity')?.value,
+          oilFilterId: this.filterForm.get('filterId')?.value,
+          subtotal: this.subtotal(),
+          vatAmount: this.vatAmount(),
+          totalAmount: this.totalAmount(),
+        },
+        accessories: this.selectedAccessories(),
+      };
+
+      const response = await this.apiService
+        .createBooking(bookingData)
+        .toPromise();
+      alert(
+        `Booking created successfully! Total: AED ${this.totalAmount().toFixed(
+          2
+        )}`
+      );
+      this.router.navigate(['/']);
+    } catch (error) {
+      console.error('Booking failed:', error);
+      alert('Booking failed. Please try again.');
+    } finally {
+      this.isSubmitting.set(false);
+    }
+  }
+
+  getServiceInterval(): number {
+    const interval = this.intervalForm.get('interval')?.value;
+    if (interval === 0) {
+      return this.intervalForm.get('customInterval')?.value || 0;
+    }
+    return interval || 0;
+  }
+
+  getSelectedBrandName(): string {
+    const brandId = this.brandForm.get('brandId')?.value;
+    const customBrand = this.brandForm.get('customBrand')?.value;
+
+    if (brandId) {
+      return this.brands().find((b) => b.id === brandId)?.name || '';
+    }
+    return customBrand || '';
+  }
+
+  getSelectedModelName(): string {
+    const modelId = this.modelForm.get('modelId')?.value;
+    const customModel = this.modelForm.get('customModel')?.value;
+
+    if (modelId) {
+      return this.models().find((m) => m.id === modelId)?.name || '';
+    }
+    return customModel || '';
+  }
+
+  getSelectedOilType(): OilType | undefined {
+    const id = this.oilForm.get('oilTypeId')?.value;
+    return this.oilTypes().find((o) => o.id === id);
+  }
+
+  getSelectedFilter(): OilFilter | undefined {
+    const id = this.filterForm.get('filterId')?.value;
+    return this.oilFilters().find((f) => f.id === id);
+  }
+
+  backToHome() {
+    this.router.navigate(['/']);
+  }
+}

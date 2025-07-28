@@ -1,0 +1,109 @@
+<div class="control-panel-layout">
+  <!-- Sidebar -->
+  <app-side-bar
+    title="Control Panel"
+    [menuItems]="menuItems"
+    [collapsed]="sidebarCollapsed()"
+    (onMenuClick)="onSidebarMenuClick($event)"
+    (onToggle)="onSidebarToggle($event)">
+  </app-side-bar>
+
+  <!-- Main Content -->
+  <div class="main-content" [class.sidebar-collapsed]="sidebarCollapsed()">
+    <div class="content-header">
+      <p class="page-title">{{ getCurrentTitle() }}</p>
+      <!-- <p class="page-subtitle">Manage your {{ getCurrentTitle().toLowerCase() }}</p> -->
+    </div>
+
+    <div class="content-body">
+      <!-- Loading State -->
+      <div *ngIf="loading()" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading {{ getCurrentTitle().toLowerCase() }}...</p>
+      </div>
+
+      <!-- Content based on active section -->
+      <div *ngIf="!loading()" class="section-content">
+        
+        <!-- Brands Section -->
+        <div *ngIf="activeSection() === 'brands'" class="data-section">
+            <app-brands-list />
+        </div>
+
+        <!-- Models Section -->
+        <div *ngIf="activeSection() === 'models'" class="data-section">
+          <div class="section-stats">
+            <div class="stat-card">
+              <h3>{{ models().length }}</h3>
+              <p>Total Models</p>
+            </div>
+          </div>
+          
+          <div class="data-grid">
+            <div *ngFor="let model of models()" class="data-card">
+              <h4>{{ model.name }}</h4>
+              <p class="text-sm text-gray-600">Brand ID: {{ model.brand_id }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Oil Types Section -->
+        <div *ngIf="activeSection() === 'oils'" class="data-section">
+          <div class="section-stats">
+            <div class="stat-card">
+              <h3>{{ oilTypes().length }}</h3>
+              <p>Oil Types</p>
+            </div>
+          </div>
+          
+          <div class="data-grid">
+            <div *ngFor="let oil of oilTypes()" class="data-card">
+              <h4>{{ oil.grade }} - {{ oil.brand }}</h4>
+              <p class="price">AED {{ oil.price }}</p>
+              <p class="stock">Stock: {{ oil.quantity_available }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Oil Filters Section -->
+        <div *ngIf="activeSection() === 'filters'" class="data-section">
+          <div class="data-grid">
+            <div *ngFor="let filter of oilFilters()" class="data-card">
+              <h4>{{ filter.code }}</h4>
+              <p>{{ filter.brand }}</p>
+              <p class="price">AED {{ filter.price }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Battery Types Section -->
+        <div *ngIf="activeSection() === 'batteries'" class="data-section">
+          <div class="data-grid">
+            <div *ngFor="let battery of batteryTypes()" class="data-card">
+              <h4>{{ battery.capacity }} Amp</h4>
+              <p>{{ battery.brand }}</p>
+              <p class="price">AED {{ battery.price }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accessories Section -->
+        <div *ngIf="activeSection() === 'accessories'" class="data-section">
+          <div class="data-grid">
+            <div *ngFor="let accessory of accessories()" class="data-card">
+              <h4>{{ accessory.name }}</h4>
+              <p class="category">{{ accessory.category }}</p>
+              <p class="price">AED {{ accessory.price }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bookings Section -->
+        <div *ngIf="activeSection() === 'bookings'" class="data-section">
+          <p class="text-center text-gray-600">Bookings management coming soon...</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

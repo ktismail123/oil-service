@@ -1,0 +1,76 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">Add New Vehicle Brand</h2>
+      <button class="close-button" (click)="closeModal()" type="button">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <form [formGroup]="brandForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Brand Name Field -->
+        <div class="form-group">
+          <label for="brandName" class="form-label">
+            Brand Name <span class="required">*</span>
+          </label>
+          <input
+            id="brandName"
+            type="text"
+            formControlName="name"
+            class="form-input"
+            [class.error]="isNameInvalid"
+            placeholder="Enter vehicle brand name (e.g., Toyota, BMW)"
+            autocomplete="off">
+          
+          <!-- Error Message -->
+          <div *ngIf="isNameInvalid" class="error-message">
+            {{ getNameErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="successMessage()" class="success-message">
+          <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+          {{ successMessage() }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage()" class="error-message">
+          <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          {{ errorMessage() }}
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="closeModal()"
+            [disabled]="isSubmitting()">
+            Cancel
+          </button>
+          
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="brandForm.invalid || isSubmitting()">
+            <span *ngIf="isSubmitting()" class="loading-spinner"></span>
+            {{ isSubmitting() ? 'Adding...' : 'Add Brand' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

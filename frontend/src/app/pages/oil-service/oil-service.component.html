@@ -1,0 +1,603 @@
+<div class="min-h-screen bg-gray-50 py-6">
+  <div class="max-w-4xl mx-auto px-4">
+    
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center space-x-3 mb-4">
+        <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800">Oil Change Service</h1>
+      </div>
+      <p class="text-gray-600">Complete the following steps to book your service</p>
+    </div>
+
+    <!-- Step Indicator -->
+    <app-step-indicator 
+      [currentStep]="currentStep()" 
+      [totalSteps]="totalSteps()" 
+      [steps]="steps"
+      [title]="steps[currentStep() - 1]">
+    </app-step-indicator>
+
+    <!-- Loading State -->
+    <app-loading *ngIf="isLoading()" text="Loading service data..."></app-loading>
+
+    <!-- Step Content -->
+    <div *ngIf="!isLoading()" class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-6 step-content">
+      
+      <!-- Step 1: Select Vehicle Brand -->
+      <div *ngIf="currentStep() === 1">
+        <div class="flex items-center mb-6">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+            <span class="text-blue-600 font-bold">1</span>
+          </div>
+          <h2 class="text-2xl font-semibold text-gray-800">Select Vehicle Brand</h2>
+        </div>
+        
+        <form [formGroup]="brandForm">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+            <div *ngFor="let brand of brands()" 
+            
+                 class="brand-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50"
+                 [class.border-blue-500]="brandForm.get('brandId')?.value == brand.id"
+                 [class.bg-blue-50]="brandForm.get('brandId')?.value == brand.id"
+                 [class.ring-2]="brandForm.get('brandId')?.value == brand.id"
+                 [class.ring-blue-200]="brandForm.get('brandId')?.value == brand.id"
+                 (click)="brandForm.get('brandId')?.setValue(brand.id); onBrandChange()">
+              <div class="text-center">
+                <div class="font-semibold text-gray-800 mb-2">{{ brand.name }}</div>
+                <div *ngIf="brandForm.get('brandId')?.value == brand.id" 
+                     class="text-blue-600">
+                  <!-- <svg class="w-5 h-5 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg> -->
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Custom Brand Input -->
+          <!-- <div class="bg-gray-50 rounded-lg p-4">
+            <app-form-field
+              label="Can't find your brand? Enter manually:"
+              [control]="brandForm.get('customBrand')!"
+              placeholder="Enter vehicle brand"
+              fieldId="customBrand"
+              (input)="onCustomBrandChange()">
+            </app-form-field>
+          </div> -->
+        </form>
+      </div>
+
+      <!-- Step 2: Select Vehicle Model -->
+      <div *ngIf="currentStep() === 2">
+        <div class="flex items-center mb-6">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+            <span class="text-blue-600 font-bold">2</span>
+          </div>
+          <h2 class="text-2xl font-semibold text-gray-800">Select Vehicle Model</h2>
+        </div>
+        
+        <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-sm text-gray-600">Selected Brand: </span>
+            <span class="font-semibold text-blue-600 ml-1">{{ getSelectedBrandName() }}</span>
+          </div>
+        </div>
+        
+        <form [formGroup]="modelForm">
+          <div *ngIf="models().length > 0" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <div *ngFor="let model of models()" 
+                 class="model-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50"
+                 [class.border-blue-500]="modelForm.get('modelId')?.value == model.id"
+                 [class.bg-blue-50]="modelForm.get('modelId')?.value == model.id"
+                 [class.ring-2]="modelForm.get('modelId')?.value == model.id"
+                 [class.ring-blue-200]="modelForm.get('modelId')?.value == model.id"
+                 (click)="modelForm.get('modelId')?.setValue(model.id); onModelChange()">
+              <div class="text-center">
+                <div class="font-semibold text-gray-800 mb-2">{{ model.name }}</div>
+                <div *ngIf="modelForm.get('modelId')?.value == model.id" 
+                     class="text-blue-600">
+                  <svg class="w-5 h-5 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          @if(models().length === 0){
+            <div class="bg-gray-50 rounded-lg p-4 text-center">
+                No Items Found!
+            </div>
+          }
+          
+          <!-- <div class="bg-gray-50 rounded-lg p-4">
+            <app-form-field
+              label="Can't find your model? Enter manually:"
+              [control]="modelForm.get('customModel')!"
+              placeholder="Enter vehicle model"
+              fieldId="customModel"
+              (input)="onCustomModelChange()">
+            </app-form-field>
+          </div> -->
+        </form>
+      </div>
+
+      <!-- Step 3: Choose Service Interval -->
+      <div *ngIf="currentStep() === 3">
+        <div class="flex items-center mb-6">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+            <span class="text-blue-600 font-bold">3</span>
+          </div>
+          <h2 class="text-2xl font-semibold text-gray-800">Choose Service Interval</h2>
+        </div>
+        
+        <form [formGroup]="intervalForm">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <div *ngFor="let interval of serviceIntervals" 
+                 class="interval-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50 "
+                 [class.border-blue-500]="intervalForm.get('interval')?.value == interval.value"
+                 [class.bg-blue-50]="intervalForm.get('interval')?.value == interval.value"
+                 [class.ring-2]="intervalForm.get('interval')?.value == interval.value"
+                 [class.ring-blue-200]="intervalForm.get('interval')?.value == interval.value"
+                 (click)="intervalForm.get('interval')?.setValue(interval.value); onIntervalChange()">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <div class="font-semibold text-gray-800">{{ interval.label }}</div>
+                </div>
+                <div *ngIf="intervalForm.get('interval')?.value == interval.value" 
+                     class="text-blue-600">
+                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="intervalForm.get('interval')?.value === 0" class="bg-gray-50 rounded-lg p-4">
+            <app-form-field
+              label="Enter custom KM:"
+              type="number"
+              [control]="intervalForm.get('customInterval')!"
+              placeholder="Enter kilometers"
+              fieldId="customInterval"
+              [required]="true"
+              (input)="onIntervalChange()">
+            </app-form-field>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 4: Choose Engine Oil Type -->
+      <div *ngIf="currentStep() === 4">
+        <div class="flex items-center mb-6">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+            <span class="text-blue-600 font-bold">4</span>
+          </div>
+          <h2 class="text-2xl font-semibold text-gray-800">Choose Engine Oil Type</h2>
+        </div>
+        
+        <form [formGroup]="oilForm">
+           <div class="grid grid-cols-2 gap-4 mb-6">
+            <div *ngFor="let oil of oilTypes()" 
+                 class="oil-card border-2 border-gray-200 rounded-xl p-5 cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50"
+                 [class.border-blue-500]="oilForm.get('oilTypeId')?.value == oil.id"
+                 [class.bg-blue-50]="oilForm.get('oilTypeId')?.value == oil.id"
+                 [class.ring-2]="oilForm.get('oilTypeId')?.value == oil.id"
+                 [class.ring-blue-200]="oilForm.get('oilTypeId')?.value == oil.id"
+                 (click)="oilForm.get('oilTypeId')?.setValue(oil.id); onOilTypeChange()">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                  <!-- <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                  </div> -->
+                  <div>
+                    <div class="font-semibold text-gray-800">{{ oil.grade }} - {{ oil.brand }}</div>
+                    <div class="text-sm text-gray-600">Per liter</div>
+                    <div *ngIf="oil.quantity_available" class="text-xs text-green-600 font-medium">
+                      <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                      </svg>
+                      {{ oil.quantity_available }} available
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-xl font-bold text-blue-600">AED {{ oil.price }}</div>
+                  <div *ngIf="oilForm.get('oilTypeId')?.value == oil.id" 
+                       class="text-blue-600 mt-2">
+                    <svg class="w-6 h-6 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+            <div class="flex items-center mb-3">
+              <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+              </svg>
+              <span class="font-medium text-blue-800">Oil Quantity Required</span>
+            </div>
+            <app-form-field
+              label="Oil Quantity (Liters):"
+              type="number"
+              [control]="oilForm.get('quantity')!"
+              placeholder="4"
+              fieldId="oilQuantity"
+              [required]="true"
+              (input)="onOilQuantityChange()">
+            </app-form-field>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 5: Choose Oil Filter -->
+      <div *ngIf="currentStep() === 5">
+        <div class="flex items-center mb-6">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+            <span class="text-blue-600 font-bold">5</span>
+          </div>
+          <h2 class="text-2xl font-semibold text-gray-800">Choose Oil Filter</h2>
+          <span class="ml-3 text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Optional</span>
+        </div>
+        
+        <form [formGroup]="filterForm">
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div *ngFor="let filter of oilFilters()" 
+                 class="filter-card border-2 border-gray-200 rounded-xl p-5 cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50"
+                 [class.border-blue-500]="filterForm.get('filterId')?.value == filter.id"
+                 [class.bg-blue-50]="filterForm.get('filterId')?.value == filter.id"
+                 [class.ring-2]="filterForm.get('filterId')?.value == filter.id"
+                 [class.ring-blue-200]="filterForm.get('filterId')?.value == filter.id"
+                 (click)="filterForm.get('filterId')?.setValue(filter.id); onFilterChange()">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                  <!-- <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                    </svg>
+                  </div> -->
+                  <div>
+                    <div class="font-semibold text-gray-800">{{ filter.code }}</div>
+                    <div class="text-sm text-gray-600">{{ filter.brand }}</div>
+                    <div *ngIf="filter.quantity_available" class="text-xs text-green-600 font-medium">
+                      <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                      </svg>
+                      {{ filter.quantity_available }} available
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-xl font-bold text-blue-600">AED {{ filter.price }}</div>
+                  <div *ngIf="filterForm.get('filterId')?.value == filter.id" 
+                       class="text-blue-600 mt-2">
+                    <svg class="w-6 h-6 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 6: Add Accessories -->
+      <div *ngIf="currentStep() === 6">
+        <div class="flex items-center mb-6">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+            <span class="text-blue-600 font-bold">6</span>
+          </div>
+          <h2 class="text-2xl font-semibold text-gray-800">Add Accessories</h2>
+          <span class="ml-3 text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Optional</span>
+        </div>
+        
+        <!-- Available Accessories -->
+        <div class="mb-8">
+          <h3 class="text-lg font-medium mb-4 text-gray-700">Available Accessories:</h3>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div *ngFor="let accessory of accessories()" 
+                 class="accessory-card border-2 border-gray-200 rounded-xl p-4 flex justify-between items-center hover:border-gray-300 hover:bg-gray-50 transition-all">
+              <div class="flex items-center">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                  <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-800">{{ accessory.name }}</div>
+                  <div class="text-sm text-gray-600">AED {{ accessory.price }} each</div>
+                  <div *ngIf="accessory.quantity_available" class="text-xs text-green-600 font-medium">
+                    <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    {{ accessory.quantity_available }} available
+                  </div>
+                </div>
+              </div>
+              <app-button 
+                variant="primary" 
+                size="sm"
+                (onClick)="addAccessory(accessory)">
+                Add
+              </app-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Accessories -->
+        <div *ngIf="selectedAccessories().length > 0" class="bg-green-50 border border-green-200 rounded-xl p-6">
+          <div class="flex items-center mb-4">
+            <svg class="w-6 h-6 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-green-800">Selected Accessories:</h3>
+          </div>
+          <div class="space-y-3">
+            <div *ngFor="let accessory of selectedAccessories()" 
+                 class="flex justify-between items-center bg-white p-4 rounded-lg border border-green-200 shadow-sm">
+              <div class="flex items-center">
+                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                  <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <span class="font-semibold text-gray-800">{{ accessory.name }}</span>
+                  <span class="text-sm text-gray-600 ml-2">x{{ accessory.quantity }}</span>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <span class="font-bold text-green-600">
+                  AED {{ ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2) }}
+                </span>
+                <app-button 
+                  variant="danger" 
+                  size="sm"
+                  (onClick)="removeAccessory(accessory.id)">
+                  Remove
+                </app-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7: Customer Details & Summary -->
+      <div *ngIf="currentStep() === 7">
+        <div class="flex items-center mb-6">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+            <span class="text-blue-600 font-bold">7</span>
+          </div>
+          <h2 class="text-2xl font-semibold text-gray-800">Customer Details & Summary</h2>
+        </div>
+        
+        <!-- Customer Form -->
+        <div class="mb-8">
+          <div class="flex items-center mb-4">
+            <svg class="w-6 h-6 text-gray-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-700">Customer Information</h3>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-6">
+            <form [formGroup]="customerForm" class="grid md:grid-cols-2 gap-4">
+              <app-form-field
+                label="Customer Name"
+                [control]="customerForm.get('name')!"
+                placeholder="Enter customer name"
+                fieldId="customerName"
+                [required]="true">
+              </app-form-field>
+              
+              <app-form-field
+                label="Mobile Number"
+                type="tel"
+                [control]="customerForm.get('mobile')!"
+                placeholder="Enter mobile number"
+                fieldId="customerMobile"
+                [required]="true">
+              </app-form-field>
+              
+              <div class="md:col-span-2">
+                <app-form-field
+                  label="Vehicle Plate Number"
+                  [control]="customerForm.get('plateNumber')!"
+                  placeholder="Enter plate number"
+                  fieldId="plateNumber"
+                  [required]="true">
+                </app-form-field>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Service Summary -->
+        <div class="border-2 border-blue-200 rounded-xl p-6 bg-gradient-to-br from-blue-50 to-indigo-50">
+          <div class="flex items-center mb-6">
+            <svg class="w-6 h-6 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h3 class="text-xl font-semibold text-blue-800">Service Summary</h3>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-gray-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
+                  <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z"></path>
+                </svg>
+                <span class="text-gray-600 font-medium">Vehicle:</span>
+              </div>
+              <span class="font-semibold text-gray-800">{{ getSelectedBrandName() }} {{ getSelectedModelName() }}</span>
+            </div>
+            
+            <div class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-gray-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-gray-600 font-medium">Service Interval:</span>
+              </div>
+              <span class="font-semibold text-gray-800">{{ getServiceInterval() }} KM</span>
+            </div>
+            
+            <div *ngIf="getSelectedOilType()" class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-orange-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+                <span class="text-gray-600 font-medium">Engine Oil:</span>
+              </div>
+              <span class="font-semibold text-gray-800">
+                {{ getSelectedOilType()?.grade }} {{ getSelectedOilType()?.brand }} 
+                ({{ oilForm.get('quantity')?.value }}L)
+              </span>
+            </div>
+            
+            <div *ngIf="getSelectedFilter()" class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                </svg>
+                <span class="text-gray-600 font-medium">Oil Filter:</span>
+              </div>
+              <span class="font-semibold text-gray-800">{{ getSelectedFilter()?.code }} - {{ getSelectedFilter()?.brand }}</span>
+            </div>
+            
+            <div *ngFor="let accessory of selectedAccessories()" class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-purple-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                </svg>
+                <span class="text-gray-600 font-medium">{{ accessory.name }} (x{{ accessory.quantity || 0 }}):</span>
+              </div>
+              <span class="font-semibold text-gray-800">AED {{ ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2) }}</span>
+            </div>
+            
+            <div class="pt-4 space-y-3 border-t-2 border-blue-200">
+              <div class="flex justify-between items-center py-2 px-4 bg-white rounded-lg">
+                <span class="text-gray-700 font-medium">Subtotal:</span>
+                <span class="font-semibold text-lg">AED {{ (subtotal() || 0)?.toFixed(2) }}</span>
+              </div>
+              
+              <div class="flex justify-between items-center py-2 px-4 bg-white rounded-lg">
+                <span class="text-gray-700 font-medium">VAT (15%):</span>
+                <span class="font-semibold text-lg">AED {{ (vatAmount() || 0).toFixed(2) }}</span>
+              </div>
+              
+              <div class="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white">
+                <span class="text-xl font-bold">Total Amount:</span>
+                <span class="text-2xl font-bold price-highlight">AED {{ (totalAmount() || 0).toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Validation Debug (only for development) -->
+    <!-- Remove this in production -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6" *ngIf="false">
+      <h4 class="font-semibold mb-2">Step Validation Status (Debug):</h4>
+      <div class="grid grid-cols-4 gap-2 text-xs">
+        <div [class.text-green-600]="step1Valid()" [class.text-red-600]="!step1Valid()">
+          Step 1: {{ step1Valid() ? '✓' : '✗' }}
+        </div>
+        <div [class.text-green-600]="step2Valid()" [class.text-red-600]="!step2Valid()">
+          Step 2: {{ step2Valid() ? '✓' : '✗' }}
+        </div>
+        <div [class.text-green-600]="step3Valid()" [class.text-red-600]="!step3Valid()">
+          Step 3: {{ step3Valid() ? '✓' : '✗' }}
+        </div>
+        <div [class.text-green-600]="step4Valid()" [class.text-red-600]="!step4Valid()">
+          Step 4: {{ step4Valid() ? '✓' : '✗' }}
+        </div>
+        <div [class.text-green-600]="step5Valid()" [class.text-red-600]="!step5Valid()">
+          Step 5: {{ step5Valid() ? '✓' : '✗' }}
+        </div>
+        <div [class.text-green-600]="step6Valid()" [class.text-red-600]="!step6Valid()">
+          Step 6: {{ step6Valid() ? '✓' : '✗' }}
+        </div>
+        <div [class.text-green-600]="step7Valid()" [class.text-red-600]="!step7Valid()">
+          Step 7: {{ step7Valid() ? '✓' : '✗' }}
+        </div>
+        <div [class.text-green-600]="canProceed()" [class.text-red-600]="!canProceed()">
+          Can Proceed: {{ canProceed() ? '✓' : '✗' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="flex justify-between items-center bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <app-button 
+        *ngIf="currentStep() > 1" 
+        variant="secondary"
+        size="lg"
+        (onClick)="prevStep()">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Previous
+      </app-button>
+      
+      <app-button 
+        variant="secondary"
+        size="lg"
+        (onClick)="backToHome()">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 7h18"></path>
+        </svg>
+        Back to Home
+      </app-button>
+      
+      <div class="flex space-x-3">
+        <app-button 
+          *ngIf="currentStep() < totalSteps()" 
+          variant="primary"
+          size="lg"
+          [disabled]="!canProceed()"
+          (onClick)="nextStep()">
+          Next
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </app-button>
+        
+        <app-button 
+          *ngIf="currentStep() === totalSteps()" 
+          variant="success"
+          size="lg"
+          [loading]="isSubmitting()"
+          [disabled]="!canProceed()"
+          (onClick)="submitBooking()">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          Confirm Booking
+        </app-button>
+      </div>
+    </div>
+  </div>
+</div>
