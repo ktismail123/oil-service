@@ -1,0 +1,129 @@
+ <div class="flex items-center mb-6">
+      <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+        <span class="text-blue-600 font-bold">7</span>
+      </div>
+      <h2 class="text-2xl font-semibold text-gray-800">Customer Details & Summary</h2>
+    </div>
+    
+    <!-- Customer Form -->
+    <div class="mb-8">
+      <div class="flex items-center mb-4">
+        <svg class="w-6 h-6 text-gray-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-700">Customer Information</h3>
+      </div>
+      <div class="bg-gray-50 rounded-xl p-6">
+        <form [formGroup]="customerForm" class="grid md:grid-cols-2 gap-4">
+          <app-form-field
+            label="Customer Name"
+            [control]="customerForm.get('name')!"
+            placeholder="Enter customer name"
+            fieldId="customerName"
+            [required]="true">
+          </app-form-field>
+          
+          <app-form-field
+            label="Mobile Number"
+            type="tel"
+            [control]="customerForm.get('mobile')!"
+            placeholder="Enter mobile number"
+            fieldId="customerMobile"
+            [required]="true">
+          </app-form-field>
+          
+          <div class="md:col-span-2">
+            <app-form-field
+              label="Vehicle Plate Number"
+              [control]="customerForm.get('plateNumber')!"
+              placeholder="Enter plate number"
+              fieldId="plateNumber"
+              [required]="true">
+            </app-form-field>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Service Summary -->
+    <div class="border-2 border-blue-200 rounded-xl p-6 bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div class="flex items-center mb-6">
+        <svg class="w-6 h-6 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <h3 class="text-xl font-semibold text-blue-800">Service Summary</h3>
+      </div>
+      
+      <div class="space-y-4">
+        <div class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-gray-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
+              <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0015.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z"></path>
+            </svg>
+            <span class="text-gray-600 font-medium">Vehicle:</span>
+          </div>
+          <span class="font-semibold text-gray-800">{{ selectedBrandName }} {{ selectedModelName }}</span>
+        </div>
+        
+        <div class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-gray-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-gray-600 font-medium">Service Interval:</span>
+          </div>
+          <span class="font-semibold text-gray-800">{{ serviceInterval }} KM</span>
+        </div>
+        
+        <div *ngIf="selectedOilType" class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-orange-500 mr-3" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+            </svg>
+            <span class="text-gray-600 font-medium">Engine Oil:</span>
+          </div>
+          <span class="font-semibold text-gray-800">
+            {{ selectedOilType?.grade }} {{ selectedOilType?.brand }} 
+            ({{ oilQuantity }}L)
+          </span>
+        </div>
+        
+        <div *ngIf="selectedFilter" class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+            </svg>
+            <span class="text-gray-600 font-medium">Oil Filter:</span>
+          </div>
+          <span class="font-semibold text-gray-800">{{ selectedFilter?.code }} - {{ selectedFilter?.brand }}</span>
+        </div>
+        
+        <div *ngFor="let accessory of selectedAccessories" class="flex justify-between items-center py-3 px-4 bg-white rounded-lg border border-blue-100 summary-item">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-purple-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+            </svg>
+            <span class="text-gray-600 font-medium">{{ accessory.name }} (x{{ accessory.quantity || 0 }}):</span>
+          </div>
+          <span class="font-semibold text-gray-800">AED {{ ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2) }}</span>
+        </div>
+        
+        <div class="pt-4 space-y-3 border-t-2 border-blue-200">
+          <div class="flex justify-between items-center py-2 px-4 bg-white rounded-lg">
+            <span class="text-gray-700 font-medium">Subtotal:</span>
+            <span class="font-semibold text-lg">AED {{ (subtotal || 0)?.toFixed(2) }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center py-2 px-4 bg-white rounded-lg">
+            <span class="text-gray-700 font-medium">VAT (5%):</span>
+            <span class="font-semibold text-lg">AED {{ (vatAmount || 0).toFixed(2) }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white">
+            <span class="text-xl font-bold">Total Amount:</span>
+            <span class="text-2xl font-bold price-highlight">AED {{ (totalAmount || 0).toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>

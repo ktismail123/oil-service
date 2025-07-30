@@ -15,10 +15,20 @@ export interface VehicleModel {
 
 export interface OilType {
   id: number;
+  name: string;
   grade: string;
   brand: string;
-  price: number;
-  quantity_available?: number;
+  service_interval: number;
+  package_1l_available: boolean;
+  package_4l_available: boolean;
+  bulk_available: boolean;
+  price_1l: number;
+  price_4l: number;
+  price_per_liter: number;
+  status: 'active' | 'inactive';
+  quantity_available: number;
+  created_at: string; // or Date
+  updated_at: string; // or Date
 }
 
 export interface OilFilter {
@@ -86,4 +96,13 @@ export interface BookingRequest {
   vehicle: Vehicle;
   service: ServiceBooking;
   accessories: Accessory[];
+}
+
+export interface OilPackageSelection {
+  oilTypeId: number;
+  package4L: boolean;
+  package1L: boolean;
+  bulkQuantity: number;
+  totalQuantity: number;
+  totalPrice: number;
 }

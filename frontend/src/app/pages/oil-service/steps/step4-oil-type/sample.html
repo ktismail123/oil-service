@@ -1,0 +1,383 @@
+ <div class="flex items-center mb-6">
+      <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+        <span class="text-blue-600 font-bold">4</span>
+      </div>
+      <h2 class="text-2xl font-semibold text-gray-800">Choose Engine Oil Type</h2>
+    </div>
+    
+    <!-- Required Quantity Input -->
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6">
+      <div class="flex items-center mb-3">
+        <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"></path>
+        </svg>
+        <span class="font-medium text-blue-800">Oil Quantity Required</span>
+      </div>
+      <app-form-field
+        label="Required Oil Quantity (Liters):"
+        type="number"
+        [control]="oilForm.get('quantity')!"
+        placeholder="4.5"
+        fieldId="oilQuantity"
+        [required]="true"
+        step="0.5"
+        min="1"
+        max="20"
+        (input)="onRequiredQuantityChange()">
+      </app-form-field>
+    </div>
+
+    <!-- Oil Types Selection -->
+    <div class="space-y-4">
+      <div *ngFor="let oil of oilTypes" 
+           class="oil-card border-2 border-gray-200 rounded-xl p-5 transition-all"
+           [class.border-blue-500]="selectedOilId() === oil.id"
+           [class.bg-blue-50]="selectedOilId() === oil.id"
+           [class.ring-2]="selectedOilId() === oil.id"
+           [class.ring-blue-200]="selectedOilId() === oil.id">
+        
+        <!-- Oil Header -->
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+              <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="font-bold text-lg text-gray-800">{{ oil.grade }} - {{ oil.brand }}</div>
+              <div class="text-sm text-gray-600">{{ oil.name }}</div>
+              <div class="text-xs text-blue-600 font-medium">{{ oil.service_interval }} KM Service Interval</div>
+            </div>
+          </div>
+          
+          <!-- Select Oil Button -->
+          <button 
+            type="button"
+            class="px-4 py-2 rounded-lg font-medium transition-all"
+            [class.bg-blue-600]="selectedOilId() === oil.id"
+            [class.text-white]="selectedOilId() === oil.id"
+            [class.bg-gray-200]="selectedOilId() !== oil.id"
+            [class.text-gray-700]="selectedOilId() !== oil.id"
+            [class.hover:bg-blue-700]="selectedOilId() === oil.id"
+            [class.hover:bg-gray-300]="selectedOilId() !== oil.id"
+            (click)="selectOilType(oil.id)">
+            {{ selectedOilId() === oil.id ? 'Selected' : 'Select' }}
+          </button>
+        </div>
+
+        <!-- Package Options (only show if oil is selected) -->
+        <div *ngIf="selectedOilId() === oil.id" class="border-t border-gray-200 pt-4">
+          <h4 class="font-medium text-gray-700 mb-3">Package Options:</h4>
+          
+          <div class="space-y-3">
+            <!-- 4L Package Option -->
+            <div *ngIf="oil.package_4l_available" 
+                 class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+              <div class="flex items-center">
+                <input 
+                  type="checkbox" 
+                  [id]="'package4L_' + oil.id"
+                  [checked]="getPackageSelection(oil.id).package4L"
+                  (change)="togglePackage4L(oil.id)"
+                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                <label [for]="'package4L_' + oil.id" class="ml-3 cursor-pointer">
+                  <div class="font-semibold text-gray-800">4L Package</div>
+                  <div class="text-sm text-gray-600">AED {{ oil.price_4l }} per 4L container</div>
+                </label>
+              </div>
+              <div class="text-right">
+                <div class="font-bold text-blue-600">AED {{ oil.price_4l }}</div>
+                <div class="text-xs text-gray-500">Per 4L</div>
+              </div>
+            </div>
+
+            <!-- 1L Package Option -->
+            <div *ngIf="oil.package_1l_available" 
+                 class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+              <div class="flex items-center">
+                <input 
+                  type="checkbox" 
+                  [id]="'package1L_' + oil.id"
+                  [checked]="getPackageSelection(oil.id).package1L"
+                  (change)="togglePackage1L(oil.id)"
+                  class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                <label [for]="'package1L_' + oil.id" class="ml-3 cursor-pointer">
+                  <div class="font-semibold text-gray-800">1L Package</div>
+                  <div class="text-sm text-gray-600">AED {{ oil.price_1l }} per 1L container</div>
+                </label>
+              </div>
+              <div class="text-right">
+                <div class="font-bold text-blue-600">AED {{ oil.price_1l }}</div>
+                <div class="text-xs text-gray-500">Per 1L</div>
+              </div>
+            </div>
+
+            <!-- Bulk Option -->
+            <div *ngIf="oil.bulk_available && oil.price_per_liter !== 0.00" 
+                 class="p-3 bg-white border border-gray-200 rounded-lg">
+              <div class="flex items-center justify-between mb-2">
+                <div>
+                  <div class="font-semibold text-gray-800">Bulk Option</div>
+                  <div class="text-sm text-gray-600">AED {{ oil.price_per_liter }} per liter</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-bold text-blue-600">AED {{ oil.price_per_liter }}</div>
+                  <div class="text-xs text-gray-500">Per Liter</div>
+                </div>
+              </div>
+              <div class="mt-2">
+                <app-form-field
+                  label="Bulk Quantity (Liters):"
+                  type="number"
+                  [control]="getBulkControl(oil.id)"
+                  placeholder="0"
+                  [fieldId]="'bulkQuantity_' + oil.id"
+                  step="0.5"
+                  min="0"
+                  (input)="onBulkQuantityChange(oil.id)">
+                </app-form-field>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smart Suggestions -->
+          <div *ngIf="requiredQuantity() > 0" class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h5 class="font-medium text-yellow-800 mb-2">💡 Smart Suggestion for {{ requiredQuantity() }}L:</h5>
+            <div class="text-sm text-yellow-700">
+              {{ getSmartSuggestion(oil) }}
+            </div>
+          </div>
+
+          <!-- Current Selection Summary -->
+          <div *ngIf="getPackageSelection(oil.id).totalQuantity > 0" 
+               class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="font-semibold text-green-800">Selected Packages</div>
+                <div class="text-sm text-green-700">
+                  Total: {{ getPackageSelection(oil.id).totalQuantity }}L
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="font-bold text-green-600 text-lg">
+                  AED {{ getPackageSelection(oil.id).totalPrice.toFixed(2) }}
+                </div>
+                <div class="text-xs text-green-600">
+                  {{ getQuantityStatus(oil.id) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Oil Types Available -->
+    <div *ngIf="oilTypes.length === 0" class="text-center py-8">
+      <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-600 mb-2">No Oil Types Available</h3>
+      <p class="text-sm text-gray-500">No oil types match your selected service interval.</p>
+    </div>
+
+    import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { OilPackageSelection, OilType } from '../../../../models';
+import { NgFor, NgIf } from '@angular/common';
+import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
+
+@Component({
+  selector: 'app-step4-oil-type',
+  imports: [NgIf, NgFor, ReactiveFormsModule, FormFieldComponent],
+  templateUrl: './step4-oil-type.component.html',
+  styleUrl: './step4-oil-type.component.scss',
+})
+export class Step4OilTypeComponent {
+  @Input() oilForm!: FormGroup;
+  @Input() oilTypes: OilType[] = [];
+  
+  @Output() oilTypeChange = new EventEmitter<void>();
+  @Output() oilQuantityChange = new EventEmitter<void>();
+
+  selectedOilId = signal<number | null>(null);
+  requiredQuantity = signal<number>(0);
+  packageSelections = signal<Map<number, OilPackageSelection>>(new Map());
+
+  getPackageSelection(oilId: number): OilPackageSelection {
+    const selection = this.packageSelections().get(oilId);
+    if (selection) return selection;
+    
+    const defaultSelection: OilPackageSelection = {
+      oilTypeId: oilId,
+      package4L: false,
+      package1L: false,
+      bulkQuantity: 0,
+      totalQuantity: 0,
+      totalPrice: 0
+    };
+    
+    const newSelections = new Map(this.packageSelections());
+    newSelections.set(oilId, defaultSelection);
+    this.packageSelections.set(newSelections);
+    
+    return defaultSelection;
+  }
+
+  selectOilType(oilId: number) {
+    this.selectedOilId.set(oilId);
+    this.oilForm.get('oilTypeId')?.setValue(oilId);
+    this.updateFormValues();
+    this.oilTypeChange.emit();
+  }
+
+  togglePackage4L(oilId: number) {
+    const selection = this.getPackageSelection(oilId);
+    selection.package4L = !selection.package4L;
+    this.updatePackageSelection(oilId, selection);
+  }
+
+  togglePackage1L(oilId: number) {
+    const selection = this.getPackageSelection(oilId);
+    selection.package1L = !selection.package1L;
+    this.updatePackageSelection(oilId, selection);
+  }
+
+  onBulkQuantityChange(oilId: number) {
+    const selection = this.getPackageSelection(oilId);
+    const bulkControl = this.getBulkControl(oilId);
+    selection.bulkQuantity = parseFloat(bulkControl.value) || 0;
+    this.updatePackageSelection(oilId, selection);
+  }
+
+  onRequiredQuantityChange() {
+    const quantity = parseFloat(this.oilForm.get('quantity')?.value) || 0;
+    this.requiredQuantity.set(quantity);
+    this.oilQuantityChange.emit();
+  }
+
+ getBulkControl(oilId: number) {
+  const controlName = `bulkQuantity_${oilId}`;
+  if (!this.oilForm.contains(controlName)) {
+    this.oilForm.addControl(controlName, new FormControl(0));
+  }
+  return this.oilForm.get(controlName)!;
+}
+
+  private updatePackageSelection(oilId: number, selection: OilPackageSelection) {
+    const oil = this.oilTypes.find(o => o.id === oilId);
+    if (!oil) return;
+
+    // Calculate total quantity and price
+    let totalQuantity = 0;
+    let totalPrice = 0;
+
+    // if (selection.package4L) {
+    //   totalQuantity += 4;
+    //   totalPrice += parseFloat(oil.price_4l);
+    // }
+
+    // if (selection.package1L) {
+    //   totalQuantity += 1;
+    //   totalPrice += parseFloat(oil.price_1l);
+    // }
+
+    // if (selection.bulkQuantity > 0) {
+    //   totalQuantity += selection.bulkQuantity;
+    //   totalPrice += selection.bulkQuantity * parseFloat(oil.price_per_liter);
+    // }
+
+    if (selection.package4L) {
+      totalQuantity += 4;
+      totalPrice += oil.price_4l;
+    }
+
+    if (selection.package1L) {
+      totalQuantity += 1;
+      totalPrice += oil.price_1l;
+    }
+
+    if (selection.bulkQuantity > 0) {
+      totalQuantity += selection.bulkQuantity;
+      totalPrice += selection.bulkQuantity * oil.price_per_liter;
+    }
+
+
+    selection.totalQuantity = totalQuantity;
+    selection.totalPrice = totalPrice;
+
+    // Update the map
+    const newSelections = new Map(this.packageSelections());
+    newSelections.set(oilId, selection);
+    this.packageSelections.set(newSelections);
+
+    this.updateFormValues();
+    this.oilTypeChange.emit();
+  }
+
+  private updateFormValues() {
+    const selectedId = this.selectedOilId();
+    if (selectedId) {
+      const selection = this.getPackageSelection(selectedId);
+      this.oilForm.get('quantity')?.setValue(selection.totalQuantity);
+      this.oilForm.get('oilTypeId')?.setValue(selectedId);
+      this.oilForm.get('totalPrice')?.setValue(selection.totalPrice);
+    }
+  }
+
+  getSmartSuggestion(oil: OilType): string {
+    const required = this.requiredQuantity();
+    if (required <= 0) return '';
+
+    const suggestions: string[] = [];
+
+    // Smart suggestion logic
+    if (oil.package_4l_available && oil.package_1l_available) {
+      const fourLPackages = Math.floor(required / 4);
+      const remainder = required % 4;
+      
+      if (fourLPackages > 0) {
+        suggestions.push(`${fourLPackages}x 4L package${fourLPackages > 1 ? 's' : ''}`);
+      }
+      
+      if (remainder > 0 && remainder <= 1) {
+        suggestions.push(`1x 1L package`);
+      } else if (remainder > 1 && remainder < 4) {
+        suggestions.push(`${Math.ceil(remainder)}x 1L package${Math.ceil(remainder) > 1 ? 's' : ''}`);
+      }
+    } else if (oil.package_4l_available) {
+      const packages = Math.ceil(required / 4);
+      suggestions.push(`${packages}x 4L package${packages > 1 ? 's' : ''} (${packages * 4}L total)`);
+    } else if (oil.package_1l_available) {
+      const packages = Math.ceil(required);
+      suggestions.push(`${packages}x 1L package${packages > 1 ? 's' : ''}`);
+    }
+
+    if (oil.bulk_available && oil.price_per_liter > 0) {
+      suggestions.push(`${required}L bulk option`);
+    }
+
+
+    return suggestions.length > 0 ? 
+      `Recommended: ${suggestions.join(' + ')}` : 
+      'No optimal package combination available';
+  }
+
+  getQuantityStatus(oilId: number): string {
+    const selection = this.getPackageSelection(oilId);
+    const required = this.requiredQuantity();
+    
+    if (required <= 0) return '';
+    
+    const difference = selection.totalQuantity - required;
+    
+    if (difference === 0) return '✓ Exact match';
+    if (difference > 0) return `+${difference}L extra`;
+    if (difference < 0) return `${Math.abs(difference)}L short`;
+    
+    return '';
+  }
+}

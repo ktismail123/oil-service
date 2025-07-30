@@ -1,0 +1,376 @@
+<div class="flex items-center mb-6">
+  <div
+    class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4"
+  >
+    <span class="text-blue-600 font-bold">4</span>
+  </div>
+  <h2 class="text-2xl font-semibold text-gray-800">Choose Engine Oil Type</h2>
+</div>
+
+<!-- Required Quantity Input -->
+<div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6">
+  <div class="flex items-center mb-3">
+    <svg
+      class="w-5 h-5 text-blue-600 mr-2"
+      fill="currentColor"
+      viewBox="0 0 20 20"
+    >
+      <path
+        d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"
+      ></path>
+    </svg>
+    <span class="font-medium text-blue-800">Oil Quantity Required</span>
+  </div>
+  <div class="max-w-md">
+    <app-form-field
+      label="Required Oil Quantity (Liters):"
+      type="number"
+      [control]="oilForm.get('quantity')!"
+      placeholder="5.5"
+      fieldId="oilQuantity"
+      [required]="true"
+      step="0.5"
+      min="1"
+      max="20"
+      (input)="onRequiredQuantityChange()"
+    >
+    </app-form-field>
+  </div>
+</div>
+
+<!-- Oil Types Grid -->
+<div
+  class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6"
+  *ngIf="oilTypes.length > 0"
+>
+  <div
+    *ngFor="let oil of oilTypes"
+    class="oil-card border-2 rounded-xl p-5 transition-all"
+    [class.border-blue-500]="selectedOilId() === oil.id"
+    [class.bg-blue-50]="selectedOilId() === oil.id"
+    [class.ring-2]="selectedOilId() === oil.id"
+    [class.ring-blue-200]="selectedOilId() === oil.id"
+    [class.border-gray-200]="selectedOilId() !== oil.id"
+    [class.hover:border-gray-300]="selectedOilId() !== oil.id"
+    [class.hover:shadow-md]="selectedOilId() !== oil.id"
+  >
+    <!-- Oil Header -->
+    <div class="flex justify-between items-start mb-4">
+      <div class="flex items-center">
+        <div
+          class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3"
+        >
+          <svg
+            class="w-5 h-5 text-orange-600"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+            />
+          </svg>
+        </div>
+        <div>
+          <div class="font-bold text-lg text-gray-800">
+            {{ oil.grade }} - {{ oil.brand }}
+          </div>
+          <div class="text-sm text-gray-600">{{ oil.name }}</div>
+          <div class="text-xs text-blue-600 font-medium">
+            {{ oil.service_interval }} KM Service Interval
+          </div>
+        </div>
+      </div>
+
+      <!-- Select Oil Button -->
+      <button
+        type="button"
+        class="px-4 py-2 rounded-lg font-medium transition-all"
+        [class.bg-blue-600]="selectedOilId() === oil.id"
+        [class.text-white]="selectedOilId() === oil.id"
+        [class.bg-gray-200]="selectedOilId() !== oil.id"
+        [class.text-gray-700]="selectedOilId() !== oil.id"
+        [class.hover:bg-blue-700]="selectedOilId() === oil.id"
+        [class.hover:bg-gray-300]="selectedOilId() !== oil.id"
+        (click)="selectOilType(oil.id)"
+      >
+        {{ selectedOilId() === oil.id ? 'Selected' : 'Select' }}
+      </button>
+    </div>
+
+    <!-- Package Options (only show if oil is selected) -->
+    <div
+      *ngIf="selectedOilId() === oil.id"
+      class="border-t border-gray-200 pt-4"
+    >
+      <h4 class="font-medium text-gray-700 mb-3">Package Options:</h4>
+
+      <div class="space-y-4">
+        <!-- 4L Package Option with Quantity -->
+        <div
+          *ngIf="oil.package_4l_available"
+          class="bg-white border border-gray-200 rounded-lg p-4"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <div class="font-semibold text-gray-800">4L Package</div>
+              <div class="text-sm text-gray-600">
+                AED {{ oil.price_4l }} per 4L container
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-blue-600">AED {{ oil.price_4l }}</div>
+              <div class="text-xs text-gray-500">Per 4L</div>
+            </div>
+          </div>
+
+          <!-- Quantity Selector -->
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-700">Quantity:</span>
+            <div class="flex items-center space-x-2">
+              <button
+                type="button"
+                (click)="decrease4LPackage(oil.id)"
+                [disabled]="getExtendedSelection(oil.id).package4L_count <= 0"
+                class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+              >
+                <svg
+                  class="w-4 h-4 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M20 12H4"
+                  ></path>
+                </svg>
+              </button>
+
+              <span class="w-8 text-center font-semibold text-gray-800">
+                {{ getExtendedSelection(oil.id).package4L_count }}
+              </span>
+
+              <button
+                type="button"
+                (click)="increase4LPackage(oil.id)"
+                class="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors"
+              >
+                <svg
+                  class="w-4 h-4 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Subtotal for this package type -->
+          <div
+            *ngIf="getExtendedSelection(oil.id).package4L_count > 0"
+            class="mt-2 text-right text-sm font-medium text-green-600"
+          >
+            Subtotal: AED {{ (getExtendedSelection(oil.id).package4L_count *
+            (oil.price_4l)).toFixed(2) }} ({{
+            getExtendedSelection(oil.id).package4L_count * 4 }}L)
+          </div>
+        </div>
+
+        <!-- 1L Package Option with Quantity -->
+        <div
+          *ngIf="oil.package_1l_available"
+          class="bg-white border border-gray-200 rounded-lg p-4"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <div class="font-semibold text-gray-800">1L Package</div>
+              <div class="text-sm text-gray-600">
+                AED {{ oil.price_1l }} per 1L container
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-blue-600">AED {{ oil.price_1l }}</div>
+              <div class="text-xs text-gray-500">Per 1L</div>
+            </div>
+          </div>
+
+          <!-- Quantity Selector -->
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-700">Quantity:</span>
+            <div class="flex items-center space-x-2">
+              <button
+                type="button"
+                (click)="decrease1LPackage(oil.id)"
+                [disabled]="getExtendedSelection(oil.id).package1L_count <= 0"
+                class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+              >
+                <svg
+                  class="w-4 h-4 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M20 12H4"
+                  ></path>
+                </svg>
+              </button>
+
+              <span class="w-8 text-center font-semibold text-gray-800">
+                {{ getExtendedSelection(oil.id).package1L_count }}
+              </span>
+
+              <button
+                type="button"
+                (click)="increase1LPackage(oil.id)"
+                class="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors"
+              >
+                <svg
+                  class="w-4 h-4 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Subtotal for this package type -->
+          <div
+            *ngIf="getExtendedSelection(oil.id).package1L_count > 0"
+            class="mt-2 text-right text-sm font-medium text-green-600"
+          >
+            Subtotal: AED {{ (getExtendedSelection(oil.id).package1L_count *
+            (oil.price_1l)).toFixed(2) }} ({{
+            getExtendedSelection(oil.id).package1L_count }}L)
+          </div>
+        </div>
+
+        <!-- Bulk Option -->
+        <div
+          *ngIf="oil.bulk_available && oil.price_per_liter !== 0.00"
+          class="bg-white border border-gray-200 rounded-lg p-4"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <div class="font-semibold text-gray-800">Bulk Option</div>
+              <div class="text-sm text-gray-600">
+                AED {{ oil.price_per_liter }} per liter
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-blue-600">
+                AED {{ oil.price_per_liter }}
+              </div>
+              <div class="text-xs text-gray-500">Per Liter</div>
+            </div>
+          </div>
+          <div class="mt-2">
+            <app-form-field
+              label="Bulk Quantity (Liters):"
+              type="number"
+              [control]="getBulkControl(oil.id)"
+              placeholder="0"
+              [fieldId]="'bulkQuantity_' + oil.id"
+              step="0.5"
+              min="0"
+              (input)="onBulkQuantityChange(oil.id)"
+            >
+            </app-form-field>
+          </div>
+
+          <!-- Bulk Subtotal -->
+          <div
+            *ngIf="getExtendedSelection(oil.id).bulkQuantity > 0"
+            class="mt-2 text-right text-sm font-medium text-green-600"
+          >
+            Subtotal: AED {{ (getExtendedSelection(oil.id).bulkQuantity *
+            (oil.price_per_liter)).toFixed(2) }} ({{
+            getExtendedSelection(oil.id).bulkQuantity }}L)
+          </div>
+        </div>
+      </div>
+
+      <!-- Smart Suggestions -->
+      <div
+        *ngIf="requiredQuantity() > 0"
+        class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+      >
+        <h5 class="font-medium text-yellow-800 mb-2">
+          💡 Smart Suggestion for {{ requiredQuantity() }}L:
+        </h5>
+        <div class="text-sm text-yellow-700">{{ getSmartSuggestion(oil) }}</div>
+        <button
+          type="button"
+          (click)="applySmartSuggestion(oil)"
+          class="mt-2 px-3 py-1 bg-yellow-200 hover:bg-yellow-300 text-yellow-800 text-xs font-medium rounded transition-colors"
+        >
+          Apply Suggestion
+        </button>
+      </div>
+
+      <!-- Current Selection Summary -->
+      <div
+        *ngIf="getExtendedSelection(oil.id).totalQuantity > 0"
+        class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg"
+      >
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="font-semibold text-green-800">Total Selected</div>
+            <div class="text-sm text-green-700">
+              {{ getExtendedSelection(oil.id).totalQuantity }}L across all
+              packages
+            </div>
+            <div class="text-xs text-green-600 mt-1">
+              {{ getPackageBreakdown(oil.id) }}
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="font-bold text-green-600 text-xl">
+              AED {{ getExtendedSelection(oil.id).totalPrice.toFixed(2) }}
+            </div>
+            <div class="text-xs text-green-600">
+              {{ getQuantityStatus(oil.id) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- No Oil Types Available -->
+<div *ngIf="oilTypes.length === 0" class="text-center py-8">
+  <div
+    class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4"
+  >
+    <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+      <path
+        d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+      />
+    </svg>
+  </div>
+  <h3 class="text-lg font-medium text-gray-600 mb-2">No Oil Types Available</h3>
+  <p class="text-sm text-gray-500">
+    No oil types match your selected service interval.
+  </p>
+</div>

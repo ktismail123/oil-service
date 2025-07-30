@@ -16,6 +16,7 @@ import {
   OilType,
   OilFilter,
   Accessory,
+  OilPackageSelection,
 } from '../../models';
 
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -23,6 +24,13 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
 import { FormFieldComponent } from '../../shared/components/form-field/form-field.component';
 import { StepIndicatorComponent } from '../../shared/components/step-indicator/step-indicator.component';
 import { distinctUntilChanged, filter } from 'rxjs';
+import { Step1BrandSelectionComponent } from './steps/step1-brand-selection/step1-brand-selection.component';
+import { Step2ModelSelectionComponent } from './steps/step2-model-selection/step2-model-selection.component';
+import { Step3ServiceIntervalComponent } from './steps/step3-service-interval/step3-service-interval.component';
+import { Step4OilTypeComponent } from './steps/step4-oil-type/step4-oil-type.component';
+import { Step5OilFilterComponent } from './steps/step5-oil-filter/step5-oil-filter.component';
+import { Step6AccessoriesComponent } from './steps/step6-accessories/step6-accessories.component';
+import { Step7CustomerSummaryComponent } from './steps/step7-customer-summary/step7-customer-summary.component';
 
 @Component({
   selector: 'app-oil-service',
@@ -34,6 +42,13 @@ import { distinctUntilChanged, filter } from 'rxjs';
     LoadingComponent,
     FormFieldComponent,
     StepIndicatorComponent,
+    Step1BrandSelectionComponent,
+    Step2ModelSelectionComponent,
+    Step3ServiceIntervalComponent,
+    Step4OilTypeComponent,
+    Step5OilFilterComponent,
+    Step6AccessoriesComponent,
+    Step7CustomerSummaryComponent
   ],
   templateUrl: './oil-service.component.html',
   styleUrls: ['./oil-service.component.css'],
@@ -43,6 +58,9 @@ export class OilServiceComponent implements OnInit {
   private apiService = inject(ApiService);
   private bookingService = inject(BookingService);
   private router = inject(Router);
+
+  // Oil package selection tracking
+  private selectedOilPackages = signal<Map<number, OilPackageSelection>>(new Map());
 
   currentStep = signal(1);
   totalSteps = signal(7);
@@ -93,7 +111,7 @@ export class OilServiceComponent implements OnInit {
   });
   vatAmount = computed(() => {
     const sub = this.subtotal();
-    return typeof sub === 'number' ? (sub * 15) / 100 : 0;
+    return typeof sub === 'number' ? (sub * 5) / 100 : 0;
   });
   totalAmount = computed(() => {
     const sub = this.subtotal();
@@ -147,9 +165,14 @@ export class OilServiceComponent implements OnInit {
       customInterval: [''],
     });
 
+    // Updated oil form to handle new package structure
     this.oilForm = this.fb.group({
       oilTypeId: [''],
-      quantity: [4, [Validators.min(1), Validators.max(10)]],
+      quantity: [4, [Validators.min(0.5), Validators.max(20)]],
+      totalPrice: [0],
+      requiredQuantity: [4, [Validators.min(0.5), Validators.max(20)]],
+      oilQuantityDetails:[]
+      // Dynamic controls for bulk quantities will be added as needed
     });
 
     this.filterForm = this.fb.group({
@@ -165,9 +188,6 @@ export class OilServiceComponent implements OnInit {
     // Subscribe to customer form changes for step 7 validation
     this.customerForm.valueChanges.subscribe(() => {
       console.log(this.customerForm.controls?.['mobile'].value?.length);
-      // if(this.customerForm.controls?.['mobile'].value?.length == 10){
-      //   this.getUserDetails(this.customerForm.controls?.['mobile'].value)
-      // }
       this.step7Valid.set(this.customerForm.valid);
     });
 
@@ -184,16 +204,13 @@ export class OilServiceComponent implements OnInit {
 
   private async loadInitialData() {
     this.isLoading.set(true);
-    // oilTypes
     try {
       const [brands, filters, accessories] = await Promise.all([
         this.apiService.getBrands().toPromise(),
-        // this.apiService.getOilTypes().toPromise(),
         this.apiService.getOilFilters().toPromise(),
         this.apiService.getAccessories('oil_service').toPromise(),
       ]);
       this.brands.set(brands || []);
-      // this.oilTypes.set(oilTypes || []);
       this.oilFilters.set(filters || []);
       this.accessories.set(
         (accessories || []).map((acc) => ({ ...acc, quantity: 0 }))
@@ -232,10 +249,14 @@ export class OilServiceComponent implements OnInit {
         }
       }
 
+      // Load oil types when moving to step 4
       if(this.currentStep() === 4){
-        const intervell = this.intervalForm.get('interval')?.value;
-        if(intervell){
-          this.loadOilTypes(intervell);
+        const interval = this.intervalForm.get('interval')?.value;
+        const customInterval = this.intervalForm.get('customInterval')?.value;
+        const serviceInterval = interval === 0 ? customInterval : interval;
+        
+        if(serviceInterval){
+          this.loadOilTypes(serviceInterval);
         }
       }
     }
@@ -303,13 +324,13 @@ export class OilServiceComponent implements OnInit {
     }
   }
 
-  private async loadOilTypes(intervell: number) {
+  private async loadOilTypes(interval: number) {
     try {
-      const models = await this.apiService.getOilTypesByIntervell(intervell).toPromise();
-      this.oilTypes.set(models || []);
+      const oilTypes = await this.apiService.getOilTypesByIntervell(interval).toPromise();
+      this.oilTypes.set(oilTypes || []);
     } catch (error) {
       console.error('Oil Types loading failed:', error);
-      this.models.set([]);
+      this.oilTypes.set([]);
     }
   }
 
@@ -338,7 +359,7 @@ export class OilServiceComponent implements OnInit {
     }
   }
 
-  // Step 4: Oil Type Selection
+  // Step 4: Oil Type Selection (Updated for new package structure)
   onOilTypeChange() {
     this.validateStep4();
   }
@@ -347,10 +368,24 @@ export class OilServiceComponent implements OnInit {
     this.validateStep4();
   }
 
+  // Updated validation for step 4 to handle package selections
   private validateStep4() {
     const oilTypeId = this.oilForm.get('oilTypeId')?.value;
+    const totalPrice = this.oilForm.get('totalPrice')?.value;
     const quantity = this.oilForm.get('quantity')?.value;
-    this.step4Valid.set(!!(oilTypeId && quantity && quantity > 0));
+    
+    // Oil is valid if we have an oil type selected with valid price and quantity
+    this.step4Valid.set(!!(oilTypeId && totalPrice && totalPrice > 0 && quantity && quantity > 0));
+  }
+
+  // Method to update oil form when packages are selected (called from Step4 component)
+  updateOilSelection(oilTypeId: number, totalQuantity: number, totalPrice: number) {
+    this.oilForm.patchValue({
+      oilTypeId: oilTypeId,
+      quantity: totalQuantity,
+      totalPrice: totalPrice
+    });
+    this.validateStep4();
   }
 
   // Step 5: Filter Selection
@@ -359,8 +394,7 @@ export class OilServiceComponent implements OnInit {
   }
 
   private validateStep5() {
-    const filterId = this.filterForm.get('filterId')?.value;
-    // this.step5Valid.set(!!filterId);
+    // Filter is optional, so always valid
     this.step5Valid.set(true);
   }
 
@@ -411,7 +445,14 @@ export class OilServiceComponent implements OnInit {
     }
     if (step <= 4) {
       this.step4Valid.set(false);
-      this.oilForm.patchValue({ oilTypeId: '', quantity: 4 });
+      this.oilForm.patchValue({ 
+        oilTypeId: '', 
+        quantity: 4, 
+        totalPrice: 0,
+        requiredQuantity: 4 
+      });
+      // Clear package selections
+      this.selectedOilPackages.set(new Map());
     }
     if (step <= 5) {
       this.step5Valid.set(true);
@@ -430,24 +471,17 @@ export class OilServiceComponent implements OnInit {
     let total = 0;
 
     try {
-      // Add oil cost
-      const oilTypeId = this.oilForm?.get('oilTypeId')?.value;
-      const oilQty = this.oilForm?.get('quantity')?.value || 0;
-
+      // Get oil cost from totalPrice (calculated from packages)
+      const oilTotalPrice = this.oilForm?.get('totalPrice')?.value || 0;
+      
       console.log('Oil calculation:', {
-        oilTypeId,
-        oilQty,
-        oilTypes: this.oilTypes(),
-      }); // Debug log
+        oilTotalPrice,
+        oilTypeId: this.oilForm?.get('oilTypeId')?.value,
+      });
 
-      if (oilTypeId && oilQty > 0) {
-        const oil = this.oilTypes().find((o) => o.id == oilTypeId); // Use == instead of === for type flexibility
-        console.log('Found oil:', oil); // Debug log
-        if (oil && oil.price) {
-          const oilCost = Number(oil.price) * Number(oilQty);
-          total += oilCost;
-          console.log('Oil cost added:', oilCost); // Debug log
-        }
+      if (oilTotalPrice > 0) {
+        total += Number(oilTotalPrice);
+        console.log('Oil total cost added:', oilTotalPrice);
       }
 
       // Add filter cost
@@ -456,21 +490,21 @@ export class OilServiceComponent implements OnInit {
       console.log('Filter calculation:', {
         filterId,
         filters: this.oilFilters(),
-      }); // Debug log
+      });
 
       if (filterId) {
-        const filter = this.oilFilters().find((f) => f.id == filterId); // Use == instead of === for type flexibility
-        console.log('Found filter:', filter); // Debug log
+        const filter = this.oilFilters().find((f) => f.id == filterId);
+        console.log('Found filter:', filter);
         if (filter && filter.price) {
           const filterCost = Number(filter.price);
           total += filterCost;
-          console.log('Filter cost added:', filterCost); // Debug log
+          console.log('Filter cost added:', filterCost);
         }
       }
 
       // Add accessories cost
       const accessories = this.selectedAccessories();
-      console.log('Accessories calculation:', accessories); // Debug log
+      console.log('Accessories calculation:', accessories);
 
       if (accessories && Array.isArray(accessories)) {
         accessories.forEach((acc) => {
@@ -482,12 +516,12 @@ export class OilServiceComponent implements OnInit {
               accessoryCost,
               'for',
               acc.name
-            ); // Debug log
+            );
           }
         });
       }
 
-      console.log('Final total:', total); // Debug log
+      console.log('Final total:', total);
     } catch (error) {
       console.error('Error calculating subtotal:', error);
       return 0;
@@ -502,6 +536,8 @@ export class OilServiceComponent implements OnInit {
     }
 
     this.isSubmitting.set(true);
+    console.log(this.oilForm.value);
+    
     try {
       const bookingData = {
         customer: {
@@ -522,10 +558,15 @@ export class OilServiceComponent implements OnInit {
           interval: this.getServiceInterval(),
           oilTypeId: this.oilForm.get('oilTypeId')?.value,
           oilQuantity: this.oilForm.get('quantity')?.value,
+          oilTotalPrice: this.oilForm.get('totalPrice')?.value,
+          oilRequiredQuantity: this.oilForm.get('requiredQuantity')?.value,
+          oilQuantityDetails: this.oilForm.get('oilQuantityDetails')?.value,
           oilFilterId: this.filterForm.get('filterId')?.value,
           subtotal: this.subtotal(),
           vatAmount: this.vatAmount(),
           totalAmount: this.totalAmount(),
+          // Include package details for backend processing
+          oilPackageDetails: this.getSelectedOilPackageDetails(),
         },
         accessories: this.selectedAccessories(),
       };
@@ -545,6 +586,22 @@ export class OilServiceComponent implements OnInit {
     } finally {
       this.isSubmitting.set(false);
     }
+  }
+
+  // Helper method to get oil package details for backend
+  private getSelectedOilPackageDetails() {
+    const oilTypeId = this.oilForm.get('oilTypeId')?.value;
+    if (!oilTypeId) return null;
+
+    const packageSelection = this.selectedOilPackages().get(oilTypeId);
+    
+    return {
+      oilTypeId: oilTypeId,
+      requiredQuantity: this.oilForm.get('requiredQuantity')?.value,
+      totalQuantity: this.oilForm.get('quantity')?.value,
+      totalPrice: this.oilForm.get('totalPrice')?.value,
+      packageSelection: packageSelection || null
+    };
   }
 
   getServiceInterval(): number {
@@ -577,12 +634,27 @@ export class OilServiceComponent implements OnInit {
 
   getSelectedOilType(): OilType | undefined {
     const id = this.oilForm.get('oilTypeId')?.value;
-    return this.oilTypes().find((o) => o.id === id);
+    return this.oilTypes().find((o) => o.id == id); // Use == for type flexibility
   }
 
   getSelectedFilter(): OilFilter | undefined {
     const id = this.filterForm.get('filterId')?.value;
-    return this.oilFilters().find((f) => f.id === id);
+    return this.oilFilters().find((f) => f.id == id);
+  }
+
+  // Helper method to get oil details for summary display
+  getOilSummaryDetails() {
+    const oilType = this.getSelectedOilType();
+    const quantity = this.oilForm.get('quantity')?.value;
+    const totalPrice = this.oilForm.get('totalPrice')?.value;
+    const requiredQuantity = this.oilForm.get('requiredQuantity')?.value;
+
+    return {
+      oilType,
+      quantity,
+      totalPrice,
+      requiredQuantity
+    };
   }
 
   backToHome() {
