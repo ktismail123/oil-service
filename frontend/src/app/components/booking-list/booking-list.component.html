@@ -2,5 +2,6 @@
 <app-data-table
   [rowDatas]="serviceData"
   [displayedColumns]="displayedColumns"
-  (addNew)="onTableAction($event)">
+  (addNew)="onTableAction($event)"
+  [actionConfig]="actionConfig">
 </app-data-table>

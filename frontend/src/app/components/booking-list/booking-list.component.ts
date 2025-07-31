@@ -7,6 +7,7 @@ import { FormFieldComponent } from '../../shared/components/form-field/form-fiel
 import { ApiService } from '../../services/api.service';
 import { take } from 'rxjs';
 import { DataTableComponent } from '../data-table/data-table.component';
+import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
 
 interface ServiceData {
   id: number;
@@ -54,6 +55,7 @@ export class BookingListComponent implements OnInit {
     'vat', 'total', 'status'
   ];
 
+  actionConfig: ActionConfig = ACTION_CONFIGS.FULL;
 
   ngOnInit() {
     // Replace this with your actual API call

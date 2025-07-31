@@ -155,7 +155,7 @@
       </ng-container>
 
       <!-- Enhanced Action Column -->
-      <ng-container matColumnDef="action">
+      <!-- <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef class="modern-header-cell action-header">
           Actions
         </th>
@@ -172,7 +172,60 @@
             </button>
           </div>
         </td>
-      </ng-container>
+      </ng-container> -->
+      <ng-container matColumnDef="action">
+  <th mat-header-cell *matHeaderCellDef class="modern-header-cell action-header">
+    Actions
+  </th>
+  <td mat-cell *matCellDef="let element" class="modern-data-cell action-cell">
+    <div class="action-button-group">
+      
+      <!-- View Button -->
+      <button 
+        *ngIf="actionConfig()?.showView !== false"
+        mat-icon-button 
+        class="modern-action-btn view-action" 
+        (click)="onView(element)"
+        [title]="actionConfig()?.viewTitle || 'View Details'">
+        <mat-icon>{{ actionConfig()?.viewIcon || 'visibility' }}</mat-icon>
+      </button>
+      
+      <!-- Edit Button -->
+      <button 
+        *ngIf="actionConfig()?.showEdit !== false"
+        mat-icon-button 
+        class="modern-action-btn edit-action" 
+        (click)="onEdit(element)"
+        [title]="actionConfig()?.editTitle || 'Edit'"
+        [disabled]="isActionDisabled('edit', element)">
+        <mat-icon>{{ actionConfig()?.editIcon || 'edit' }}</mat-icon>
+      </button>
+      
+      <!-- Delete Button -->
+      <button 
+        *ngIf="actionConfig()?.showDelete !== false"
+        mat-icon-button 
+        class="modern-action-btn delete-action" 
+        (click)="confirmDelete(element)"
+        [title]="actionConfig()?.deleteTitle || 'Delete'"
+        [disabled]="isActionDisabled('delete', element)">
+        <mat-icon>{{ actionConfig()?.deleteIcon || 'delete' }}</mat-icon>
+      </button>
+      
+      <!-- Custom Actions -->
+      <button 
+        *ngFor="let customAction of actionConfig()?.customActions || []"
+        mat-icon-button 
+        [class]="'modern-action-btn ' + customAction.class"
+        (click)="onCustomAction(customAction.key, element)"
+        [title]="customAction.title"
+        [disabled]="isActionDisabled(customAction.key, element)">
+        <mat-icon>{{ customAction.icon }}</mat-icon>
+      </button>
+      
+    </div>
+  </td>
+</ng-container>
 
       <!-- Table Rows -->
       <tr mat-header-row *matHeaderRowDef="getAllColumns()" class="modern-header-row" ></tr>

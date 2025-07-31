@@ -118,6 +118,6 @@ export class ApiService {
   }
 
   deleteBrand(brandId: number): Observable<any> {
-    return this.http.delete<any>(`${this.baseUrl}/brands/${brandId}`);
+    return this.http.delete<any>(`${this.baseUrl}/brands/${brandId}/delete`);
   }
 }

@@ -13,6 +13,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { ActionConfig } from '../../models/action';
 
 @Component({
   selector: 'app-data-table',
@@ -41,6 +42,13 @@ export class DataTableComponent implements AfterViewInit {
   
   // Output signals
   addNew = output<{ event: 'add' | 'edit' | 'view' | 'delete', data?: any }>();
+
+  // Action Configuration Input
+  actionConfig = input<ActionConfig>({
+    showView: true,
+    showEdit: true,
+    showDelete: true
+  });
 
   dataSource = new MatTableDataSource<any>([]);
 
@@ -194,5 +202,22 @@ proceedDelete() {
     this.cancelDelete();
   }
 }
+
+// Custom action handler
+  onCustomAction(actionKey: string, element: any) {
+    // this.addNew.emit({ 
+    //   event: 'custom', 
+    //   data: element, 
+    //   customAction: actionKey 
+    // });
+  }
+
+  // Check if action should be disabled
+  isActionDisabled(actionKey: string, element: any): boolean {
+    const config = this.actionConfig();
+    const disableCondition = config?.disableConditions?.[actionKey];
+    return disableCondition ? disableCondition(element) : false;
+  }
+
   
 }

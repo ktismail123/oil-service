@@ -14,6 +14,7 @@ import { AddBrandModalComponent } from '../../modals/add-brand-modal/add-brand-m
 import { DataTableComponent } from '../data-table/data-table.component';
 import { ApiService } from '../../services/api.service';
 import { take } from 'rxjs';
+import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
 
 @Component({
   selector: 'app-brands-list',
@@ -27,13 +28,13 @@ export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
   // Data signals
   brands = signal<any[]>([]);
 
+  actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
+
   refreshTable = output();
   private dialog = inject(MatDialog);
   addNewEvent = input<boolean | null>(false);
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log(this.addNewEvent());
-
     if (changes['addNewEvent'] && this.addNewEvent()) {
       this.actionEvents({ event: 'add' });
     }
@@ -52,19 +53,19 @@ export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-  actionEvents(event: {
+  actionEvents(action: {
     event: 'add' | 'edit' | 'view' | 'delete';
     data?: any;
   }) {
     console.log(event);
-    
-    if (event.event === 'add' || event.event === 'edit') {
+
+    if (action.event === 'add' || action.event === 'edit') {
       this.dialog
         .open(AddBrandModalComponent, {
           width: '500px',
           data: {
-            mode: event.event,
-            rowData: event?.data,
+            mode: action.event,
+            rowData: action?.data,
           },
         })
         .afterClosed()
@@ -73,6 +74,14 @@ export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
             this.loadBrands();
           },
         });
+    }
+
+    if(action.event === 'delete'){
+       this.apiService.deleteBrand(action.data?.id).subscribe({
+        next:(res => {
+            this.loadBrands();
+        })
+       })
     }
   }
 

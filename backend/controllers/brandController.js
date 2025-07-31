@@ -141,16 +141,56 @@ const updateBrand = async (req, res) => {
       brand: updatedBrand[0]
     });
 
-    } finally {
-      // await db.end();
-    }
-  
+    }  catch (error) {
+    console.error('Error creating brand:', error);
+    res.status(500).json({ error: 'Failed to update brand' });
+  }
+
 }
+
+const deleteBrand = async (req, res) => {
+  const id = req.params.id;
+
+    try {
+      const db = getDB();
+      // Check if brand exists
+      const [existing] = await db.execute(
+        'SELECT id FROM vehicle_brands WHERE id = ?',
+        [id]
+      );
+
+      if (existing.length === 0) {
+        throw { status: 404, message: 'Brand not found' };
+      }
+
+      // Check if brand has associated models
+      const [models] = await db.execute(
+        'SELECT id FROM vehicle_models WHERE brand_id = ?',
+        [id]
+      );
+
+      if (models.length > 0) {
+        throw { status: 400, message: 'Cannot delete brand. It has associated vehicle models.' };
+      }
+
+      // Delete brand
+      await db.execute('DELETE FROM vehicle_brands WHERE id = ?', [id]);
+
+        res.status(201).json({
+      message: 'Brand deleted successfully',
+    });
+
+    }  catch (error) {
+      console.error('Error creating brand:', error);
+      res.status(500).json({ error: 'Failed to delete brand' });
+    }
+    }
 
 module.exports = {
   getAllBrands,
   createBrand,
-  updateBrand
+  updateBrand,
+  deleteBrand
 };
 
 // class BrandController {
