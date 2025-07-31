@@ -7,6 +7,7 @@ import {
   input,
   OnChanges,
   SimpleChanges,
+  OnDestroy,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AddBrandModalComponent } from '../../modals/add-brand-modal/add-brand-modal.component';
@@ -20,7 +21,7 @@ import { take } from 'rxjs';
   templateUrl: './brands-list.component.html',
   styleUrl: './brands-list.component.scss',
 })
-export class BrandsListComponent implements OnInit, OnChanges {
+export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
   private apiService = inject(ApiService);
 
 
@@ -68,4 +69,9 @@ export class BrandsListComponent implements OnInit, OnChanges {
         },
       });
   }
+
+  ngOnDestroy(): void {
+      
+  }
+  
 }

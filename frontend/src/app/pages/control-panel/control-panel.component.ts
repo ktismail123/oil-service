@@ -174,6 +174,9 @@ private apiService = inject(ApiService);
   }
 
   addNew(): void {
+    this.addNewEvent.set(false);
+    setTimeout(() => {
     this.addNewEvent.set(true);
+    });
   }
 }

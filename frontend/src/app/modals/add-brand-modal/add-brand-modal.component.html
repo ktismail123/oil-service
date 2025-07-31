@@ -1,72 +1,130 @@
-<div class="modal-overlay" (click)="closeModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+<div class="modern-modal-overlay" (click)="closeModal()">
+  <div class="modern-modal-container" (click)="$event.stopPropagation()">
     
-    <!-- Modal Header -->
-    <div class="modal-header">
-      <h2 class="modal-title">Add New Vehicle Brand</h2>
-      <button class="close-button" (click)="closeModal()" type="button">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
+    <!-- Enhanced Modal Header -->
+    <div class="modern-modal-header">
+      <div class="header-content">
+        <div class="header-icon" [class.edit-mode]="isEditMode()">
+          <i [class]="isEditMode() ? 'fas fa-edit' : 'fas fa-car'"></i>
+        </div>
+        <div class="header-text">
+          <h2 class="modal-title">{{ getModalTitle() }}</h2>
+          <p class="modal-subtitle">{{ getModalSubtitle() }}</p>
+        </div>
+      </div>
+      <button class="modern-close-button" (click)="closeModal()" type="button">
+        <i class="fas fa-times"></i>
       </button>
     </div>
 
-    <!-- Modal Body -->
-    <div class="modal-body">
+    <!-- Enhanced Modal Body -->
+    <div class="modern-modal-body">
+      <!-- Edit Mode Info Banner -->
+      <div *ngIf="isEditMode()" class="edit-info-banner">
+        <div class="banner-icon">
+          <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="banner-content">
+          <h4 class="banner-title">Editing Brand</h4>
+          <p class="banner-text">
+            You are editing <strong>{{ brandData()?.name }}</strong>
+            <span class="edit-date">(Created: {{ brandData()?.created_at | date:'short' }})</span>
+          </p>
+        </div>
+      </div>
+
       <form [formGroup]="brandForm" (ngSubmit)="onSubmit()">
         
-        <!-- Brand Name Field -->
-        <div class="form-group">
-          <label for="brandName" class="form-label">
-            Brand Name <span class="required">*</span>
+        <!-- Enhanced Brand Name Field -->
+        <div class="modern-form-group">
+          <label for="brandName" class="modern-form-label">
+            <i class="fas fa-tag label-icon"></i>
+            Brand Name <span class="required-indicator">*</span>
           </label>
-          <input
-            id="brandName"
-            type="text"
-            formControlName="name"
-            class="form-input"
-            [class.error]="isNameInvalid"
-            placeholder="Enter vehicle brand name (e.g., Toyota, BMW)"
-            autocomplete="off">
+          <div class="input-wrapper">
+            <input
+              id="brandName"
+              type="text"
+              formControlName="name"
+              class="modern-form-input"
+              [class.input-error]="isNameInvalid"
+              [class.input-success]="nameControl?.valid && nameControl?.touched"
+              [placeholder]="isEditMode() ? 'Update brand name' : 'Enter vehicle brand name (e.g., Toyota, BMW, Mercedes-Benz)'"
+              autocomplete="off">
+            
+            <!-- Input Status Icons -->
+            <div class="input-status-icon">
+              <i *ngIf="nameControl?.valid && nameControl?.touched" 
+                 class="fas fa-check success-icon"></i>
+              <i *ngIf="isNameInvalid" 
+                 class="fas fa-exclamation-triangle error-icon"></i>
+            </div>
+          </div>
           
-          <!-- Error Message -->
-          <div *ngIf="isNameInvalid" class="error-message">
-            {{ getNameErrorMessage() }}
+          <!-- Enhanced Error Message -->
+          <div *ngIf="isNameInvalid" class="modern-error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ getNameErrorMessage() }}</span>
+          </div>
+
+          <!-- Form Change Indicator (Edit Mode) -->
+          <div *ngIf="isEditMode() && hasFormChanged()" class="change-indicator">
+            <i class="fas fa-edit"></i>
+            <span>Changes detected - ready to update</span>
           </div>
         </div>
 
-        <!-- Success Message -->
-        <div *ngIf="successMessage()" class="success-message">
-          <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-          </svg>
-          {{ successMessage() }}
+        <!-- Enhanced Success Message -->
+        <div *ngIf="successMessage()" class="modern-success-alert">
+          <div class="alert-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="alert-content">
+            <h4 class="alert-title">Success!</h4>
+            <p class="alert-message">{{ successMessage() }}</p>
+          </div>
         </div>
 
-        <!-- Error Message -->
-        <div *ngIf="errorMessage()" class="error-message">
-          <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-          </svg>
-          {{ errorMessage() }}
+        <!-- Enhanced Error Message -->
+        <div *ngIf="errorMessage()" class="modern-error-alert">
+          <div class="alert-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="alert-content">
+            <h4 class="alert-title">Error Occurred</h4>
+            <p class="alert-message">{{ errorMessage() }}</p>
+          </div>
         </div>
 
-        <!-- Form Actions -->
-        <div class="form-actions">
+        <!-- Enhanced Form Actions -->
+        <div class="modern-form-actions">
+          <!-- Reset Button (only show when there are changes) -->
+          <button
+            *ngIf="showResetButton()"
+            type="button"
+            class="modern-btn modern-btn-reset"
+            (click)="resetForm()"
+            [disabled]="isSubmitting()">
+            <i class="fas fa-undo btn-icon"></i>
+            <span>Reset</span>
+          </button>
+
           <button
             type="button"
-            class="btn-secondary"
+            class="modern-btn modern-btn-secondary"
             (click)="closeModal()"
             [disabled]="isSubmitting()">
-            Cancel
+            <i class="fas fa-times btn-icon"></i>
+            <span>Cancel</span>
           </button>
           
           <button
             type="submit"
-            class="btn-primary"
-            [disabled]="brandForm.invalid || isSubmitting()">
-            <span *ngIf="isSubmitting()" class="loading-spinner"></span>
-            {{ isSubmitting() ? 'Adding...' : 'Add Brand' }}
+            class="modern-btn modern-btn-primary"
+            [disabled]="isSubmitDisabled()">
+            <div *ngIf="isSubmitting()" class="modern-loading-spinner"></div>
+            <i *ngIf="!isSubmitting()" [class]="getSubmitButtonIcon()" class="btn-icon"></i>
+            <span>{{ getSubmitButtonText() }}</span>
           </button>
         </div>
 

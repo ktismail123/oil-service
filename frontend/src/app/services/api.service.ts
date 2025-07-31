@@ -110,7 +110,7 @@ export class ApiService {
   }
 
   updateBrand(brandId: number, brandData: { name: string }): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/brands/${brandId}`, brandData);
+    return this.http.put<any>(`${this.baseUrl}/brands/${brandId}/update`, brandData);
   }
 
   deleteBrand(brandId: number): Observable<any> {

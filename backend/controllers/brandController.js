@@ -80,7 +80,9 @@ try {
 
 const updateBrand = async (req, res) => {
     const { name } =    req.body;
-    const id = req.params.brandId;
+    const id = req.params.id;
+    const db = getDB();
+
 
     // Validation
     if (!name || typeof name !== 'string') {
@@ -93,11 +95,12 @@ const updateBrand = async (req, res) => {
       throw { status: 400, message: 'Brand name must be between 2 and 50 characters' };
     }
 
-    const connection = await mysql.createConnection(dbConfig);
+    // const connection = await mysql.createConnection(dbConfig);
 
     try {
+      
       // Check if brand exists
-      const [existing] = await connection.execute(
+      const [existing] = await db.execute(
         'SELECT id FROM vehicle_brands WHERE id = ?',
         [id]
       );
@@ -107,7 +110,7 @@ const updateBrand = async (req, res) => {
       }
 
       // Check if name is already taken by another brand
-      const [duplicate] = await connection.execute(
+      const [duplicate] = await db.execute(
         'SELECT id FROM vehicle_brands WHERE LOWER(name) = LOWER(?) AND id != ?',
         [trimmedName, id]
       );
@@ -117,24 +120,29 @@ const updateBrand = async (req, res) => {
       }
 
       // Update brand
-      await connection.execute(
+      await db.execute(
         'UPDATE vehicle_brands SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
         [trimmedName, id]
       );
 
       // Get updated brand
-      const [updatedBrand] = await connection.execute(
+      const [updatedBrand] = await db.execute(
         'SELECT * FROM vehicle_brands WHERE id = ?',
         [id]
       );
 
-      return {
-        message: 'Brand updated successfully',
-        brand: updatedBrand[0]
-      };
+      // return {
+      //   message: 'Brand updated successfully',
+      //   brand: updatedBrand[0]
+      // };
+
+       res.status(201).json({
+      message: 'Brand updated successfully',
+      brand: updatedBrand[0]
+    });
 
     } finally {
-      await connection.end();
+      // await db.end();
     }
   
 }

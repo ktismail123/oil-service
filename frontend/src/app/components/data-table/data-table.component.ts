@@ -45,6 +45,9 @@ export class DataTableComponent implements AfterViewInit {
   // Predefined columns that have custom templates
   predefinedColumns = ['id', 'customer', 'vehicle', 'service_type', 'service_date', 'oil_quantity', 'subtotal', 'vat', 'total', 'status'];
 
+  // Action menu state
+  activeMenuId: number | null = null;
+
   // Computed signal for custom columns (columns not in predefined list)
   customDisplayedColumns = computed(() => 
     this.displayedColumns().filter(col => !this.predefinedColumns.includes(col) && col !== 'action')
@@ -57,6 +60,11 @@ export class DataTableComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', () => {
+      this.closeActionMenu();
+    });
   }
 
   constructor() {
@@ -67,6 +75,16 @@ export class DataTableComponent implements AfterViewInit {
         this.dataSource.data = data;
       }
     });
+  }
+
+  // Action menu methods
+  toggleActionMenu(id: number, event: Event) {
+    event.stopPropagation();
+    this.activeMenuId = this.activeMenuId === id ? null : id;
+  }
+
+  closeActionMenu() {
+    this.activeMenuId = null;
   }
 
   // Action methods
@@ -137,4 +155,5 @@ export class DataTableComponent implements AfterViewInit {
   getTotalCount(): number {
     return this.dataSource.filteredData.length;
   }
+  
 }

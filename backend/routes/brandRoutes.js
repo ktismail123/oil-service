@@ -4,6 +4,6 @@ const { getAllBrands, createBrand, updateBrand } = require('../controllers/brand
 
 router.get('/', getAllBrands);
 router.post('/', createBrand);
-router.post('/:id/update', updateBrand);
+router.put('/:id/update', updateBrand);
 
 module.exports = router;
