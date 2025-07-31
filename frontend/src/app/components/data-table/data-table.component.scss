@@ -1,10 +1,736 @@
-table {
-  width: 100%;
-}
-.text-primary mat-icon {
-  color: #1976d2; // Material Blue 700
+/* Modern Table Wrapper */
+.modern-table-wrapper {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.text-warn mat-icon {
-  color: #d32f2f; // Material Red 700
+/* Enhanced Header Section */
+.table-header-section {
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Custom Search Container */
+.search-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+.custom-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.custom-search-wrapper:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.search-icon {
+  color: #64748b;
+  margin-right: 0.75rem;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.custom-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+.custom-search-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.clear-search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 50%;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  transform: scale(1.1);
+}
+
+.clear-search-btn i {
+  font-size: 0.75rem;
+}
+
+.modern-add-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white !important;
+  border-radius: 0.75rem !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.modern-add-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5) !important;
+}
+
+.add-icon {
+  margin-right: 0.5rem !important;
+  font-size: 1.125rem !important;
+}
+
+/* Table Container */
+.table-container {
+  overflow-x: auto;
+  position: relative;
+}
+
+.enhanced-table {
+  width: 100% !important;
+  background: white !important;
+}
+
+/* Modern Header Cells */
+.modern-header-cell {
+  background: #f8fafc !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  padding: 1.25rem 1.5rem !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  font-size: 0.875rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  white-space: nowrap !important;
+}
+
+.action-header {
+  text-align: center !important;
+  width: 140px !important;
+}
+
+/* Modern Data Cells */
+.modern-data-cell {
+  padding: 1rem 1.5rem !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  font-size: 0.875rem !important;
+  color: #1e293b !important;
+  font-weight: 500 !important;
+  vertical-align: middle !important;
+}
+
+.action-cell {
+  text-align: center !important;
+}
+
+/* Table Rows with fixed height */
+.modern-header-row {
+  background: #f8fafc !important;
+  height: 60px !important;
+}
+
+.modern-data-row {
+  transition: all 0.2s ease !important;
+  height: 80px !important; /* Fixed row height for consistent vertical centering */
+}
+
+.modern-data-row:hover {
+  background: #f8fafc !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Currency Header Styling */
+.currency-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  align-items: flex-start;
+}
+
+.currency-label {
+  font-size: 0.6875rem !important;
+  color: #94a3b8 !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+.id-badge {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 0.25rem 0.75rem;
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 180px; /* Set minimum width for customer column */
+  align-items: start; /* Center align content */
+  text-align: center;
+}
+
+/* Specific column width control for Customer */
+.enhanced-table .mat-column-customer {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 220px !important;
+}
+
+/* Alternative: Use flex-basis for more flexible width */
+.enhanced-table .mat-column-customer {
+  flex: 0 0 200px !important; /* Don't grow, don't shrink, 200px base */
+}
+
+.customer-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.customer-mobile {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.vehicle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 200px; /* Set minimum width for vehicle column */
+  align-items: start; /* Center align content */
+  text-align: center;
+}
+
+/* Specific column width control */
+.enhanced-table .mat-column-vehicle {
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
+}
+
+/* Alternative: Use flex-basis for more flexible width */
+.enhanced-table .mat-column-vehicle {
+  flex: 0 0 150px !important; /* Don't grow, don't shrink, 250px base */
+}
+
+.vehicle-brand {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.plate-number {
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-family: monospace;
+  background: #f1f5f9;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  display: inline-block;
+}
+
+.service-type-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.service-type {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.service-interval {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.date-time-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.service-date {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.service-time {
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-family: monospace;
+}
+
+.oil-quantity {
+  font-weight: 600;
+  color: #059669;
+  background: rgba(5, 150, 105, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.8125rem;
+}
+
+.amount {
+  font-weight: 600;
+  color: #059669;
+  font-size: 0.9375rem;
+}
+
+.vat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.vat-amount {
+  font-weight: 600;
+  color: #059669;
+}
+
+.vat-percentage {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.total-amount {
+  font-weight: 700;
+  color: #059669;
+  font-size: 1rem;
+}
+
+.status-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-in-progress {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+/* Action Button Group */
+.action-button-group {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.modern-action-btn {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s ease !important;
+  border: 1px solid transparent !important;
+}
+
+.modern-action-btn mat-icon {
+  font-size: 1.125rem !important;
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+}
+
+.view-action {
+  color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.view-action:hover {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: #10b981 !important;
+  transform: scale(1.05) !important;
+}
+
+.edit-action {
+  color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.edit-action:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: #3b82f6 !important;
+  transform: scale(1.05) !important;
+}
+
+.delete-action {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.delete-action:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: #ef4444 !important;
+  transform: scale(1.05) !important;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 3rem;
+}
+
+.empty-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.empty-icon i {
+  font-size: 2rem;
+  color: #94a3b8;
+}
+
+.empty-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-description {
+  color: #64748b;
+  margin: 0 0 2rem 0;
+  line-height: 1.6;
+}
+
+.empty-action-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: white !important;
+  border-radius: 0.75rem !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+}
+
+/* Paginator Wrapper */
+.paginator-wrapper {
+  padding: 1rem 2rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.paginator-info {
+  flex: 1;
+}
+
+.results-count {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.modern-paginator {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Custom Paginator Styling */
+::ng-deep .modern-paginator .mat-mdc-paginator-range-label {
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+
+::ng-deep .modern-paginator .mat-mdc-icon-button {
+  color: #64748b !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-radius: 0.5rem !important;
+  margin: 0 0.25rem !important;
+  transition: all 0.2s ease !important;
+}
+
+::ng-deep .modern-paginator .mat-mdc-icon-button:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #3b82f6 !important;
+}
+
+::ng-deep .modern-paginator .mat-mdc-icon-button[disabled] {
+  background: #f1f5f9 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .table-header-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .header-left {
+    justify-content: stretch;
+  }
+  
+  .search-container {
+    max-width: none;
+  }
+  
+  .modern-data-cell,
+  .modern-header-cell {
+    padding: 0.875rem 1rem !important;
+    font-size: 0.8125rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-header-section {
+    padding: 1rem;
+  }
+  
+  .paginator-wrapper {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .modern-data-cell,
+  .modern-header-cell {
+    padding: 0.75rem 0.875rem !important;
+    font-size: 0.8125rem !important;
+  }
+  
+  .action-button-group {
+    gap: 0.25rem;
+  }
+  
+  .modern-action-btn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .modern-action-btn mat-icon {
+    font-size: 1rem !important;
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+  
+  .action-header {
+    width: 100px !important;
+  }
+  
+  .customer-info,
+  .vehicle-info,
+  .service-type-info,
+  .date-time-info,
+  .vat-info {
+    gap: 0.125rem;
+  }
+  
+  .customer-name,
+  .vehicle-brand,
+  .service-type,
+  .service-date {
+    font-size: 0.8125rem;
+  }
+  
+  .customer-mobile,
+  .plate-number,
+  .service-interval,
+  .service-time,
+  .vat-percentage {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-header-section {
+    padding: 0.75rem;
+  }
+  
+  .paginator-wrapper {
+    padding: 0.75rem;
+  }
+  
+  .modern-data-cell,
+  .modern-header-cell {
+    padding: 0.625rem 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .id-badge,
+  .oil-quantity,
+  .status-badge {
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+  }
+  
+  .amount,
+  .total-amount {
+    font-size: 0.8125rem;
+  }
+  
+  .action-button-group {
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  
+  .modern-action-btn {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  
+  .modern-action-btn mat-icon {
+    font-size: 0.875rem !important;
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+  }
+}
+
+/* Focus States for Accessibility */
+.modern-add-button:focus,
+.modern-action-btn:focus,
+.clear-search-btn:focus,
+.custom-search-input:focus {
+  // outline: 2px solid #60a5fa !important;
+  outline-offset: 2px !important;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .modern-header-cell {
+    border-bottom: 3px solid #000 !important;
+  }
+  
+  .modern-data-cell {
+    border-bottom: 1px solid #666 !important;
+  }
+  
+  .modern-action-btn {
+    border: 2px solid currentColor !important;
+  }
+  
+  .status-badge {
+    border: 1px solid currentColor !important;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .modern-data-row,
+  .modern-action-btn,
+  .modern-add-button,
+  .custom-search-wrapper {
+    transition: none !important;
+  }
+  
+  .modern-data-row:hover {
+    transform: none !important;
+  }
+  
+  .modern-action-btn:hover,
+  .clear-search-btn:hover {
+    transform: none !important;
+  }
+  
+  .modern-add-button:hover {
+    transform: none !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .table-header-section,
+  .action-cell,
+  .paginator-wrapper {
+    display: none !important;
+  }
+  
+  .modern-table-wrapper {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+  
+  .modern-data-row:hover {
+    background: transparent !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  .status-badge,
+  .id-badge,
+  .oil-quantity {
+    background: transparent !important;
+    border: 1px solid currentColor !important;
+  }
 }

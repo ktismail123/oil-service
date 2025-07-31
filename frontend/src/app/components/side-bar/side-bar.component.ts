@@ -1,6 +1,6 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 export interface SidebarMenuItem {
   id: string;
@@ -8,6 +8,7 @@ export interface SidebarMenuItem {
   icon: string;
   count?: number;
   active?: boolean;
+  slug: string
 }
 
 @Component({
@@ -24,6 +25,8 @@ export class SideBarComponent {
   @Output() onMenuClick = new EventEmitter<string>();
   @Output() onToggle = new EventEmitter<boolean>();
 
+  private router = inject(Router);
+
   activeItem = signal<string>('');
 
   selectMenuItem(itemId: string) {
@@ -33,6 +36,7 @@ export class SideBarComponent {
     // Update active state in menu items
     this.menuItems.forEach((item) => {
       item.active = item.id === itemId;
+      // this.router.navigateByUrl(item.slug)
     });
   }
 

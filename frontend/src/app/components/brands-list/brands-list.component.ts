@@ -1,11 +1,12 @@
-import { NgFor } from '@angular/common';
 import {
   Component,
   inject,
-  input,
   signal,
   OnInit,
   output,
+  input,
+  OnChanges,
+  SimpleChanges,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AddBrandModalComponent } from '../../modals/add-brand-modal/add-brand-modal.component';
@@ -15,18 +16,28 @@ import { take } from 'rxjs';
 
 @Component({
   selector: 'app-brands-list',
-  imports: [NgFor, DataTableComponent],
+  imports: [DataTableComponent],
   templateUrl: './brands-list.component.html',
   styleUrl: './brands-list.component.scss',
 })
-export class BrandsListComponent implements OnInit {
+export class BrandsListComponent implements OnInit, OnChanges {
   private apiService = inject(ApiService);
+
 
   // Data signals
   brands = signal<any[]>([]);
 
   refreshTable = output();
+  addNewEvent = input<boolean>(false);
   private dialog = inject(MatDialog);
+
+  ngOnChanges(changes: SimpleChanges): void {
+    console.log(this.addNewEvent());
+    
+      if(this.addNewEvent()){
+        this.addNewBrand({event:'add'});
+      }
+  }
 
   ngOnInit(): void {
     this.loadBrands();
@@ -41,9 +52,7 @@ export class BrandsListComponent implements OnInit {
       });
   }
 
-  addNewBrand(event: { event: 'add' | 'edit', data?: any }) {
-    console.log(event);
-    
+  addNewBrand(event: { event: 'add' | 'edit' | 'view' | 'delete', data?: any }) {
     this.dialog
       .open(AddBrandModalComponent, {
         width: '500px',

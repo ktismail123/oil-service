@@ -6,6 +6,7 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
 import { FormFieldComponent } from '../../shared/components/form-field/form-field.component';
 import { ApiService } from '../../services/api.service';
 import { take } from 'rxjs';
+import { DataTableComponent } from '../data-table/data-table.component';
 
 interface ServiceData {
   id: number;
@@ -37,7 +38,8 @@ interface ServiceData {
     ButtonComponent,
     LoadingComponent,
     FormFieldComponent,
-    CurrencyPipe
+    CurrencyPipe,
+    DataTableComponent
   ],
   templateUrl: './booking-list.component.html',
   styleUrls: ['./booking-list.component.css']
@@ -45,6 +47,13 @@ interface ServiceData {
 export class BookingListComponent implements OnInit {
   serviceData: ServiceData[] = [];
   private apiService = inject(ApiService);
+
+   displayedColumns = [
+    'id', 'customer', 'vehicle', 'service_type', 
+    'service_date', 'oil_quantity', 'subtotal', 
+    'vat', 'total', 'status'
+  ];
+
 
   ngOnInit() {
     // Replace this with your actual API call
@@ -77,6 +86,26 @@ export class BookingListComponent implements OnInit {
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  onTableAction(event: any) {
+    switch(event.event) {
+      case 'add':
+        // Handle add new record
+        break;
+      case 'edit':
+        // Handle edit record
+        console.log('Edit:', event.data);
+        break;
+      case 'view':
+        // Handle view record
+        console.log('View:', event.data);
+        break;
+      case 'delete':
+        // Handle delete record
+        console.log('Delete:', event.data);
+        break;
     }
   }
 }

@@ -3,11 +3,13 @@ import { ApiService } from '../../services/api.service';
 import { SideBarComponent, SidebarMenuItem } from '../../components/side-bar/side-bar.component';
 import { NgFor, NgIf } from '@angular/common';
 import { BrandsListComponent } from '../../components/brands-list/brands-list.component';
+import { BookingListComponent } from '../../components/booking-list/booking-list.component';
 
 @Component({
   selector: 'app-control-panel',
   imports: [NgIf, SideBarComponent, NgFor,
-    BrandsListComponent
+    BrandsListComponent,
+    BookingListComponent
   ],
   templateUrl: './control-panel.component.html',
   styleUrl: './control-panel.component.scss'
@@ -17,7 +19,8 @@ private apiService = inject(ApiService);
 
   // Sidebar state
   sidebarCollapsed = signal(false);
-  activeSection = signal<string>('brands');
+  addNewEvent = signal(false);
+  activeSection = signal<string>('bookings');
 
   // Data signals
   brands = signal<any[]>([]);
@@ -34,40 +37,47 @@ private apiService = inject(ApiService);
   // Sidebar menu items
   menuItems: SidebarMenuItem[] = [
     {
+      id: 'bookings',
+      label: 'All Bookings',
+      icon: 'fas fa-calendar-check',
+      slug: 'bookings',
+      active: true,
+    },
+    {
       id: 'brands',
       label: 'Vehicle Brands',
       icon: 'fas fa-car',
-      active: true
+      slug:''
     },
     {
       id: 'models',
       label: 'Vehicle Models',
-      icon: 'fas fa-list'
+      icon: 'fas fa-list',
+      slug:''
     },
     {
       id: 'oils',
       label: 'Oil Types',
-      icon: 'fas fa-oil-can'
+      icon: 'fas fa-oil-can',
+      slug:''
     },
     {
       id: 'filters',
       label: 'Oil Filters',
-      icon: 'fas fa-filter'
+      icon: 'fas fa-filter',
+      slug:''
     },
     {
       id: 'batteries',
       label: 'Battery Types',
-      icon: 'fas fa-battery-full'
+      icon: 'fas fa-battery-full',
+      slug:''
     },
     {
       id: 'accessories',
       label: 'Accessories',
-      icon: 'fas fa-tools'
-    },
-    {
-      id: 'bookings',
-      label: 'All Bookings',
-      icon: 'fas fa-calendar-check'
+      icon: 'fas fa-tools',
+      slug:''
     }
   ];
 
@@ -78,6 +88,7 @@ private apiService = inject(ApiService);
 
   // Handle sidebar menu clicks
   onSidebarMenuClick(sectionId: string) {
+    this.addNewEvent.set(false);
     this.activeSection.set(sectionId);
     this.loadData(sectionId);
   }
@@ -160,5 +171,9 @@ private apiService = inject(ApiService);
   getCurrentTitle() {
     const item = this.menuItems.find(item => item.id === this.activeSection());
     return item ? item.label : 'Control Panel';
+  }
+
+  addNew(): void {
+    this.addNewEvent.set(true);
   }
 }
