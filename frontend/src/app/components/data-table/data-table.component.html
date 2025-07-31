@@ -98,8 +98,7 @@
       <ng-container matColumnDef="subtotal">
         <th mat-header-cell *matHeaderCellDef class="modern-header-cell">
           <div class="currency-header">
-            <span>Subtotal</span>
-            <span class="currency-label">(AED)</span>
+            <span>Subtotal <span class="currency-label">(AED)</span></span>
           </div>
         </th>
         <td mat-cell *matCellDef="let element" class="modern-data-cell">
@@ -111,8 +110,7 @@
       <ng-container matColumnDef="vat">
         <th mat-header-cell *matHeaderCellDef class="modern-header-cell">
           <div class="currency-header">
-            <span>VAT</span>
-            <span class="currency-label">(AED 5%)</span>
+            <span>VAT<span class="currency-label">(AED 5%)</span></span>        
           </div>
         </th>
         <td mat-cell *matCellDef="let element" class="modern-data-cell">
@@ -127,8 +125,8 @@
       <ng-container matColumnDef="total">
         <th mat-header-cell *matHeaderCellDef class="modern-header-cell">
           <div class="currency-header">
-            <span>Total</span>
-            <span class="currency-label">(AED)</span>
+            <span>Total<span class="currency-label">(AED)</span></span>
+            
           </div>
         </th>
         <td mat-cell *matCellDef="let element" class="modern-data-cell">

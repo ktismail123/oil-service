@@ -19,7 +19,7 @@ private apiService = inject(ApiService);
 
   // Sidebar state
   sidebarCollapsed = signal(false);
-  addNewEvent = signal(false);
+  addNewEvent = signal<boolean | null>(false);
   activeSection = signal<string>('bookings');
 
   // Data signals
@@ -82,15 +82,15 @@ private apiService = inject(ApiService);
   ];
 
   ngOnInit() {
-    this.loadData('brands');
+    // this.loadData('brands');
     this.updateMenuCounts();
   }
 
   // Handle sidebar menu clicks
   onSidebarMenuClick(sectionId: string) {
-    this.addNewEvent.set(false);
     this.activeSection.set(sectionId);
     this.loadData(sectionId);
+    this.addNewEvent.set(null)
   }
 
   // Handle sidebar toggle

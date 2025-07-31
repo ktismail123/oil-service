@@ -28,16 +28,16 @@ export class BrandsListComponent implements OnInit, OnChanges {
   brands = signal<any[]>([]);
 
   refreshTable = output();
-  addNewEvent = input<boolean>(false);
   private dialog = inject(MatDialog);
+  addNewEvent = input<boolean | null>(false);
 
   ngOnChanges(changes: SimpleChanges): void {
     console.log(this.addNewEvent());
     
-      if(this.addNewEvent()){
-        this.addNewBrand({event:'add'});
-      }
+  if (changes['addNewEvent'] && this.addNewEvent()) {
+    this.addNewBrand({ event: 'add' });
   }
+}
 
   ngOnInit(): void {
     this.loadBrands();
