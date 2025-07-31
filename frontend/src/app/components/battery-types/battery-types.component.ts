@@ -1,31 +1,31 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { DataTableComponent } from '../data-table/data-table.component';
 import { ApiService } from '../../services/api.service';
 import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs';
 
 @Component({
-  selector: 'app-model-list',
+  selector: 'app-battery-types',
   imports: [DataTableComponent],
-  templateUrl: './model-list.component.html',
-  styleUrl: './model-list.component.scss',
+  templateUrl: './battery-types.component.html',
+  styleUrl: './battery-types.component.scss'
 })
-export class ModelListComponent implements OnInit{
-  private apiService = inject(ApiService);
+export class BatteryTypesComponent {
+ private apiService = inject(ApiService);
   private dialog = inject(MatDialog);
 
-  models = signal<any[]>([]);
+  batteryTypes = signal<any[]>([]);
 
   ngOnInit(): void {
-    this.loadModels();
+    this.loadBatteryTpes();
   }
 
-  loadModels(): void {
+  loadBatteryTpes(): void {
     this.apiService
-      .getAllModels()
+      .getBatteryTypes()
       .pipe(take(1))
       .subscribe({
-        next: (res) => [this.models.set(res)],
+        next: (res: any) => [this.batteryTypes.set(res)],
       });
   }
 
@@ -52,5 +52,4 @@ export class ModelListComponent implements OnInit{
     //     });
     // }
   }
-
 }

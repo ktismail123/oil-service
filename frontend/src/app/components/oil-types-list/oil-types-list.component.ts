@@ -5,27 +5,27 @@ import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs';
 
 @Component({
-  selector: 'app-model-list',
+  selector: 'app-oil-types-list',
   imports: [DataTableComponent],
-  templateUrl: './model-list.component.html',
-  styleUrl: './model-list.component.scss',
+  templateUrl: './oil-types-list.component.html',
+  styleUrl: './oil-types-list.component.scss',
 })
-export class ModelListComponent implements OnInit{
+export class OilTypesListComponent implements OnInit{
   private apiService = inject(ApiService);
   private dialog = inject(MatDialog);
 
-  models = signal<any[]>([]);
+  oilTypes = signal<any[]>([]);
 
   ngOnInit(): void {
-    this.loadModels();
+    this.loadOilTypes();
   }
 
-  loadModels(): void {
+  loadOilTypes(): void {
     this.apiService
-      .getAllModels()
+      .getOilTypes()
       .pipe(take(1))
       .subscribe({
-        next: (res) => [this.models.set(res)],
+        next: (res) => [this.oilTypes.set(res)],
       });
   }
 
@@ -52,5 +52,4 @@ export class ModelListComponent implements OnInit{
     //     });
     // }
   }
-
 }

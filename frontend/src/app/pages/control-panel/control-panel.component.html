@@ -51,104 +51,17 @@
 
         <!-- Oil Types Section -->
         <div *ngIf="activeSection() === 'oils'" class="data-section">
-          <div class="section-header">
-            <h2 class="section-title">Oil Types & Inventory</h2>
-            <p class="section-description">Monitor oil grades, pricing, and stock levels</p>
-          </div>
-          
-          <div class="stats-container">
-            <div class="stat-card featured">
-              <div class="stat-icon">
-                <i class="fas fa-oil-can"></i>
-              </div>
-              <div class="stat-content">
-                <h3 class="stat-number">{{ oilTypes().length }}</h3>
-                <p class="stat-label">Oil Types</p>
-                <span class="stat-trend positive">In Stock</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="content-grid">
-            <div *ngFor="let oil of oilTypes()" class="content-card">
-              <div class="card-header">
-                <h4 class="card-title">{{ oil.grade }} - {{ oil.brand }}</h4>
-                <div class="stock-indicator" [class]="oil.quantity_available > 10 ? 'high' : oil.quantity_available > 5 ? 'medium' : 'low'"></div>
-              </div>
-              <div class="card-body">
-                <div class="price-display">
-                  <span class="currency">AED</span>
-                  <span class="amount">{{ oil.price }}</span>
-                </div>
-                <div class="stock-info">
-                  <i class="fas fa-boxes"></i>
-                  <span>{{ oil.quantity_available }} units available</span>
-                </div>
-              </div>
-              <div class="card-actions">
-                <button class="btn-secondary">Update Stock</button>
-                <button class="btn-primary">View Details</button>
-              </div>
-            </div>
-          </div>
+          <app-oil-types-list/>
         </div>
 
         <!-- Oil Filters Section -->
         <div *ngIf="activeSection() === 'filters'" class="data-section">
-          <div class="section-header">
-            <h2 class="section-title">Oil Filters</h2>
-            <p class="section-description">Complete catalog of available oil filters</p>
-          </div>
-          
-          <div class="content-grid">
-            <div *ngFor="let filter of oilFilters()" class="content-card">
-              <div class="card-header">
-                <h4 class="card-title">{{ filter.code }}</h4>
-                <span class="brand-badge">{{ filter.brand }}</span>
-              </div>
-              <div class="card-body">
-                <div class="price-display">
-                  <span class="currency">AED</span>
-                  <span class="amount">{{ filter.price }}</span>
-                </div>
-              </div>
-              <div class="card-actions">
-                <button class="btn-secondary">Edit</button>
-                <button class="btn-primary">View Details</button>
-              </div>
-            </div>
-          </div>
+          <app-oil-filters/>
         </div>
 
         <!-- Battery Types Section -->
         <div *ngIf="activeSection() === 'batteries'" class="data-section">
-          <div class="section-header">
-            <h2 class="section-title">Battery Types</h2>
-            <p class="section-description">Battery inventory and specifications</p>
-          </div>
-          
-          <div class="content-grid">
-            <div *ngFor="let battery of batteryTypes()" class="content-card">
-              <div class="card-header">
-                <h4 class="card-title">{{ battery.capacity }} Amp</h4>
-                <span class="brand-badge">{{ battery.brand }}</span>
-              </div>
-              <div class="card-body">
-                <div class="capacity-display">
-                  <i class="fas fa-battery-three-quarters"></i>
-                  <span>{{ battery.capacity }} Amp Hours</span>
-                </div>
-                <div class="price-display">
-                  <span class="currency">AED</span>
-                  <span class="amount">{{ battery.price }}</span>
-                </div>
-              </div>
-              <div class="card-actions">
-                <button class="btn-secondary">Edit</button>
-                <button class="btn-primary">View Details</button>
-              </div>
-            </div>
-          </div>
+          <app-battery-types/>
         </div>
 
         <!-- Accessories Section -->

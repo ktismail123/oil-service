@@ -10,7 +10,7 @@ app.use('/api/brands', require('./routes/brandRoutes'));
 app.use('/api/models', require('./routes/modelRoutes'));
 app.use('/api/oil-types', require('./routes/oilTypeRoutes'));
 app.use('/api/oil-filters', require('./routes/oilFilterRoutes'));
-// app.use('/api/battery-types', require('./routes/batteryTypeRoutes'));
+app.use('/api/battery-types', require('./routes/batteryTypeRoutes'));
 app.use('/api/accessories', require('./routes/accessoryRoutes'));
 // app.use('/api/customer', require('./routes/customerRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));

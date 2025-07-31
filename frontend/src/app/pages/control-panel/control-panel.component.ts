@@ -5,14 +5,18 @@ import { NgFor, NgIf } from '@angular/common';
 import { BrandsListComponent } from '../../components/brands-list/brands-list.component';
 import { BookingListComponent } from '../../components/booking-list/booking-list.component';
 import { ModelListComponent } from '../../components/model-list/model-list.component';
+import { OilTypesListComponent } from '../../components/oil-types-list/oil-types-list.component';
+import { OilFiltersComponent } from "../../components/oil-filters/oil-filters.component";
+import { BatteryTypesComponent } from "../../components/battery-types/battery-types.component";
 
 @Component({
   selector: 'app-control-panel',
   imports: [NgIf, SideBarComponent, NgFor,
     BrandsListComponent,
     BookingListComponent,
-    ModelListComponent
-  ],
+    ModelListComponent,
+    OilTypesListComponent,
+    OilFiltersComponent, BatteryTypesComponent],
   templateUrl: './control-panel.component.html',
   styleUrl: './control-panel.component.scss'
 })
@@ -116,20 +120,20 @@ private apiService = inject(ApiService);
           // this.models.set(models || []);
           // break;
           
-        case 'oils':
-          const oils = await this.apiService.getOilTypes().toPromise();
-          this.oilTypes.set(oils || []);
-          break;
+        // case 'oils':
+        //   const oils = await this.apiService.getOilTypes().toPromise();
+        //   this.oilTypes.set(oils || []);
+        //   break;
           
         case 'filters':
-          const filters = await this.apiService.getOilFilters().toPromise();
-          this.oilFilters.set(filters || []);
-          break;
+          // const filters = await this.apiService.getOilFilters().toPromise();
+          // this.oilFilters.set(filters || []);
+          // break;
           
         case 'batteries':
-          const batteries = await this.apiService.getBatteryTypes().toPromise();
-          this.batteryTypes.set(batteries || []);
-          break;
+          // const batteries = await this.apiService.getBatteryTypes().toPromise();
+          // this.batteryTypes.set(batteries || []);
+          // break;
           
         case 'accessories':
           const accessories = await this.apiService.getAccessories().toPromise();
