@@ -155,5 +155,42 @@ export class DataTableComponent implements AfterViewInit {
   getTotalCount(): number {
     return this.dataSource.filteredData.length;
   }
+
+  // Add these properties and methods to your component class for custom modal
+
+// Properties for custom delete modal
+showDeleteConfirmation = false;
+itemToDelete: any = null;
+
+// Method to show delete confirmation (replace confirmDelete)
+confirmDelete(element: any) {
+  this.itemToDelete = element;
+  this.showDeleteConfirmation = true;
+}
+
+// Get display name for item being deleted
+getDeleteItemName(): string {
+  if (!this.itemToDelete) return '';
+  
+  return this.itemToDelete.customer_name || 
+         this.itemToDelete.name || 
+         this.itemToDelete.title || 
+         `Record #${this.itemToDelete.id}` ||
+         'this item';
+}
+
+// Cancel delete operation
+cancelDelete() {
+  this.showDeleteConfirmation = false;
+  this.itemToDelete = null;
+}
+
+// Proceed with delete operation
+proceedDelete() {
+  if (this.itemToDelete) {
+    this.onDelete(this.itemToDelete);
+    this.cancelDelete();
+  }
+}
   
 }

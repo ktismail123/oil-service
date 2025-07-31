@@ -167,7 +167,7 @@
             <button mat-icon-button class="modern-action-btn edit-action" (click)="onEdit(element)">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button class="modern-action-btn delete-action" (click)="onDelete(element)">
+            <button mat-icon-button class="modern-action-btn delete-action" (click)="confirmDelete(element)">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
@@ -208,4 +208,45 @@
     </mat-paginator>
   </div>
 
+</div>
+
+<!-- Optional: Custom Delete Confirmation Modal -->
+<!-- Add this to your component template if you want a custom modal instead of browser alert -->
+
+<div class="delete-confirmation-overlay" *ngIf="showDeleteConfirmation" (click)="cancelDelete()">
+  <div class="delete-confirmation-modal" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="delete-modal-header">
+      <div class="warning-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h3 class="delete-title">Confirm Deletion</h3>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="delete-modal-body">
+      <p class="delete-message">
+        Are you sure you want to delete 
+        <strong>{{ getDeleteItemName() }}</strong>?
+      </p>
+      <p class="delete-warning">
+        <i class="fas fa-info-circle"></i>
+        This action cannot be undone.
+      </p>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="delete-modal-actions">
+      <button class="delete-btn-cancel" (click)="cancelDelete()">
+        <i class="fas fa-times"></i>
+        Cancel
+      </button>
+      <button class="delete-btn-confirm" (click)="proceedDelete()">
+        <i class="fas fa-trash"></i>
+        Delete
+      </button>
+    </div>
+
+  </div>
 </div>

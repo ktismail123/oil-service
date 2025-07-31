@@ -24,7 +24,6 @@ import { take } from 'rxjs';
 export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
   private apiService = inject(ApiService);
 
-
   // Data signals
   brands = signal<any[]>([]);
 
@@ -34,11 +33,11 @@ export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     console.log(this.addNewEvent());
-    
-  if (changes['addNewEvent'] && this.addNewEvent()) {
-    this.addNewBrand({ event: 'add' });
+
+    if (changes['addNewEvent'] && this.addNewEvent()) {
+      this.actionEvents({ event: 'add' });
+    }
   }
-}
 
   ngOnInit(): void {
     this.loadBrands();
@@ -53,25 +52,29 @@ export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-  addNewBrand(event: { event: 'add' | 'edit' | 'view' | 'delete', data?: any }) {
-    this.dialog
-      .open(AddBrandModalComponent, {
-        width: '500px',
-        data:{
-          mode : event.event,
-          rowData: event?.data
-        }
-      })
-      .afterClosed()
-      .subscribe({
-        next: (res) => {
-          this.loadBrands();
-        },
-      });
+  actionEvents(event: {
+    event: 'add' | 'edit' | 'view' | 'delete';
+    data?: any;
+  }) {
+    console.log(event);
+    
+    if (event.event === 'add' || event.event === 'edit') {
+      this.dialog
+        .open(AddBrandModalComponent, {
+          width: '500px',
+          data: {
+            mode: event.event,
+            rowData: event?.data,
+          },
+        })
+        .afterClosed()
+        .subscribe({
+          next: (res) => {
+            this.loadBrands();
+          },
+        });
+    }
   }
 
-  ngOnDestroy(): void {
-      
-  }
-  
+  ngOnDestroy(): void {}
 }
