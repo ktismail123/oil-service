@@ -8,6 +8,7 @@ import { ModelListComponent } from '../../components/model-list/model-list.compo
 import { OilTypesListComponent } from '../../components/oil-types-list/oil-types-list.component';
 import { OilFiltersComponent } from "../../components/oil-filters/oil-filters.component";
 import { BatteryTypesComponent } from "../../components/battery-types/battery-types.component";
+import { AccessoriesComponent } from "../../components/accessories/accessories.component";
 
 @Component({
   selector: 'app-control-panel',
@@ -16,7 +17,7 @@ import { BatteryTypesComponent } from "../../components/battery-types/battery-ty
     BookingListComponent,
     ModelListComponent,
     OilTypesListComponent,
-    OilFiltersComponent, BatteryTypesComponent],
+    OilFiltersComponent, BatteryTypesComponent, AccessoriesComponent],
   templateUrl: './control-panel.component.html',
   styleUrl: './control-panel.component.scss'
 })
@@ -88,14 +89,12 @@ private apiService = inject(ApiService);
   ];
 
   ngOnInit() {
-    // this.loadData('brands');
     this.updateMenuCounts();
   }
 
   // Handle sidebar menu clicks
   onSidebarMenuClick(sectionId: string) {
     this.activeSection.set(sectionId);
-    this.loadData(sectionId);
     this.addNewEvent.set(null)
   }
 
@@ -104,54 +103,6 @@ private apiService = inject(ApiService);
     this.sidebarCollapsed.set(collapsed);
   }
 
-  // Load data based on section
-  async loadData(section: string) {
-    this.loading.set(true);
-    
-    try {
-      switch (section) {
-        case 'brands':
-          // const brands = await this.apiService.getBrands().toPromise();
-          // this.brands.set(brands || []);
-          // break;
-          
-        case 'models':
-          // const models = await this.apiService.getModels(1).toPromise(); // Load all models
-          // this.models.set(models || []);
-          // break;
-          
-        // case 'oils':
-        //   const oils = await this.apiService.getOilTypes().toPromise();
-        //   this.oilTypes.set(oils || []);
-        //   break;
-          
-        case 'filters':
-          // const filters = await this.apiService.getOilFilters().toPromise();
-          // this.oilFilters.set(filters || []);
-          // break;
-          
-        case 'batteries':
-          // const batteries = await this.apiService.getBatteryTypes().toPromise();
-          // this.batteryTypes.set(batteries || []);
-          // break;
-          
-        case 'accessories':
-          const accessories = await this.apiService.getAccessories().toPromise();
-          this.accessories.set(accessories || []);
-          break;
-          
-        case 'bookings':
-          // Load bookings (you'll need to create this API endpoint)
-          // const bookings = await this.apiService.getBookings().toPromise();
-          // this.bookings.set(bookings || []);
-          break;
-      }
-    } catch (error) {
-      console.error(`Error loading ${section}:`, error);
-    } finally {
-      this.loading.set(false);
-    }
-  }
 
   // Update menu item counts
   private updateMenuCounts() {

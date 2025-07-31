@@ -66,29 +66,7 @@
 
         <!-- Accessories Section -->
         <div *ngIf="activeSection() === 'accessories'" class="data-section">
-          <div class="section-header">
-            <h2 class="section-title">Accessories</h2>
-            <p class="section-description">Vehicle accessories and parts catalog</p>
-          </div>
-          
-          <div class="content-grid">
-            <div *ngFor="let accessory of accessories()" class="content-card">
-              <div class="card-header">
-                <h4 class="card-title">{{ accessory.name }}</h4>
-                <span class="category-badge">{{ accessory.category }}</span>
-              </div>
-              <div class="card-body">
-                <div class="price-display">
-                  <span class="currency">AED</span>
-                  <span class="amount">{{ accessory.price }}</span>
-                </div>
-              </div>
-              <div class="card-actions">
-                <button class="btn-secondary">Edit</button>
-                <button class="btn-primary">View Details</button>
-              </div>
-            </div>
-          </div>
+          <app-accessories/>
         </div>
 
         <!-- Bookings Section -->

@@ -5,27 +5,27 @@ import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs';
 
 @Component({
-  selector: 'app-battery-types',
+  selector: 'app-accessories',
   imports: [DataTableComponent],
-  templateUrl: './battery-types.component.html',
-  styleUrl: './battery-types.component.scss',
+  templateUrl: './accessories.component.html',
+  styleUrl: './accessories.component.scss',
 })
-export class BatteryTypesComponent {
+export class AccessoriesComponent {
   private apiService = inject(ApiService);
   private dialog = inject(MatDialog);
 
-  batteryTypes = signal<any[]>([]);
+  accessories = signal<any[]>([]);
 
   ngOnInit(): void {
-    this.loadBatteryTpes();
+    this.loadAccessories();
   }
 
-  loadBatteryTpes(): void {
+  loadAccessories(): void {
     this.apiService
-      .getBatteryTypes()
+      .getAccessories()
       .pipe(take(1))
       .subscribe({
-        next: (res: any) => [this.batteryTypes.set(res)],
+        next: (res: any) => [this.accessories.set(res)],
       });
   }
 

@@ -20,7 +20,7 @@
   <!-- Navigation Menu -->
   <nav class="sidebar-nav">
     <div class="nav-section">
-      <h3 class="nav-section-title" [class.hidden]="collapsed">Main Menu</h3>
+      <!-- <h3 class="nav-section-title" [class.hidden]="collapsed">Main Menu</h3> -->
       <ul class="nav-list">
         <li *ngFor="let item of menuItems" 
             class="nav-item"
@@ -81,23 +81,26 @@
         <h4 class="profile-name">Admin User</h4>
         <p class="profile-role">System Administrator</p>
       </div>
-      <button class="profile-menu-btn">
+      <!-- <button class="profile-menu-btn">
         <i class="fas fa-ellipsis-v"></i>
-      </button>
+      </button> -->
     </div>
   </div>
 
   <!-- Sidebar Footer -->
-  <div class="sidebar-footer">
+    <div class="sidebar-footer">
     <div class="footer-content" [class.hidden]="collapsed">
-      <div class="system-info">
-        <!-- <p class="version-text">Garage Management v2.0</p> -->
-        <div class="system-status">
-          <div class="status-dot online"></div>
-          <span>All Systems Operational</span>
-        </div>
-      </div>
+    <div class="system-info text-center text-sm text-gray-500">
+      <!-- <div class="system-status flex items-center justify-center gap-2 mb-1">
+        <div class="status-dot online w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
+        <span>All Systems Operational</span>
+      </div> -->
+      <p class="powered-by mt-1 text-center">
+        Powered by <strong class="text-blue-600">Tech Lube</strong>
+      </p>
     </div>
+  </div>
+
     
     <!-- Collapsed state icon -->
     <!-- <div class="footer-icon" [class.hidden]="!collapsed">
