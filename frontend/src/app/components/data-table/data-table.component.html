@@ -175,8 +175,8 @@
       </ng-container>
 
       <!-- Table Rows -->
-      <tr mat-header-row *matHeaderRowDef="getAllColumns()" class="modern-header-row"></tr>
-      <tr mat-row *matRowDef="let row; columns: getAllColumns()" class="modern-data-row"></tr>
+      <tr mat-header-row *matHeaderRowDef="getAllColumns()" class="modern-header-row" ></tr>
+      <tr mat-row *matRowDef="let row; columns: getAllColumns()" class="modern-data-row" [ngStyle]="{'height': height()}"></tr>
     </table>
 
     <!-- Empty State -->

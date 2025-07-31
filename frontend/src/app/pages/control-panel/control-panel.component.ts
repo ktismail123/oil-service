@@ -4,12 +4,14 @@ import { SideBarComponent, SidebarMenuItem } from '../../components/side-bar/sid
 import { NgFor, NgIf } from '@angular/common';
 import { BrandsListComponent } from '../../components/brands-list/brands-list.component';
 import { BookingListComponent } from '../../components/booking-list/booking-list.component';
+import { ModelListComponent } from '../../components/model-list/model-list.component';
 
 @Component({
   selector: 'app-control-panel',
   imports: [NgIf, SideBarComponent, NgFor,
     BrandsListComponent,
-    BookingListComponent
+    BookingListComponent,
+    ModelListComponent
   ],
   templateUrl: './control-panel.component.html',
   styleUrl: './control-panel.component.scss'

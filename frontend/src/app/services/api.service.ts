@@ -24,6 +24,10 @@ export class ApiService {
     return this.http.get<VehicleBrand[]>(`${this.baseUrl}/brands`);
   }
 
+  getAllModels(): Observable<VehicleModel[]> {
+    return this.http.get<VehicleModel[]>(`${this.baseUrl}/models`);
+  }
+
   getModels(brandId: number): Observable<VehicleModel[]> {
     return this.http.get<VehicleModel[]>(`${this.baseUrl}/models/${brandId}`);
   }

@@ -41,66 +41,12 @@
         
         <!-- Brands Section -->
         <div *ngIf="activeSection() === 'brands'" class="data-section">
-          <!-- <div class="section-header">
-            <h2 class="section-title">Brand Management</h2>
-            <p class="section-description">Manage all vehicle brands in your system</p>
-          </div> -->
           <app-brands-list [addNewEvent]="addNewEvent()" />
         </div>
 
         <!-- Models Section -->
         <div *ngIf="activeSection() === 'models'" class="data-section">
-          <div class="section-header">
-            <h2 class="section-title">Vehicle Models</h2>
-            <p class="section-description">Comprehensive list of all vehicle models</p>
-          </div>
-          
-          <div class="stats-container">
-            <div class="stat-card featured">
-              <div class="stat-icon">
-                <i class="fas fa-car"></i>
-              </div>
-              <div class="stat-content">
-                <h3 class="stat-number">{{ models().length }}</h3>
-                <p class="stat-label">Total Models</p>
-                <span class="stat-trend positive">+12% this month</span>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon secondary">
-                <i class="fas fa-chart-line"></i>
-              </div>
-              <div class="stat-content">
-                <h3 class="stat-number">85%</h3>
-                <p class="stat-label">Active Models</p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="content-grid">
-            <div *ngFor="let model of models()" class="content-card">
-              <div class="card-header">
-                <h4 class="card-title">{{ model.name }}</h4>
-                <div class="card-menu">
-                  <button class="menu-btn">
-                    <i class="fas fa-ellipsis-v"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="card-meta">
-                  <span class="meta-item">
-                    <i class="fas fa-tag"></i>
-                    Brand ID: {{ model.brand_id }}
-                  </span>
-                </div>
-              </div>
-              <div class="card-actions">
-                <button class="btn-secondary">Edit</button>
-                <button class="btn-primary">View Details</button>
-              </div>
-            </div>
-          </div>
+         <app-model-list/>
         </div>
 
         <!-- Oil Types Section -->

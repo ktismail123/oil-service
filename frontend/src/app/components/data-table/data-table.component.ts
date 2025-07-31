@@ -1,4 +1,4 @@
-import { NgFor, NgIf, TitleCasePipe, NgClass, DatePipe } from '@angular/common';
+import { NgFor, NgIf, TitleCasePipe, NgClass, DatePipe, NgStyle } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -26,7 +26,8 @@ import { MatButtonModule } from '@angular/material/button';
     NgClass,
     MatIconModule,
     MatButtonModule,
-    DatePipe
+    DatePipe,
+    NgStyle
   ],
   templateUrl: './data-table.component.html',
   styleUrls: ['./data-table.component.scss'],
@@ -36,6 +37,7 @@ export class DataTableComponent implements AfterViewInit {
   displayedColumns = input<string[]>(['id', 'customer', 'vehicle', 'service_type', 'service_date', 'oil_quantity', 'subtotal', 'vat', 'total', 'status']);
   rowDatas = input<any[]>();
   showAddButton = input<boolean>(false);
+  height = input<string>('80px');
   
   // Output signals
   addNew = output<{ event: 'add' | 'edit' | 'view' | 'delete', data?: any }>();
