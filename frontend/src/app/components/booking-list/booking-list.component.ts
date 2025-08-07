@@ -52,7 +52,7 @@ export class BookingListComponent implements OnInit {
    displayedColumns = [
     'id', 'customer', 'vehicle', 'service_type', 
     'service_date', 'oil_quantity', 'subtotal', 
-    'vat', 'total', 'status'
+    'vat', 'status'
   ];
 
   actionConfig: ActionConfig = ACTION_CONFIGS.FULL;

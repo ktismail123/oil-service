@@ -1,8 +1,10 @@
-import { Component, EventEmitter, Input, OnDestroy, Output, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Component, EventEmitter, Input, OnDestroy, Output, signal, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { OilType } from '../../../../models';
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
+import { SearchPipe } from '../../../../pipes/search.pipe';
+
 export interface OilPackageSelection {
   oilTypeId: number;
   package4L: boolean;
@@ -17,27 +19,212 @@ interface ExtendedOilPackageSelection extends OilPackageSelection {
   package4L_count: number;  // Internal count for 4L packages
   package1L_count: number;  // Internal count for 1L packages
 }
+
 @Component({
   selector: 'app-step4-oil-type',
-  imports: [NgIf, NgFor, ReactiveFormsModule, FormFieldComponent, NgClass],
+  imports: [NgIf, NgFor, ReactiveFormsModule, FormFieldComponent, NgClass, FormsModule, SearchPipe],
   templateUrl: './step4-oil-type.component.html',
   styleUrl: './step4-oil-type.component.scss',
 })
-export class Step4OilTypeComponent implements OnDestroy {
+export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
   @Input() oilForm!: FormGroup;
   @Input() oilTypes: OilType[] = [];
+
+  searchTerm: string = '';
+  searchKeys: string[] = ['brand', 'grade', 'name'];
 
   reqOilQnyForm = new FormGroup({
     requiredOilQuantity: new FormControl(4)
   });
 
-  
   @Output() oilTypeChange = new EventEmitter<void>();
   @Output() oilQuantityChange = new EventEmitter<void>();
 
   selectedOilId = signal<number | null>(null);
   requiredQuantity = signal<number>(0);
   packageSelections = signal<Map<number, ExtendedOilPackageSelection>>(new Map());
+  private isInitialized = false;
+
+  errorMessage = signal('')
+
+  ngOnInit(): void {
+    this.populateExistingData();
+    this.isInitialized = true;
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Re-populate data when oilForm or oilTypes change
+    if (this.isInitialized && (changes['oilForm'] || changes['oilTypes'])) {
+      this.populateExistingData();
+    }
+  }
+
+  private populateExistingData(): void {
+    if (!this.oilForm) return;
+
+    // Get existing form values
+    const existingOilTypeId = this.oilForm.get('oilTypeId')?.value;
+    const existingRequiredQuantity = this.oilForm.get('requiredQuantity')?.value;
+    const existingOilQuantityDetails = this.oilForm.get('oilQuantityDetails')?.value;
+
+    console.log('Populating existing data:', {
+      existingOilTypeId,
+      existingRequiredQuantity,
+      existingOilQuantityDetails
+    });
+
+    // Populate required quantity
+    if (existingRequiredQuantity) {
+      this.reqOilQnyForm.get('requiredOilQuantity')?.setValue(existingRequiredQuantity);
+      this.requiredQuantity.set(existingRequiredQuantity);
+    }
+
+    // Populate selected oil type
+    if (existingOilTypeId) {
+      this.selectedOilId.set(existingOilTypeId);
+      
+      // If we have detailed package selection data, restore it
+      if (existingOilQuantityDetails) {
+        this.populatePackageSelection(existingOilTypeId, existingOilQuantityDetails);
+      } else {
+        // If no detailed data, try to reverse-engineer from basic form values
+        this.reconstructPackageSelection(existingOilTypeId);
+      }
+    }
+  }
+
+  private populatePackageSelection(oilTypeId: number, details: any): void {
+    const oil = this.oilTypes.find(o => o.id === oilTypeId);
+    if (!oil) return;
+
+    const extendedSelection: ExtendedOilPackageSelection = {
+      oilTypeId: oilTypeId,
+      package4L: details.package4L || false,
+      package1L: details.package1L || false,
+      bulkQuantity: details.bulkQuantity || 0,
+      totalQuantity: details.totalQuantity || 0,
+      totalPrice: details.totalPrice || 0,
+      package4L_count: details.package4L_count || 0,
+      package1L_count: details.package1L_count || 0
+    };
+
+    // If we don't have the count data, try to calculate it from boolean flags and quantities
+    if (!details.package4L_count && details.package4L) {
+      extendedSelection.package4L_count = this.calculatePackageCount(
+        details.totalQuantity - details.bulkQuantity,
+        oil,
+        '4L'
+      );
+    }
+
+    if (!details.package1L_count && details.package1L) {
+      extendedSelection.package1L_count = this.calculatePackageCount(
+        details.totalQuantity - details.bulkQuantity - (extendedSelection.package4L_count * 4),
+        oil,
+        '1L'
+      );
+    }
+
+    const newSelections = new Map(this.packageSelections());
+    newSelections.set(oilTypeId, extendedSelection);
+    this.packageSelections.set(newSelections);
+
+    console.log('Populated package selection:', extendedSelection);
+  }
+
+  private reconstructPackageSelection(oilTypeId: number): void {
+    const oil = this.oilTypes.find(o => o.id === oilTypeId);
+    if (!oil) return;
+
+    const totalQuantity = this.oilForm.get('quantity')?.value || 0;
+    const totalPrice = this.oilForm.get('totalPrice')?.value || 0;
+
+    if (totalQuantity === 0) {
+      // No existing data to reconstruct
+      return;
+    }
+
+    // Try to reverse-engineer the package selection based on price and quantity
+    const extendedSelection: ExtendedOilPackageSelection = {
+      oilTypeId: oilTypeId,
+      package4L: false,
+      package1L: false,
+      bulkQuantity: 0,
+      totalQuantity: totalQuantity,
+      totalPrice: totalPrice,
+      package4L_count: 0,
+      package1L_count: 0
+    };
+
+    // Simple reconstruction logic - this could be made more sophisticated
+    // For now, assume it's all bulk if bulk is available, otherwise try packages
+    if (oil.bulk_available && oil.price_per_liter > 0) {
+      const bulkCost = totalQuantity * oil.price_per_liter;
+      if (Math.abs(bulkCost - totalPrice) < 0.01) {
+        extendedSelection.bulkQuantity = totalQuantity;
+      }
+    }
+
+    // If not bulk, try to figure out package combination
+    if (extendedSelection.bulkQuantity === 0) {
+      this.reconstructPackageCombination(extendedSelection, oil, totalQuantity, totalPrice);
+    }
+
+    const newSelections = new Map(this.packageSelections());
+    newSelections.set(oilTypeId, extendedSelection);
+    this.packageSelections.set(newSelections);
+
+    console.log('Reconstructed package selection:', extendedSelection);
+  }
+
+  private reconstructPackageCombination(
+    selection: ExtendedOilPackageSelection, 
+    oil: OilType, 
+    totalQuantity: number, 
+    totalPrice: number
+  ): void {
+    // Try different combinations to match the total quantity and price
+    if (oil.package_4l_available && oil.package_1l_available) {
+      for (let pkg4L = Math.floor(totalQuantity / 4); pkg4L >= 0; pkg4L--) {
+        const remaining = totalQuantity - (pkg4L * 4);
+        if (remaining >= 0 && oil.package_1l_available) {
+          const pkg1L = Math.ceil(remaining);
+          const calculatedPrice = (pkg4L * oil.price_4l) + (pkg1L * oil.price_1l);
+          
+          if (Math.abs(calculatedPrice - totalPrice) < 0.01) {
+            selection.package4L_count = pkg4L;
+            selection.package1L_count = pkg1L;
+            selection.package4L = pkg4L > 0;
+            selection.package1L = pkg1L > 0;
+            break;
+          }
+        }
+      }
+    } else if (oil.package_4l_available) {
+      const pkg4L = Math.ceil(totalQuantity / 4);
+      const calculatedPrice = pkg4L * oil.price_4l;
+      if (Math.abs(calculatedPrice - totalPrice) < 0.01) {
+        selection.package4L_count = pkg4L;
+        selection.package4L = true;
+      }
+    } else if (oil.package_1l_available) {
+      const pkg1L = Math.ceil(totalQuantity);
+      const calculatedPrice = pkg1L * oil.price_1l;
+      if (Math.abs(calculatedPrice - totalPrice) < 0.01) {
+        selection.package1L_count = pkg1L;
+        selection.package1L = true;
+      }
+    }
+  }
+
+  private calculatePackageCount(remainingQuantity: number, oil: OilType, packageType: '4L' | '1L'): number {
+    if (packageType === '4L' && oil.package_4l_available) {
+      return Math.floor(remainingQuantity / 4);
+    } else if (packageType === '1L' && oil.package_1l_available) {
+      return Math.ceil(remainingQuantity);
+    }
+    return 0;
+  }
 
   getExtendedSelection(oilId: number): ExtendedOilPackageSelection {
     const selection = this.packageSelections().get(oilId);
@@ -48,7 +235,7 @@ export class Step4OilTypeComponent implements OnDestroy {
       package4L: false,
       package1L: false,
       bulkQuantity: 0,
-      totalQuantity: 4,
+      totalQuantity: 0,
       totalPrice: 0,
       package4L_count: 0,
       package1L_count: 0
@@ -114,7 +301,7 @@ export class Step4OilTypeComponent implements OnDestroy {
   onRequiredQuantityChange() {
     const quantity = (this.reqOilQnyForm.get('requiredOilQuantity')?.value) || 0;
     this.requiredQuantity.set(quantity);
-    this.oilQuantityChange.emit();
+    this.updateFormValues();
   }
 
   private updatePackageSelection(oilId: number, selection: ExtendedOilPackageSelection) {
@@ -147,18 +334,18 @@ export class Step4OilTypeComponent implements OnDestroy {
     this.packageSelections.set(newSelections);
 
     this.updateFormValues();
-    this.oilTypeChange.emit();
   }
 
   private updateFormValues() {
     const selectedId = this.selectedOilId();
     if (selectedId) {
       const selection = this.getExtendedSelection(selectedId);
-      console.log(selection);
+      console.log('Updating form values:', selection);
       
       this.oilForm.get('quantity')?.setValue(selection.totalQuantity);
       this.oilForm.get('oilTypeId')?.setValue(selectedId);
       this.oilForm.get('totalPrice')?.setValue(selection.totalPrice);
+      this.oilForm.get('requiredQuantity')?.setValue(this.reqOilQnyForm.get('requiredOilQuantity')?.value);
       this.oilForm.get('oilQuantityDetails')?.setValue(selection);
     }
   }
@@ -233,21 +420,19 @@ export class Step4OilTypeComponent implements OnDestroy {
   }
 
   getQuantityStatus(oilId: number): string {
-  const selection = this.getExtendedSelection(oilId);
-  // const required = this.requiredQuantity();
-  const required = this.reqOilQnyForm.get('requiredOilQuantity')?.value || 0
+    const selection = this.getExtendedSelection(oilId);
+    const required = this.reqOilQnyForm.get('requiredOilQuantity')?.value || 0;
 
-  if (required <= 0) return '';
+    if (required <= 0) return '';
 
-  const difference = selection.totalQuantity - required;
+    const difference = selection.totalQuantity - required;
 
-  if (difference === 0) return '✓ Exact match';
-  if (difference > 0) return `+${difference.toFixed(2)}L extra`;
-  if (difference < 0) return `${Math.abs(difference).toFixed(2)}L short`;
+    if (difference === 0) return '✓ Exact match';
+    if (difference > 0) return `+${difference.toFixed(2)}L extra`;
+    if (difference < 0) return `${Math.abs(difference).toFixed(2)}L short`;
 
-  return '';
-}
-
+    return '';
+  }
 
   getPackageBreakdown(oilId: number): string {
     const selection = this.getExtendedSelection(oilId);
@@ -281,9 +466,33 @@ export class Step4OilTypeComponent implements OnDestroy {
   }
 
   showAllOils(): void {
-    this.selectedOilId.set(null)
+    this.selectedOilId.set(null);
+  }
+
+  proceedToNextStep5() {
+    console.log('Current form value:', this.oilForm.value);
+
+    const quantity = this.oilForm.get('quantity')?.value;
+    const requiredQuantity = this.oilForm.get('requiredQuantity')?.value;
+
+     if (quantity < requiredQuantity) {
+      this.errorMessage.set('Please select a valid quantity');
+
+      setTimeout(() => {
+        this.errorMessage.set('');
+      }, 2000);
+      return;
+    }
+
+    if (quantity >= requiredQuantity) {
+      this.oilQuantityChange.emit();
+      this.oilTypeChange.emit();
+    }
+
+   
   }
 
   ngOnDestroy(): void {
+    // Cleanup if needed
   }
 }

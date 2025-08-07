@@ -105,21 +105,77 @@ export class OilServiceComponent implements OnInit {
     }
   });
 
-  subtotal = computed(() => {
-    const result = this.calculateSubtotal();
-    return typeof result === 'number' ? result : 0;
-  });
-  vatAmount = computed(() => {
-    const sub = this.subtotal();
-    return typeof sub === 'number' ? (sub * 5) / 100 : 0;
-  });
-  totalAmount = computed(() => {
-    const sub = this.subtotal();
-    const vat = this.vatAmount();
-    return (
-      (typeof sub === 'number' ? sub : 0) + (typeof vat === 'number' ? vat : 0)
-    );
-  });
+// Manual trigger signal to force recalculation
+private calculationTrigger = signal(0);
+
+subtotal = computed(() => {
+  // this.calculationTrigger();
+  const result = this.calculateSubtotal(); // This already includes labor cost
+  return typeof result === 'number' ? result : 0;
+});
+
+vatAmount = computed(() => {
+  const sub = this.subtotal();
+  return typeof sub === 'number' ? (sub * 5) / 100 : 0;
+});
+
+// ✅ FIXED: Simple total calculation (subtotal + VAT only)
+totalAmount = computed(() => {
+  const sub = this.subtotal(); // Already includes labor cost
+  const vat = this.vatAmount();
+  
+  // ✅ SIMPLE: Just add subtotal + VAT (no additional labor cost)
+  return (
+    (typeof sub === 'number' ? sub : 0) + (typeof vat === 'number' ? vat : 0)
+  );
+});
+
+private calculateSubtotal(): number {
+  let total = 0;
+
+  try {
+    // Oil cost
+    const oilTotalPrice = this.oilForm?.get('totalPrice')?.value || 0;
+    if (oilTotalPrice > 0) {
+      total += Number(oilTotalPrice);
+    }
+
+    // Filter cost
+    const filterId = this.filterForm?.get('filterId')?.value;
+    if (filterId) {
+      const filter = this.oilFilters().find((f) => f.id == filterId);
+      if (filter && filter.price) {
+        total += Number(filter.price);
+      }
+    }
+
+    // Accessories cost
+    const accessories = this.selectedAccessories();
+    if (accessories && Array.isArray(accessories)) {
+      accessories.forEach((acc) => {
+        if (acc && acc.price && acc.quantity) {
+          total += Number(acc.price) * Number(acc.quantity);
+        }
+      });
+    }
+
+    // ✅ Labor cost (included in subtotal)
+    const laborCost = this.laborCostSignal();
+    console.log(laborCost, '---------');
+    
+    total += Number(laborCost);
+
+    console.log('Final subtotal (including labor):', total);
+  } catch (error) {
+    console.error('Error calculating subtotal:', error);
+    return 0;
+  }
+console.log(total, '+++++++++++');
+
+  return total || 0;
+}
+
+  private laborCostSignal = signal(0);
 
   brandForm!: FormGroup;
   modelForm!: FormGroup;
@@ -183,13 +239,17 @@ export class OilServiceComponent implements OnInit {
       name: ['', Validators.required],
       mobile: ['', [Validators.required, Validators.pattern(/^\d{10,15}$/)]],
       plateNumber: ['', Validators.required],
+      laborCost: [0, [Validators.min(0)]]
     });
 
     // Subscribe to customer form changes for step 7 validation
     this.customerForm.valueChanges.subscribe(() => {
-      console.log(this.customerForm.controls?.['mobile'].value?.length);
       this.step7Valid.set(this.customerForm.valid);
     });
+    this.customerForm.get('laborCost')?.valueChanges.subscribe(value => {
+    this.laborCostSignal.set(value || 0);
+    // this.triggerCalculation(); // Trigger recalculation
+  });
 
     this.customerForm
       .get('mobile')
@@ -201,6 +261,11 @@ export class OilServiceComponent implements OnInit {
         this.getUserDetails(mobile);
       });
   }
+
+  // ✅ Manual trigger methods to update calculations
+private triggerCalculation() {
+  this.calculationTrigger.update(val => val + 1);
+}
 
   private async loadInitialData() {
     this.isLoading.set(true);
@@ -370,12 +435,17 @@ export class OilServiceComponent implements OnInit {
 
   // Updated validation for step 4 to handle package selections
   private validateStep4() {
+    console.log(this.oilForm.value);
+    
     const oilTypeId = this.oilForm.get('oilTypeId')?.value;
     const totalPrice = this.oilForm.get('totalPrice')?.value;
     const quantity = this.oilForm.get('quantity')?.value;
+    const requiredQuantity = Number(this.oilForm.get('requiredQuantity')?.value);
+    console.log(!!(oilTypeId && totalPrice && totalPrice > 0  && (quantity >= requiredQuantity)));
+    
     
     // Oil is valid if we have an oil type selected with valid price and quantity
-    this.step4Valid.set(!!(oilTypeId && totalPrice && totalPrice > 0 && quantity && quantity > 0));
+    this.step4Valid.set(!!(oilTypeId && totalPrice && totalPrice > 0 && (quantity >= requiredQuantity)));
   }
 
   // Method to update oil form when packages are selected (called from Step4 component)
@@ -467,70 +537,11 @@ export class OilServiceComponent implements OnInit {
     }
   }
 
-  private calculateSubtotal(): number {
-    let total = 0;
 
-    try {
-      // Get oil cost from totalPrice (calculated from packages)
-      const oilTotalPrice = this.oilForm?.get('totalPrice')?.value || 0;
-      
-      console.log('Oil calculation:', {
-        oilTotalPrice,
-        oilTypeId: this.oilForm?.get('oilTypeId')?.value,
-      });
-
-      if (oilTotalPrice > 0) {
-        total += Number(oilTotalPrice);
-        console.log('Oil total cost added:', oilTotalPrice);
-      }
-
-      // Add filter cost
-      const filterId = this.filterForm?.get('filterId')?.value;
-
-      console.log('Filter calculation:', {
-        filterId,
-        filters: this.oilFilters(),
-      });
-
-      if (filterId) {
-        const filter = this.oilFilters().find((f) => f.id == filterId);
-        console.log('Found filter:', filter);
-        if (filter && filter.price) {
-          const filterCost = Number(filter.price);
-          total += filterCost;
-          console.log('Filter cost added:', filterCost);
-        }
-      }
-
-      // Add accessories cost
-      const accessories = this.selectedAccessories();
-      console.log('Accessories calculation:', accessories);
-
-      if (accessories && Array.isArray(accessories)) {
-        accessories.forEach((acc) => {
-          if (acc && acc.price && acc.quantity) {
-            const accessoryCost = Number(acc.price) * Number(acc.quantity);
-            total += accessoryCost;
-            console.log(
-              'Accessory cost added:',
-              accessoryCost,
-              'for',
-              acc.name
-            );
-          }
-        });
-      }
-
-      console.log('Final total:', total);
-    } catch (error) {
-      console.error('Error calculating subtotal:', error);
-      return 0;
-    }
-
-    return total || 0;
-  }
 
   async submitBooking() {
+    console.log(this.canProceed());
+    
     if (!this.canProceed()) {
       return;
     }
@@ -575,7 +586,7 @@ export class OilServiceComponent implements OnInit {
         .createBooking(bookingData)
         .toPromise();
       alert(
-        `Booking created successfully! Total: AED ${this.totalAmount().toFixed(
+        `Booking created successfully! Total: AED ${this.subtotal().toFixed(
           2
         )}`
       );
@@ -659,5 +670,62 @@ export class OilServiceComponent implements OnInit {
 
   backToHome() {
     this.router.navigate(['/']);
+  }
+
+  onBrandChangeAndProceed() {
+    this.onBrandChange();
+    if (this.step1Valid()) {
+      setTimeout(() => this.nextStep(), 300); // Small delay for better UX
+    }
+  }
+
+  onCustomBrandChangeAndProceed() {
+    this.onCustomBrandChange();
+    if (this.step1Valid()) {
+      setTimeout(() => this.nextStep(), 300);
+    }
+  }
+
+  onModelChangeAndProceed() {
+    this.onModelChange();
+    if (this.step2Valid()) {
+      setTimeout(() => this.nextStep(), 300);
+    }
+  }
+
+  onCustomModelChangeAndProceed() {
+    this.onCustomModelChange();
+    if (this.step2Valid()) {
+      setTimeout(() => this.nextStep(), 300);
+    }
+  }
+
+  onIntervalChangeAndProceed() {
+    this.onIntervalChange();
+    if (this.step3Valid()) {
+      setTimeout(() => this.nextStep(), 300);
+    }
+  }
+
+  onOilTypeChangeAndProceed() {
+    this.onOilTypeChange();
+    if (this.step4Valid()) {
+      setTimeout(() => this.nextStep(), 300);
+    }
+  }
+
+  onFilterChangeAndProceed() {
+    this.onFilterChange();
+    if (this.step5Valid()) {
+      setTimeout(() => this.nextStep(), 300);
+    }
+  }
+
+  onAccessoriesCompleteAndProceed() {
+    // This would be called when user indicates they're done with accessories
+    // For example, clicking a "Continue" button or selecting "No more accessories"
+    if (this.step6Valid()) {
+      setTimeout(() => this.nextStep(), 300);
+    }
   }
 }

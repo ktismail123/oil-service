@@ -100,7 +100,7 @@ const createNewBooking = async (req, res) => {
     }
     
     // Calculate totals
-    const vatPercentage = 15.00; // Get from settings
+    const vatPercentage = 5.00; // Get from settings
     const subtotal = parseFloat(service.subtotal);
     const vatAmount = (subtotal * vatPercentage) / 100;
     const totalAmount = subtotal + vatAmount;

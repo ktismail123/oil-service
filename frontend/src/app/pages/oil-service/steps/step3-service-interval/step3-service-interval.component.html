@@ -1,47 +1,136 @@
-<div class="flex items-center mb-6">
-      <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-        <span class="text-blue-600 font-bold">3</span>
-      </div>
-      <h2 class="text-2xl font-semibold text-gray-800">Choose Service Interval</h2>
+<div class="flex flex-col sm:flex-row items-start sm:items-center mb-6 gap-4">
+  <div class="w-full flex items-center">
+    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+      <span class="text-blue-600 font-bold">3</span>
     </div>
-    
-    <form [formGroup]="intervalForm">
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        <div *ngFor="let interval of serviceIntervals" 
-             class="interval-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50 "
-             [class.border-blue-500]="intervalForm.get('interval')?.value == interval.value"
-             [class.bg-blue-50]="intervalForm.get('interval')?.value == interval.value"
-             [class.ring-2]="intervalForm.get('interval')?.value == interval.value"
-             [class.ring-blue-200]="intervalForm.get('interval')?.value == interval.value"
-             (click)="intervalForm.get('interval')?.setValue(interval.value); onIntervalChange()">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <div class="font-semibold text-gray-800">{{ interval.label }}</div>
-            </div>
-            <div *ngIf="intervalForm.get('interval')?.value == interval.value" 
-                 class="text-blue-600">
-              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-            </div>
+    <div class="flex-1 min-w-0">
+      <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Choose Service Interval</h2>
+    </div>
+  </div>
+  
+  <!-- Search Container -->
+  <div class="search-container w-full sm:w-auto sm:min-w-[250px]">
+    <div class="custom-search-wrapper">
+      <i class="search-icon fas fa-search"></i>
+      <input type="text" 
+             class="custom-search-input w-full"
+             placeholder="Search service interval" 
+             [(ngModel)]="searchTerm"
+             #searchInput>
+      <button class="clear-search-btn" (click)="searchTerm=''"
+              *ngIf="searchInput.value">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<form [formGroup]="intervalForm">
+  <!-- Service Intervals Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+    <div *ngFor="let interval of serviceIntervals | search:searchTerm:searchKeys" 
+         class="interval-card border-2 border-gray-200 rounded-xl p-3 sm:p-4 cursor-pointer transition-all hover:border-blue-300 hover:bg-blue-50"
+         [class.border-blue-500]="intervalForm.get('interval')?.value == interval.value"
+         [class.bg-blue-50]="intervalForm.get('interval')?.value == interval.value"
+         [class.ring-2]="intervalForm.get('interval')?.value == interval.value"
+         [class.ring-blue-200]="intervalForm.get('interval')?.value == interval.value"
+         (click)="intervalForm.get('interval')?.setValue(interval.value); onIntervalChange()">
+      
+      <!-- Mobile Layout -->
+      <div class="flex sm:hidden items-center justify-between">
+        <div class="flex items-center flex-1 min-w-0">
+          <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+            <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="font-semibold text-gray-800 text-sm truncate" [title]="interval.label">
+            {{ interval.label }}
           </div>
         </div>
+        
+        <!-- Selection Indicator -->
+        <div class="flex-shrink-0">
+          <div *ngIf="intervalForm.get('interval')?.value == interval.value" 
+               class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+            <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+          <div *ngIf="intervalForm.get('interval')?.value != interval.value" 
+               class="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
+        </div>
       </div>
-      
-      <div *ngIf="intervalForm.get('interval')?.value === 0" class="bg-gray-50 rounded-lg p-4">
-        <app-form-field
-          label="Enter custom KM:"
-          type="number"
-          [control]="intervalForm.get('customInterval')!"
-          placeholder="Enter kilometers"
-          fieldId="customInterval"
-          [required]="true"
-          (input)="onIntervalChange()">
-        </app-form-field>
+
+      <!-- Desktop Layout -->
+      <div class="hidden sm:flex items-center justify-between">
+        <div class="flex items-center flex-1 min-w-0">
+          <!-- <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+            <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div> -->
+          <div class="font-semibold text-gray-800 text-sm sm:text-base truncate" [title]="interval.label">
+            {{ interval.label }}
+          </div>
+        </div>
+        
+        <!-- Selection Indicator -->
+        <div class="flex-shrink-0">
+          <div *ngIf="intervalForm.get('interval')?.value == interval.value" 
+               class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+          <div *ngIf="intervalForm.get('interval')?.value != interval.value" 
+               class="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
+        </div>
       </div>
-    </form>
+    </div>
+  </div>
+
+  <!-- No Results Message -->
+  <div *ngIf="(serviceIntervals | search:searchTerm:searchKeys).length === 0 && serviceIntervals.length > 0" 
+       class="text-center py-12">
+    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+      </svg>
+    </div>
+    <h3 class="text-lg font-medium text-gray-600 mb-2">No matching intervals found</h3>
+    <p class="text-sm text-gray-500">Try adjusting your search terms or clear the search to see all intervals.</p>
+    <button 
+      type="button"
+      (click)="searchTerm=''"
+      class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+      Clear Search
+    </button>
+  </div>
+
+  <!-- Empty State (No intervals at all) -->
+  <div *ngIf="serviceIntervals.length === 0" class="text-center py-16">
+    <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+      <svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+    </div>
+    <h3 class="text-xl sm:text-2xl font-semibold text-gray-700 mb-2">No Service Intervals Available</h3>
+    <p class="text-gray-500">Please check back later or contact support.</p>
+  </div>
+  
+  <!-- Custom Interval Input -->
+  <div *ngIf="intervalForm.get('interval')?.value === 0" class="bg-gray-50 rounded-lg p-4 sm:p-6">
+    <div class="max-w-md">
+      <app-form-field
+        label="Enter custom KM:"
+        type="number"
+        [control]="intervalForm.get('customInterval')!"
+        placeholder="Enter kilometers"
+        fieldId="customInterval"
+        [required]="true"
+        (input)="onIntervalChange()">
+      </app-form-field>
+    </div>
+  </div>
+</form>

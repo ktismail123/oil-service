@@ -1,90 +1,222 @@
-<div class="flex items-center mb-6">
-      <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-        <span class="text-blue-600 font-bold">6</span>
-      </div>
-      <h2 class="text-2xl font-semibold text-gray-800">Add Accessories</h2>
-      <span class="ml-3 text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Optional</span>
+<div class="flex flex-col sm:flex-row items-start sm:items-center mb-6 gap-4">
+  <div class="w-full flex items-center">
+    <div
+      class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0"
+    >
+      <span class="text-blue-600 font-bold">6</span>
     </div>
-    
-    <!-- Available Accessories -->
-    <div class="mb-8">
-      <h3 class="text-lg font-medium mb-4 text-gray-700">Available Accessories:</h3>
-      <div class="grid md:grid-cols-2 gap-4">
-        <div *ngFor="let accessory of accessories" 
-             class="accessory-card border-2 border-gray-200 rounded-xl p-4 flex justify-between items-center hover:border-gray-300 hover:bg-gray-50 transition-all">
-          <div class="flex items-center">
-            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-              <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
-              </svg>
-            </div>
-            <div>
-              <div class="font-semibold text-gray-800">{{ accessory.name }}</div>
-              <div class="text-sm text-gray-600">AED {{ accessory.price }} each</div>
-              <div *ngIf="accessory.quantity_available" class="text-xs text-green-600 font-medium">
-                <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-                {{ accessory.quantity_available }} available
-              </div>
-            </div>
-          </div>
-          <app-button 
-            variant="primary" 
-            size="sm"
-            (onClick)="onAddAccessory(accessory)">
-            Add
-          </app-button>
-        </div>
-      </div>
+    <div class="flex-1 min-w-0">
+      <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">
+        Add Accessories
+      </h2>
+      <span
+        class="ml-0 sm:ml-3 mt-2 sm:mt-0 inline-block text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full"
+        >Optional</span
+      >
     </div>
+  </div>
+  <div class="search-container w-full sm:w-auto sm:min-w-[250px]">
+    <div class="custom-search-wrapper">
+      <i class="search-icon fas fa-search"></i>
+      <input
+        type="text"
+        class="custom-search-input w-full"
+        placeholder="Search accessories"
+        [(ngModel)]="searchTerm"
+        #searchInput
+      />
+      <button
+        class="clear-search-btn"
+        (click)="searchTerm = ''"
+        *ngIf="searchInput.value"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+</div>
 
-    <!-- Selected Accessories -->
-    <div *ngIf="selectedAccessories.length > 0" class="bg-green-50 border border-green-200 rounded-xl p-6">
-      <div class="flex items-center mb-4">
-        <svg class="w-6 h-6 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-        </svg>
-        <h3 class="text-lg font-medium text-green-800">Selected Accessories:</h3>
-      </div>
-      <div class="space-y-3">
-        <div *ngFor="let accessory of selectedAccessories" 
-             class="flex justify-between items-center bg-white p-4 rounded-lg border border-green-200 shadow-sm">
-          <div class="flex items-center">
-            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-              <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-            </div>
-            <div>
-              <span class="font-semibold text-gray-800">{{ accessory.name }}</span>
-              <span class="text-sm text-gray-600 ml-2">x{{ accessory.quantity }}</span>
-            </div>
-          </div>
-          <div class="flex items-center space-x-3">
-            <span class="font-bold text-green-600">
-              AED {{ ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2) }}
-            </span>
-            <app-button 
-              variant="danger" 
-              size="sm"
-              (onClick)="onRemoveAccessory(accessory.id)">
-              Remove
-            </app-button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <div *ngIf="selectedAccessories.length === 0" class="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
-      <div class="flex flex-col items-center">
-        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-          <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+<!-- Available Accessories -->
+<div class="mb-8">
+  <h3 class="text-base sm:text-lg font-medium mb-4 text-gray-700">
+    Available Accessories:
+  </h3>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Optional 'Skip Accessories' Card -->
+    <div
+      class="accessory-card border-2 border-gray-200 rounded-xl p-4 flex justify-between items-center cursor-pointer hover:border-gray-300 hover:bg-gray-50 transition-all"
+      (click)="onSkipAccessories()"
+      [class.border-blue-500]="selectedAccessories.length === 0"
+      [class.bg-blue-50]="selectedAccessories.length === 0"
+    >
+      <div class="flex items-center flex-1 min-w-0">
+        <div
+          class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0"
+        >
+          <svg
+            class="w-5 h-5 text-blue-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-7V7a1 1 0 112 0v4a1 1 0 01-2 0zm1 4a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z"
+              clip-rule="evenodd"
+            />
           </svg>
         </div>
-        <h3 class="text-lg font-medium text-gray-600 mb-2">No Accessories Selected</h3>
-        <p class="text-sm text-gray-500">Add accessories from the available options above to enhance your service.</p>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-gray-800 text-sm sm:text-base">
+            No Accessories
+          </div>
+          <div class="text-xs sm:text-sm text-gray-600 truncate">
+            Skip adding accessories
+          </div>
+        </div>
       </div>
     </div>
+
+    <div
+      *ngFor="let accessory of accessories | search : searchTerm : searchKeys"
+      class="accessory-card border-2 border-gray-200 rounded-xl p-4 flex justify-between items-center hover:border-gray-300 hover:bg-gray-50 transition-all"
+    >
+      <div class="flex items-center flex-1 min-w-0 mr-3">
+        <div
+          class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0"
+        >
+          <svg
+            class="w-5 h-5 text-purple-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
+            ></path>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div
+            class="font-semibold text-gray-800 text-sm sm:text-base truncate"
+          >
+            {{ accessory.name }}
+          </div>
+          <div class="text-xs sm:text-sm text-gray-600">
+            AED {{ accessory.price }} each
+          </div>
+          <div
+            *ngIf="accessory.quantity_available"
+            class="text-xs text-green-600 font-medium flex items-center mt-1"
+          >
+            <svg
+              class="w-3 h-3 inline mr-1 flex-shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="truncate"
+              >{{ accessory.quantity_available }} available</span
+            >
+          </div>
+        </div>
+      </div>
+      <div class="flex-shrink-0">
+        <app-button
+          variant="primary"
+          size="sm"
+          (onClick)="onAddAccessory(accessory)"
+        >
+          Add
+        </app-button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Selected Accessories -->
+<div
+  *ngIf="selectedAccessories.length > 0"
+  class="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6"
+>
+  <div class="flex items-center mb-4">
+    <svg
+      class="w-6 h-6 text-green-600 mr-2 flex-shrink-0"
+      fill="currentColor"
+      viewBox="0 0 20 20"
+    >
+      <path
+        fill-rule="evenodd"
+        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+        clip-rule="evenodd"
+      ></path>
+    </svg>
+    <h3 class="text-base sm:text-lg font-medium text-green-800">
+      Selected Accessories:
+    </h3>
+  </div>
+  <div class="space-y-3">
+    <div
+      *ngFor="let accessory of selectedAccessories"
+      class="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-3 sm:p-4 rounded-lg border border-green-200 shadow-sm gap-3"
+    >
+      <div class="flex items-center flex-1 min-w-0">
+        <div
+          class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0"
+        >
+          <svg
+            class="w-4 h-4 text-green-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <span
+            class="font-semibold text-gray-800 text-sm sm:text-base block truncate"
+            >{{ accessory.name }}</span
+          >
+          <span class="text-xs sm:text-sm text-gray-600"
+            >x{{ accessory.quantity }}</span
+          >
+        </div>
+      </div>
+      <div
+        class="flex items-center justify-between sm:justify-end space-x-3 flex-shrink-0"
+      >
+        <span class="font-bold text-green-600 text-sm sm:text-base">
+          AED
+          {{ ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2) }}
+        </span>
+        <app-button
+          variant="danger"
+          size="sm"
+          (onClick)="onRemoveAccessory(accessory.id)"
+        >
+          Remove
+        </app-button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Empty State -->
+<!-- <div *ngIf="selectedAccessories.length === 0" class="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+  <div class="flex flex-col items-center">
+    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+      </svg>
+    </div>
+    <h3 class="text-lg font-medium text-gray-600 mb-2">No Accessories Selected</h3>
+    <p class="text-sm text-gray-500">Add accessories from the available options above to enhance your service.</p>
+  </div>
+</div> -->

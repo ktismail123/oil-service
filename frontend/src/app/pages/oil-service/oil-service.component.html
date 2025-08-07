@@ -1,8 +1,8 @@
 <div class="min-h-screen bg-gray-50 py-6">
   <div class="max-w-4xl mx-auto px-4">
     
-    <!-- Header -->
-    <div class="text-center mb-8">
+    <!-- Header with Back Button -->
+    <div class="text-center mb-8 relative">
       <div class="inline-flex items-center space-x-3 mb-4">
         <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
           <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,12 +16,31 @@
     </div>
 
     <!-- Step Indicator -->
-    <app-step-indicator 
+    <div class="relative">
+       <button 
+        *ngIf="currentStep() > 1"
+        (click)="prevStep()"
+        class="absolute left-0 top-[75px] inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Back
+      </button>
+      <app-step-indicator 
       [currentStep]="currentStep()" 
       [totalSteps]="totalSteps()" 
       [steps]="steps"
       [title]="steps[currentStep() - 1]">
     </app-step-indicator>
+    <button 
+        (click)="backToHome()"
+        class="absolute right-0 top-[75px] inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+        </svg>
+        Home
+      </button>
+    </div>
 
     <!-- Loading State -->
     <app-loading *ngIf="isLoading()" text="Loading service data..."></app-loading>
@@ -30,159 +49,87 @@
     <div *ngIf="!isLoading()" class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-6 step-content">
       
       <!-- Step 1: Select Vehicle Brand -->
-        <app-step1-brand-selection 
-            *ngIf="currentStep() === 1"
-            [brandForm]="brandForm"
-            [brands]="brands()"
-            (brandChange)="onBrandChange()"
-            (customBrandChange)="onCustomBrandChange()">
-          </app-step1-brand-selection>
-
+      <app-step1-brand-selection 
+        *ngIf="currentStep() === 1"
+        [brandForm]="brandForm"
+        [brands]="brands()"
+        (brandChange)="onBrandChangeAndProceed()"
+        (customBrandChange)="onCustomBrandChangeAndProceed()">
+      </app-step1-brand-selection>
 
       <!-- Step 2: Model Selection -->
-          <app-step2-model-selection 
-            *ngIf="currentStep() === 2"
-            [modelForm]="modelForm"
-            [models]="models()"
-            [selectedBrandName]="getSelectedBrandName()"
-            (modelChange)="onModelChange()"
-            (customModelChange)="onCustomModelChange()">
-          </app-step2-model-selection>
+      <app-step2-model-selection 
+        *ngIf="currentStep() === 2"
+        [modelForm]="modelForm"
+        [models]="models()"
+        [selectedBrandName]="getSelectedBrandName()"
+        (modelChange)="onModelChangeAndProceed()"
+        (customModelChange)="onCustomModelChangeAndProceed()">
+      </app-step2-model-selection>
 
       <!-- Step 3: Service Interval -->
-          <app-step3-service-interval 
-            *ngIf="currentStep() === 3"
-            [intervalForm]="intervalForm"
-            [serviceIntervals]="serviceIntervals"
-            (intervalChange)="onIntervalChange()">
-          </app-step3-service-interval>
+      <app-step3-service-interval 
+        *ngIf="currentStep() === 3"
+        [intervalForm]="intervalForm"
+        [serviceIntervals]="serviceIntervals"
+        (intervalChange)="onIntervalChangeAndProceed()">
+      </app-step3-service-interval>
 
       <!-- Step 4: Choose Engine Oil Type -->
-          <app-step4-oil-type 
-            *ngIf="currentStep() === 4"
-            [oilForm]="oilForm"
-            [oilTypes]="oilTypes()"
-            (oilTypeChange)="onOilTypeChange()"
-            (oilQuantityChange)="onOilQuantityChange()">
-          </app-step4-oil-type>
+      <app-step4-oil-type 
+        *ngIf="currentStep() === 4"
+        [oilForm]="oilForm"
+        [oilTypes]="oilTypes()"
+        (oilTypeChange)="onOilTypeChangeAndProceed()"
+        (oilQuantityChange)="onOilQuantityChange()">
+      </app-step4-oil-type>
 
-          <!-- Step 5: Oil Filter -->
-          <app-step5-oil-filter 
-            *ngIf="currentStep() === 5"
-            [filterForm]="filterForm"
-            [oilFilters]="oilFilters()"
-            (filterChange)="onFilterChange()">
-          </app-step5-oil-filter>
+      <!-- Step 5: Oil Filter -->
+      <app-step5-oil-filter 
+        *ngIf="currentStep() === 5"
+        [filterForm]="filterForm"
+        [oilFilters]="oilFilters()"
+        (filterChange)="onFilterChangeAndProceed()">
+      </app-step5-oil-filter>
 
-          <!-- Step 6: Accessories -->
-          <app-step6-accessories 
-            *ngIf="currentStep() === 6"
-            [accessories]="accessories()"
-            [selectedAccessories]="selectedAccessories()"
-            (addAccessory)="addAccessory($event)"
-            (removeAccessory)="removeAccessory($event)">
-          </app-step6-accessories>
+      <!-- Step 6: Accessories -->
+      <app-step6-accessories 
+        *ngIf="currentStep() === 6"
+        [accessories]="accessories()"
+        [selectedAccessories]="selectedAccessories()"
+        (addAccessory)="addAccessory($event)"
+        (removeAccessory)="removeAccessory($event)"
+        (accessoriesComplete)="onAccessoriesCompleteAndProceed()">
+      </app-step6-accessories>
 
-
- <!-- Step 7: Customer & Summary -->
-          <app-step7-customer-summary 
-            *ngIf="currentStep() === 7"
-            [customerForm]="customerForm"
-            [oilForm]="oilForm"
-            [selectedBrandName]="getSelectedBrandName()"
-            [selectedModelName]="getSelectedModelName()"
-            [serviceInterval]="getServiceInterval()"
-            [selectedOilType]="getSelectedOilType()"
-            [selectedFilter]="getSelectedFilter()"
-            [selectedAccessories]="selectedAccessories()"
-            [subtotal]="subtotal()"
-            [vatAmount]="vatAmount()"
-            [totalAmount]="totalAmount()"
-            [oilQuantity]="oilForm.get('quantity')?.value || 0">
-          </app-step7-customer-summary>
+      <!-- Step 7: Customer & Summary -->
+      <app-step7-customer-summary 
+        *ngIf="currentStep() === 7"
+        [customerForm]="customerForm"
+        [oilForm]="oilForm"
+        [selectedBrandName]="getSelectedBrandName()"
+        [selectedModelName]="getSelectedModelName()"
+        [serviceInterval]="getServiceInterval()"
+        [selectedOilType]="getSelectedOilType()"
+        [selectedFilter]="getSelectedFilter()"
+        [selectedAccessories]="selectedAccessories()"
+        [subtotal]="subtotal()"
+        [vatAmount]="vatAmount()"
+        [laborCost]="customerForm.get('laborCost')?.value || 0"
+        [totalAmount]="totalAmount()"
+        [oilQuantity]="oilForm.get('quantity')?.value || 0"
+        (submitBooking)="submitBooking()">
+      </app-step7-customer-summary>
     </div>
 
-    <!-- Validation Debug (only for development) -->
-    <!-- Remove this in production -->
-    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6" *ngIf="false">
-      <h4 class="font-semibold mb-2">Step Validation Status (Debug):</h4>
-      <div class="grid grid-cols-4 gap-2 text-xs">
-        <div [class.text-green-600]="step1Valid()" [class.text-red-600]="!step1Valid()">
-          Step 1: {{ step1Valid() ? '✓' : '✗' }}
-        </div>
-        <div [class.text-green-600]="step2Valid()" [class.text-red-600]="!step2Valid()">
-          Step 2: {{ step2Valid() ? '✓' : '✗' }}
-        </div>
-        <div [class.text-green-600]="step3Valid()" [class.text-red-600]="!step3Valid()">
-          Step 3: {{ step3Valid() ? '✓' : '✗' }}
-        </div>
-        <div [class.text-green-600]="step4Valid()" [class.text-red-600]="!step4Valid()">
-          Step 4: {{ step4Valid() ? '✓' : '✗' }}
-        </div>
-        <div [class.text-green-600]="step5Valid()" [class.text-red-600]="!step5Valid()">
-          Step 5: {{ step5Valid() ? '✓' : '✗' }}
-        </div>
-        <div [class.text-green-600]="step6Valid()" [class.text-red-600]="!step6Valid()">
-          Step 6: {{ step6Valid() ? '✓' : '✗' }}
-        </div>
-        <div [class.text-green-600]="step7Valid()" [class.text-red-600]="!step7Valid()">
-          Step 7: {{ step7Valid() ? '✓' : '✗' }}
-        </div>
-        <div [class.text-green-600]="canProceed()" [class.text-red-600]="!canProceed()">
-          Can Proceed: {{ canProceed() ? '✓' : '✗' }}
-        </div>
-      </div>
+    <!-- Progress Indicator at Bottom -->
+    <div class="text-center text-sm text-gray-500">
+      <!-- Step {{ currentStep() }} of {{ totalSteps() }} -->
     </div>
+  </div>
 
-    <!-- Navigation Buttons -->
-    <div class="flex justify-between items-center bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-      <app-button 
-        *ngIf="currentStep() > 1" 
-        variant="secondary"
-        size="lg"
-        (onClick)="prevStep()">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
-        Previous
-      </app-button>
-      
-      <app-button 
-        variant="secondary"
-        size="lg"
-        (onClick)="backToHome()">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m0 7h18"></path>
-        </svg>
-        Back to Home
-      </app-button>
-      
-      <div class="flex space-x-3">
-        <app-button 
-          *ngIf="currentStep() < totalSteps()" 
-          variant="primary"
-          size="lg"
-          [disabled]="!canProceed()"
-          (onClick)="nextStep()">
-          Next
-          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-          </svg>
-        </app-button>
-        
-        <app-button 
-          *ngIf="currentStep() === totalSteps()" 
-          variant="success"
-          size="lg"
-          [loading]="isSubmitting()"
-          [disabled]="!canProceed()"
-          (onClick)="submitBooking()">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-          Confirm Booking
-        </app-button>
-      </div>
-    </div>
+  <div class="footer fixed bottom-0 text-center w-full p-2 bg-[#f9fafb]">
+               Powered by <strong class="text-blue-600">Tech Lube</strong>
+
   </div>
 </div>
