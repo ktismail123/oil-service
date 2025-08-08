@@ -3,6 +3,11 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
+    loadComponent: () => import('./components/auth/login/login.component')
+      .then(m => m.LoginComponent)
+  },
+  {
+    path: 'select-service',
     loadComponent: () => import('./pages/service-selection/service-selection.component')
       .then(m => m.ServiceSelectionComponent)
   },

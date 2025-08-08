@@ -1,0 +1,147 @@
+    <div class="login-container">
+      <!-- Background Elements -->
+      <div class="background-elements">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+        <div class="grid-pattern"></div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Left Side - Branding -->
+        <div class="branding-section">
+          <div class="logo-container">
+            <div class="logo-circle">
+              <span class="logo-text">TL</span>
+            </div>
+            <h1 class="brand-name">Tech Lube</h1>
+          </div>
+          <p class="brand-tagline">Premium Automotive Care Solutions</p>
+          
+          <div class="features-list">
+            <div class="feature-item" *ngFor="let feature of features; let i = index" 
+                 [style.animation-delay]="(i * 0.2) + 's'">
+              <div class="feature-icon">{{ feature.icon }}</div>
+              <div class="feature-text">
+                <h4>{{ feature.title }}</h4>
+                <p>{{ feature.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="login-section">
+          <div class="login-card">
+            <!-- Header -->
+            <div class="login-header">
+              <h2>Welcome Back</h2>
+              <p>Please sign in to your account</p>
+            </div>
+
+            <!-- Login Form -->
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+              <div class="form-group" 
+                   [class.focused]="focusedField === 'email'" 
+                   [class.filled]="loginForm.get('email')?.value">
+                <label for="email">Email Address</label>
+                <div class="input-container">
+                  <input
+                    type="email"
+                    id="email"
+                    formControlName="email"
+                    (focus)="onFieldFocus('email')"
+                    (blur)="onFieldBlur()"
+                    autocomplete="email"
+                    placeholder="Enter your email">
+                  <div class="input-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2"/>
+                      <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="error-message" 
+                     *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                  Please enter a valid email address
+                </div>
+              </div>
+
+              <div class="form-group" 
+                   [class.focused]="focusedField === 'password'" 
+                   [class.filled]="loginForm.get('password')?.value">
+                <label for="password">Password</label>
+                <div class="input-container">
+                  <input
+                    [type]="showPassword ? 'text' : 'password'"
+                    id="password"
+                    formControlName="password"
+                    (focus)="onFieldFocus('password')"
+                    (blur)="onFieldBlur()"
+                    autocomplete="current-password"
+                    placeholder="Enter your password">
+                  <div class="input-icon toggle-password" (click)="togglePassword()">
+                    <svg *ngIf="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <svg *ngIf="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" stroke-width="2"/>
+                      <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="error-message" 
+                     *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                  Password is required
+                </div>
+              </div>
+
+              <div class="form-options">
+                <label class="checkbox-container">
+                  <input type="checkbox" formControlName="rememberMe">
+                  <span class="checkmark"></span>
+                  Remember me
+                </label>
+                <a href="#" class="forgot-link">Forgot password?</a>
+              </div>
+
+              <button type="submit" 
+                      class="login-button" 
+                      [class.loading]="isLoading"
+                      [disabled]="loginForm.invalid || isLoading">
+                <span *ngIf="!isLoading">Sign In</span>
+                <div *ngIf="isLoading" class="loading-spinner">
+                  <div class="spinner"></div>
+                </div>
+              </button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Assistant (Optional) -->
+      <div class="ai-assistant" [class.expanded]="showAssistant" *ngIf="showAssistant">
+        <div class="assistant-header">
+          <h3>AI Assistant</h3>
+          <button class="close-assistant" (click)="toggleAssistant()">×</button>
+        </div>
+        <div class="assistant-content">
+          <p>How can I help you today?</p>
+          <div class="quick-actions">
+            <button class="quick-action">Reset Password</button>
+            <button class="quick-action">Contact Support</button>
+            <button class="quick-action">Account Help</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assistant Toggle -->
+      <!-- <button class="assistant-toggle" (click)="toggleAssistant()" *ngIf="!showAssistant">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+        </svg>
+      </button> -->
+    </div>
