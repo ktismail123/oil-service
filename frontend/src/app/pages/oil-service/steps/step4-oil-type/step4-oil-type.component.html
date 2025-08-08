@@ -1,14 +1,15 @@
 <div class="max-w-7xl mx-auto p-4 sm:p-6">
   <!-- Header Section -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-    <div class="flex items-center">
-      <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 shadow-lg flex-shrink-0">
-        <span class="text-white font-bold text-lg">4</span>
-      </div>
-      <div class="flex-1 min-w-0">
-        <h2 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Choose Engine Oil</h2>
-      </div>
+    
+    <div class="w-full flex items-center">
+    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+      <span class="text-blue-600 font-bold">4</span>
     </div>
+    <div class="flex-1 min-w-0">
+      <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Choose Engine Oil</h2>
+    </div>
+  </div>
     
     <!-- Search Container and Selected Oil Info -->
     <div class="flex flex-col sm:flex-row gap-4 sm:items-center">
@@ -282,7 +283,7 @@
 
     <!-- Oil Types Selection Grid -->
     <div class="space-y-4" *ngIf="!selectedOilId()">
-      <h3 class="text-xl font-semibold text-gray-900">Available Oil Types</h3>
+      <!-- <h3 class="text-xl font-semibold text-gray-900">Available Oil Types</h3> -->
       
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <div *ngFor="let oil of oilTypes | search : searchTerm : searchKeys" 
