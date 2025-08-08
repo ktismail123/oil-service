@@ -181,14 +181,14 @@
           <p class="font-medium">{{ accessory.name }}</p>
           <p class="text-gray-500">
             Qty: {{ accessory.quantity || 1 }} x AED
-            {{ (accessory.price || 0).toFixed(2) }}
+            {{ (accessory.price || 0) }}
           </p>
         </div>
         <div class="text-right">
           <p class="font-medium">
             AED
             {{
-              ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2)
+              ((accessory.price || 0) * (accessory.quantity || 1))
             }}
           </p>
         </div>

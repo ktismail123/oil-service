@@ -239,7 +239,7 @@ console.log(total, '+++++++++++');
       name: ['', Validators.required],
       mobile: ['', [Validators.required, Validators.pattern(/^\d{10,15}$/)]],
       plateNumber: ['', Validators.required],
-      laborCost: [0, [Validators.min(0)]]
+      laborCost: [0, [Validators.required]]
     });
 
     // Subscribe to customer form changes for step 7 validation

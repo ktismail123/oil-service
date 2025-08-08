@@ -34,4 +34,12 @@ export class Step6AccessoriesComponent {
     this.accessoriesComplete.emit();
   }
 
+  onNextStep(): void {
+    this.accessoriesComplete.emit();
+  }
+
+  get total(){
+    return this.selectedAccessories.reduce((total, accessory) => total + ((accessory.price || 0) * (accessory.quantity || 1)), 0).toFixed(2)
+  }
+
 }

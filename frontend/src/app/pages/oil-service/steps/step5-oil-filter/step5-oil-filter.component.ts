@@ -14,7 +14,7 @@ export class Step5OilFilterComponent {
   @Input() filterForm!: FormGroup;
   @Input() oilFilters: OilFilter[] = [];
   searchTerm: string = '';
-  searchKeys: string[] = ['code', 'name', 'price'];
+  searchKeys: string[] = ['code', 'brand', 'price'];
 
   @Output() filterChange = new EventEmitter<void>();
 
