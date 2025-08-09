@@ -4,7 +4,8 @@ const dbConfig = {
   host: 'localhost',
   user: 'root',
   password: '_kt_root_',
-  database: 'car_garage_db'
+  database: 'car_garage_db',
+  waitForConnections: true,
 };
 
 let db;

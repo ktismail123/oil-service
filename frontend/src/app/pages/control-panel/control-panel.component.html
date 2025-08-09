@@ -17,12 +17,12 @@
           <p class="page-title">{{ getCurrentTitle() }}</p>
           <!-- <p class="page-subtitle">Manage your {{ getCurrentTitle().toLowerCase() }} efficiently</p> -->
         </div>
-        <div class="header-actions">
+        <!-- <div class="header-actions">
           <button class="action-btn primary" (click)="addNew()">
             <i class="fas fa-plus"></i>
             <span>Add New</span>
           </button>
-        </div>
+        </div> -->
       </div>
     </div>
 
@@ -72,6 +72,11 @@
         <!-- Bookings Section -->
         <div *ngIf="activeSection() === 'bookings'" class="data-section">
           <app-booking-list/>
+        </div>
+
+        <!-- User management -->
+        <div *ngIf="activeSection() === 'user-management'" class="data-section">
+          <app-user-management/>
         </div>
 
       </div>

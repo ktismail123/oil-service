@@ -245,15 +245,13 @@ export class Step7CustomerSummaryComponent {
     if (this.selectedFilter) {
       commands += `${this.selectedFilter.brand} Oil Filter\n`;
       commands += `Code: ${this.selectedFilter.code}\n`;
-      commands += `                AED ${this.selectedFilter.price.toFixed(
-        2
-      )}\n\n`;
+      commands += `                AED ${this.selectedFilter.price}\n\n`;
     }
 
     const laborCost = this.customerForm.get('laborCost')?.value;
     if (laborCost && laborCost > 0) {
       commands += 'Labor & Service Charges\n';
-      commands += `                AED ${laborCost.toFixed(2)}\n\n`;
+      commands += `                AED ${laborCost}\n\n`;
     }
 
     // Totals

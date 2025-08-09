@@ -1,6 +1,9 @@
+import { ApiService } from './../../../services/api.service';
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { finalize, take } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -9,6 +12,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
+
+  private apiService = inject(ApiService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
   loginForm: FormGroup;
   focusedField: string | null = null;
   showPassword = false;
@@ -40,7 +48,8 @@ export class LoginComponent {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      rememberMe: [false],
+      role: ['manager', [Validators.required]], // Default to manager
+      rememberMe: [false]
     });
   }
 
@@ -65,11 +74,25 @@ export class LoginComponent {
       this.isLoading = true;
 
       // Simulate authentication
-      setTimeout(() => {
+     this.apiService.login(this.loginForm.value)
+     .pipe(
+      take(1),
+      finalize(() => {
         this.isLoading = false;
-        console.log('Login attempt:', this.loginForm.value);
-        // Handle successful login
-      }, 2000);
+      })
+     )
+     .subscribe({
+      next:(res => {
+        console.log(res);
+        if(res.success){
+          localStorage.setItem('token', res.data.token);
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || 'select-service';
+
+          this.router.navigateByUrl(returnUrl);
+        }
+      }),
+      
+     })
     } else {
       // Mark all fields as touched to show validation errors
       Object.keys(this.loginForm.controls).forEach((key) => {
@@ -90,5 +113,9 @@ export class LoginComponent {
 
   toggleAssistant() {
     this.showAssistant = !this.showAssistant;
+  }
+
+  selectRole(role: string) {
+    this.loginForm.patchValue({ role: role });
   }
 }

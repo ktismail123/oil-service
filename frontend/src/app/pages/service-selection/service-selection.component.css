@@ -1,386 +1,93 @@
-/* Modern POS Theme Styling */
+.service-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .service-card:hover::before {
+      left: 100%;
+    }
 
-/* Custom Gray Scale for POS */
-.bg-gray-750 {
-  background-color: #374151;
-}
+    @media (max-width: 640px) {
+      .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 {
+        grid-template-columns: 1fr;
+      }
+    }
 
-/* POS Service Button Base Styling */
-.pos-service-btn {
-  position: relative;
-  transition: all 0.2s ease;
-  border-width: 1px;
-  transform: translateZ(0);
-}
+    @media (min-width: 640px) and (max-width: 1023px) {
+      .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
 
-/* Service Button Hover Effects */
-.pos-service-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3);
-}
+    @media (min-width: 1024px) {
+      .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-4 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
 
-.pos-service-btn:active {
-  transform: translateY(0);
-  transition-duration: 0.1s;
-}
+    /* Touch optimizations */
+    @media (hover: none) and (pointer: coarse) {
+      .service-card:hover {
+        transform: none;
+      }
+      
+      .service-card:active {
+        transform: scale(0.98);
+      }
+    }
 
-/* Service Icon Animation */
-.pos-service-btn .w-12 {
-  transition: all 0.2s ease;
-}
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .service-card,
+      .service-card > div > div {
+        transition: none;
+        transform: none;
+      }
+      
+      .service-card:hover {
+        transform: none;
+      }
+      
+      .service-card::before {
+        transition: none;
+      }
+    }
 
-.pos-service-btn:hover .w-12 {
-  transform: scale(1.05);
-}
+    /* High contrast mode */
+    @media (prefers-contrast: high) {
+      .service-card {
+        border-width: 2px;
+      }
+      
+      .bg-gradient-to-br {
+        background: solid !important;
+      }
+    }
 
-/* Status Indicator Animation */
-.pos-service-btn .w-2.h-2 {
-  animation: statusPulse 2s ease-in-out infinite;
-}
-
-@keyframes statusPulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* Focus States for POS Interface */
-.pos-service-btn:focus {
-  outline: none;
-  ring-width: 2px;
-  ring-offset-width: 2px;
-  ring-offset-color: #1f2937;
-}
-
-/* Quick Action Buttons */
-button:not(.pos-service-btn) {
-  transition: all 0.15s ease;
-}
-
-button:not(.pos-service-btn):hover {
-  transform: translateY(-1px);
-}
-
-button:not(.pos-service-btn):active {
-  transform: translateY(0);
-}
-
-/* Header Status Indicator */
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-/* Mobile Responsive Design */
-@media (max-width: 768px) {
-  /* Mobile Header */
-  .bg-gray-800.border-b {
-    padding: 1rem;
-  }
-  
-  .text-lg {
-    font-size: 1rem;
-  }
-  
-  /* Mobile Service Cards */
-  .pos-service-btn {
-    padding: 1rem;
-  }
-  
-  .pos-service-btn .w-12 {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-  
-  .pos-service-btn .w-6 {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-  
-  .text-lg {
-    font-size: 1rem;
-    line-height: 1.5rem;
-  }
-  
-  /* Mobile Quick Actions */
-  .grid.grid-cols-2.sm\\:grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-  
-  /* Mobile Padding */
-  .p-6 {
-    padding: 1rem;
-  }
-  
-  .p-4 {
-    padding: 0.75rem;
-  }
-}
-
-@media (max-width: 640px) {
-  /* Small Mobile Adjustments */
-  .max-w-6xl {
-    margin: 0;
-    padding: 0 1rem;
-  }
-  
-  .pos-service-btn {
-    padding: 0.875rem;
-  }
-  
-  .pos-service-btn h3 {
-    font-size: 1rem;
-    line-height: 1.25rem;
-  }
-  
-  .pos-service-btn p {
-    font-size: 0.75rem;
-    line-height: 1rem;
-  }
-  
-  /* Footer adjustments */
-  .fixed.bottom-0 {
-    position: relative;
-    margin-top: 2rem;
-  }
-  
-  .fixed.bottom-0 .flex {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
-}
-
-@media (max-width: 475px) {
-  /* Extra Small Mobile */
-  .grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-3 {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-  
-  .pos-service-btn .flex.items-start {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1rem;
-  }
-  
-  .pos-service-btn .flex-1 {
-    flex: none;
-  }
-}
-
-/* Touch Device Optimizations */
-@media (hover: none) and (pointer: coarse) {
-  .pos-service-btn {
-    padding: 1.25rem;
-  }
-  
-  .pos-service-btn:hover {
-    transform: none;
-    box-shadow: none;
-  }
-  
-  .pos-service-btn:active {
-    background-color: #4b5563;
-    transform: scale(0.98);
-  }
-  
-  .pos-service-btn.group.hover\\:bg-blue-600:active {
-    background-color: #2563eb;
-  }
-  
-  .pos-service-btn.group.hover\\:bg-emerald-600:active {
-    background-color: #059669;
-  }
-}
-
-/* High Contrast Mode */
-@media (prefers-contrast: high) {
-  .bg-gray-900 {
-    background-color: #000000;
-  }
-  
-  .bg-gray-800 {
-    background-color: #1a1a1a;
-  }
-  
-  .bg-gray-700 {
-    background-color: #333333;
-  }
-  
-  .border-gray-700,
-  .border-gray-600 {
-    border-color: #666666;
-  }
-  
-  .text-white {
-    color: #ffffff;
-  }
-  
-  .text-gray-400 {
-    color: #cccccc;
-  }
-}
-
-/* Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
-  .pos-service-btn,
-  .pos-service-btn .w-12,
-  button,
-  .animate-pulse,
-  .w-2.h-2 {
-    transition: none;
-    animation: none;
-  }
-  
-  .pos-service-btn:hover,
-  button:hover {
-    transform: none;
-  }
-}
-
-/* Print Styles */
-@media print {
-  .min-h-screen {
-    background: white !important;
-    color: black !important;
-  }
-  
-  .bg-gray-900,
-  .bg-gray-800,
-  .bg-gray-700 {
-    background: white !important;
-    color: black !important;
-  }
-  
-  .text-white {
-    color: black !important;
-  }
-  
-  .border-gray-700,
-  .border-gray-600 {
-    border-color: black !important;
-  }
-  
-  .pos-service-btn {
-    border: 2px solid black !important;
-    box-shadow: none !important;
-  }
-  
-  .fixed.bottom-0 {
-    position: relative !important;
-    border: none !important;
-  }
-}
-
-/* Loading State */
-.pos-service-btn.loading {
-  position: relative;
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-.pos-service-btn.loading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  margin: -10px 0 0 -10px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Scrollbar Styling for Dark Theme */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #4b5563 #1f2937;
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: #1f2937;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: #4b5563;
-  border-radius: 4px;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
-
-/* Selection Color for Dark Theme */
-::selection {
-  background-color: #3b82f6;
-  color: white;
-}
-
-/* Custom Focus Ring for Dark Theme */
-.focus\\:ring-blue-500:focus {
-  --tw-ring-color: #3b82f6;
-}
-
-.focus\\:ring-emerald-500:focus {
-  --tw-ring-color: #10b981;
-}
-
-/* Improved Button States */
-.pos-service-btn[disabled] {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* Better Text Contrast */
-.text-gray-400 {
-  color: #9ca3af;
-}
-
-.text-gray-300 {
-  color: #d1d5db;
-}
-
-/* Enhanced Service Card Layout */
-.pos-service-btn .flex.items-start.space-x-4 {
-  width: 100%;
-}
-
-/* Status Badge Styling */
-.pos-service-btn .flex.items-center.mt-3 {
-  margin-top: 0.75rem;
-}
-
-/* Quick Action Grid Responsiveness */
-@media (min-width: 640px) and (max-width: 767px) {
-  .grid.grid-cols-2.sm\\:grid-cols-4 {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-  }
-}
+    /* Print styles */
+    @media print {
+      .min-h-screen {
+        background: white !important;
+      }
+      
+      .service-card {
+        break-inside: avoid;
+        border: 2px solid #000 !important;
+        box-shadow: none !important;
+      }
+      
+      footer {
+        display: none;
+      }
+    }

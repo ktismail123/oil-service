@@ -1,0 +1,95 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Simple Modal Header -->
+    <div class="modal-header">
+      <h2>{{ isEditMode() ? 'Edit User' : 'Add New User' }}</h2>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Simple Modal Body -->
+    <div class="modal-body">
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Name Field -->
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="form-input"
+            placeholder="Enter full name">
+          <div *ngIf="isNameInvalid()" class="error-msg">
+            {{ getNameErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="form-input"
+            placeholder="Enter email address">
+          <div *ngIf="isEmailInvalid()" class="error-msg">
+            {{ getEmailErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            class="form-input"
+            [placeholder]="isEditMode() ? 'Enter new password (leave blank to keep current)' : 'Enter password (min. 8 characters)'">
+          <div *ngIf="isPasswordInvalid()" class="error-msg">
+            {{ getPasswordErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Role Field -->
+        <div class="form-group">
+          <label for="role">Role *</label>
+          <select id="role" formControlName="role" class="form-select">
+            <option value="">Select role</option>
+            <option value="manager">Manager</option>
+            <option value="technician">Technician</option>
+          </select>
+          <div *ngIf="isRoleInvalid()" class="error-msg">
+            {{ getRoleErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="successMessage()" class="success-msg">
+          {{ successMessage() }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage()" class="error-msg">
+          {{ errorMessage() }}
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" >
+            <span *ngIf="isSubmitting()">{{ isEditMode() ? 'Updating...' : 'Creating...' }}</span>
+            <span *ngIf="!isSubmitting()">{{ isEditMode() ? 'Update User' : 'Create User' }}</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

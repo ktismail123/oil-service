@@ -19,6 +19,10 @@ export class ApiService {
   private http = inject(HttpClient);
   private baseUrl = environment.apiUrl;
 
+  login(payload:{email: string, password: string, role: string}): Observable<any>{
+    return this.http.post<any>(`${this.baseUrl}/auth/login`, payload)
+  }
+
   // Vehicle endpoints
   getBrands(): Observable<VehicleBrand[]> {
     return this.http.get<VehicleBrand[]>(`${this.baseUrl}/brands`);
@@ -119,5 +123,13 @@ export class ApiService {
 
   deleteBrand(brandId: number): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/brands/${brandId}/delete`);
+  }
+
+  createUser(postData:{name: string, email: string, role: string, password: string}): Observable<any>{
+    return this.http.post<any>(`${this.baseUrl}/user/create`, postData);
+  }
+
+  getUsers(): Observable<any>{
+    return this.http.get<any>(`${this.baseUrl}/user/all`)
   }
 }
