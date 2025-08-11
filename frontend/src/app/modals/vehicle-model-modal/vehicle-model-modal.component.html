@@ -1,0 +1,68 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2>{{ isEditMode() ? 'Edit Model' : 'Add New Model' }}</h2>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <form [formGroup]="modelForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Model Name Field -->
+        <div class="form-group">
+          <label for="modelName">Model Name *</label>
+          <input
+            id="modelName"
+            type="text"
+            formControlName="name"
+            class="form-input"
+            placeholder="Enter model name">
+          <div *ngIf="isModelNameInvalid()" class="error-msg">
+            {{ getModelNameErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Brand Name Field -->
+        <div class="form-group">
+          <label for="brandName">Brand Name *</label>
+          <select id="brandName" formControlName="brand_id" class="form-select">
+            <option value="">Select brand</option>
+            <option *ngFor="let brand of brands()" [value]="brand.id">
+              {{ brand.name }}
+            </option>
+          </select>
+          <div *ngIf="isBrandNameInvalid()" class="error-msg">
+            {{ getBrandNameErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="successMessage()" class="success-msg">
+          {{ successMessage() }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage()" class="error-msg">
+          {{ errorMessage() }}
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting()">
+            <span *ngIf="isSubmitting()">{{ isEditMode() ? 'Updating...' : 'Creating...' }}</span>
+            <span *ngIf="!isSubmitting()">{{ isEditMode() ? 'Update Model' : 'Create Model' }}</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

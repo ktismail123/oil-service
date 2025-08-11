@@ -1,1 +1,1 @@
-<app-data-table [height]="'40px'" [displayedColumns]="['id', 'name', 'brand_name']" [rowDatas]="models()" (addNew)="actionEvents($event)"/>
+<app-data-table [height]="'40px'" [showAddButton]="true" [displayedColumns]="['id', 'name', 'brand_name']" [rowDatas]="models()" (addNew)="actionEvents($event)" [actionConfig]="actionConfig"/>

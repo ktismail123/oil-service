@@ -36,6 +36,18 @@ export class ApiService {
     return this.http.get<VehicleModel[]>(`${this.baseUrl}/models/${brandId}`);
   }
 
+  createVehicleModel(payload:{name: string, brand_id: string}): Observable<any>{
+    return this.http.post<any>(`${this.baseUrl}/models/create`, payload)
+  }
+
+  updateVehicleModel(payload:{name: string, brand_id: string}, id: number): Observable<any>{
+    return this.http.put<any>(`${this.baseUrl}/models/${id}`, payload)
+  }
+
+  deleteVehicleModel(id: number): Observable<any>{
+    return this.http.delete<any>(`${this.baseUrl}/models/${id}`)
+  }
+
   // Oil service endpoints
   getOilTypes(): Observable<OilType[]> {
     return this.http.get<OilType[]>(`${this.baseUrl}/oil-types`);
