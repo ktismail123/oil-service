@@ -40,7 +40,7 @@ export class BatteryCapacityStepComponent {
 
   capacityForm!: FormGroup;
    searchTerm: string = '';
-  searchKeys: string[] = ['name'];
+  searchKeys: string[] = ['capacity'];
   
   isValid = computed(() => !!this.capacityForm?.get('capacity')?.value);
 

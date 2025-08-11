@@ -28,7 +28,7 @@ private fb = inject(FormBuilder);
   validityChanged = output<boolean>();
 
   searchTerm: string = '';
-  searchKeys: string[] = ['name'];
+  searchKeys: string[] = ['brand', 'price'];
 
   // Signals
   brandForm!: FormGroup;
