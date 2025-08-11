@@ -83,11 +83,10 @@ export class LoginComponent {
      )
      .subscribe({
       next:(res => {
-        console.log(res);
         if(res.success){
           localStorage.setItem('token', res.data.token);
+          localStorage.setItem('userData', JSON.stringify(res.data?.userData));
           const returnUrl = this.route.snapshot.queryParams['returnUrl'] || 'select-service';
-
           this.router.navigateByUrl(returnUrl);
         }
       }),
