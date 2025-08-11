@@ -1,166 +1,113 @@
+
+// battery-service.component.ts - Updated Main Component
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-} from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { distinctUntilChanged, filter } from 'rxjs';
 
 import { ApiService } from '../../services/api.service';
 import { BookingService } from '../../services/booking.service';
-import { BatteryType, Accessory } from '../../models';
 
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
-import { FormFieldComponent } from '../../shared/components/form-field/form-field.component';
 import { StepIndicatorComponent } from '../../shared/components/step-indicator/step-indicator.component';
-import { distinctUntilChanged, filter } from 'rxjs';
+
+// Import step components
+import { BatteryCapacityStepComponent, CapacityOption } from './steps/battery-capacity-step/battery-capacity-step.component';
+import { BatteryBrandStepComponent } from './steps/battery-brand-step/battery-brand-step.component';
+import { AccessoriesStepComponent } from './steps/accessories-step/accessories-step.component';
+import { CustomerData, CustomerSummaryStepComponent, ServiceSummary } from './steps/customer-summary-step/customer-summary-step.component';
+import { Accessory, BatteryType } from '../../models';
 
 @Component({
   selector: 'app-battery-service',
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
     ButtonComponent,
     LoadingComponent,
-    FormFieldComponent,
     StepIndicatorComponent,
+    BatteryCapacityStepComponent,
+    BatteryBrandStepComponent,
+    AccessoriesStepComponent,
+    CustomerSummaryStepComponent
   ],
   templateUrl: './battery-service.component.html',
   styleUrls: ['./battery-service.component.css'],
 })
 export class BatteryServiceComponent implements OnInit {
-  private fb = inject(FormBuilder);
   private apiService = inject(ApiService);
   private bookingService = inject(BookingService);
   private router = inject(Router);
 
+  // Step management
   currentStep = signal(1);
-  totalSteps = signal(4);  // Updated to 4 steps
+  totalSteps = signal(4);
+  steps = ['Capacity', 'Brand', 'Accessories', 'Summary'];
+
+  // Loading states
   isLoading = signal(false);
   isSubmitting = signal(false);
 
+  // Data signals
   batteryTypes = signal<BatteryType[]>([]);
   accessories = signal<Accessory[]>([]);
+  
+  // Selection signals
+  selectedCapacity = signal<number | null>(null);
+  selectedBatteryTypeId = signal<number | null>(null);
+  selectedBatteryType = signal<BatteryType | null>(null);
   selectedAccessories = signal<Accessory[]>([]);
+  customerData = signal<CustomerData | null>(null);
 
-  // Updated validation flags for 4 steps
-  step1Valid = signal(false); // Step 1: Capacity selection
-  step2Valid = signal(false); // Step 2: Brand selection  
-  step3Valid = signal(true);  // Step 3: Accessories (optional)
-  step4Valid = signal(false); // Step 4: Customer details
+  // Validation signals
+  step1Valid = signal(false);
+  step2Valid = signal(false);
+  step3Valid = signal(true); // Always valid (optional)
+  step4Valid = signal(false);
 
-  // Simple computed to check if current step is valid
+  // Computed properties
   canProceed = computed(() => {
     switch (this.currentStep()) {
-      case 1:
-        return this.step1Valid();
-      case 2:
-        return this.step2Valid();
-      case 3:
-        return this.step3Valid();
-      case 4:
-        return this.step4Valid();
-      default:
-        return false;
+      case 1: return this.step1Valid();
+      case 2: return this.step2Valid();
+      case 3: return this.step3Valid();
+      case 4: return this.step4Valid();
+      default: return false;
     }
   });
 
-  subtotal = computed(() => {
-    const result = this.calculateSubtotal();
-    return typeof result === 'number' ? result : 0;
-  });
-  vatAmount = computed(() => {
-    const sub = this.subtotal();
-    return typeof sub === 'number' ? (sub * 15) / 100 : 0;
-  });
-  totalAmount = computed(() => {
-    const sub = this.subtotal();
-    const vat = this.vatAmount();
-    return (
-      (typeof sub === 'number' ? sub : 0) + (typeof vat === 'number' ? vat : 0)
-    );
-  });
-
-  capacityForm!: FormGroup;
-  brandForm!: FormGroup;
-  customerForm!: FormGroup;
-
-  capacityOptions = signal([
-    {
-      value: 80,
-      label: '80 Amp',
-      description: 'Suitable for small to medium cars',
-    },
+  capacityOptions = signal<CapacityOption[]>([
+    { value: 80, label: '80 Amp', description: 'Suitable for small to medium cars' },
     { value: 90, label: '90 Amp', description: 'Suitable for medium cars' },
-    {
-      value: 110,
-      label: '110 Amp',
-      description: 'Suitable for large cars and SUVs',
-    },
+    { value: 110, label: '110 Amp', description: 'Suitable for large cars and SUVs' },
   ]);
+  laborCost = signal(0);
 
-  // Available battery brands grouped by capacity
-  batteryBrands = computed(() => {
-    const selectedCapacity = this.capacityForm?.get('capacity')?.value;
-    if (!selectedCapacity) return [];
-
-    return this.batteryTypes().filter(
-      (battery) => battery.capacity === selectedCapacity
-    );
+  subtotal = computed(() => {
+    let total = 0;
+    
+    // Add battery cost
+    const batteryType = this.selectedBatteryType();
+    if (batteryType?.price) {
+      total += Number(batteryType.price);
+    }
+    
+    // Add accessories cost
+    this.selectedAccessories().forEach(acc => {
+      if (acc.price && acc.quantity) {
+        total += Number(acc.price) * Number(acc.quantity);
+      }
+    });
+    total += this.laborCost();
+    return total;
   });
 
-  steps = ['Capacity', 'Brand', 'Accessories', 'Summary']; // Updated steps
+  vatAmount = computed(() => (this.subtotal() * 5) / 100);
+  totalAmount = computed(() => this.subtotal() + this.vatAmount());
 
   ngOnInit() {
-    this.initializeForms();
     this.loadInitialData();
-  }
-
-  private initializeForms() {
-    this.capacityForm = this.fb.group({
-      capacity: [''],
-    });
-
-    this.brandForm = this.fb.group({
-      batteryTypeId: [''],
-    });
-
-    this.customerForm = this.fb.group({
-      name: ['', Validators.required],
-      mobile: ['', [Validators.required, Validators.pattern(/^\d{10,15}$/)]],
-      plateNumber: ['', Validators.required],
-    });
-
-    // Subscribe to customer form changes for step 4 validation
-    this.customerForm.valueChanges.subscribe(() => {
-      this.step4Valid.set(this.customerForm.valid);
-    });
-
-    this.customerForm
-      .get('mobile')
-      ?.valueChanges.pipe(
-        filter((value) => value?.length === 10),
-        distinctUntilChanged()
-      )
-      .subscribe((mobile) => {
-        this.getUserDetails(mobile);
-      });
-  }
-
-  getUserDetails(mobile: number) {
-    this.apiService.checkCustomer(mobile.toString()).subscribe({
-      next: (res) => {
-        const result = res[0];
-        this.customerForm.patchValue({
-          name: result?.name || '',
-          plateNumber: result?.plate_number || '',
-        });
-      },
-    });
   }
 
   private async loadInitialData() {
@@ -170,10 +117,9 @@ export class BatteryServiceComponent implements OnInit {
         this.apiService.getBatteryTypes().toPromise(),
         this.apiService.getAccessories('battery_service').toPromise(),
       ]);
+      
       this.batteryTypes.set(batteryTypes || []);
-      this.accessories.set(
-        (accessories || []).map((acc) => ({ ...acc, quantity: 0 }))
-      );
+      this.accessories.set((accessories || []).map(acc => ({ ...acc, quantity: 0 })));
     } catch (error) {
       console.error('Data loading failed:', error);
     } finally {
@@ -181,183 +127,113 @@ export class BatteryServiceComponent implements OnInit {
     }
   }
 
+  // Step navigation
   nextStep() {
-    if (!this.canProceed()) {
-      return;
-    }
-    if (this.currentStep() < this.totalSteps()) {
-      this.currentStep.update((step) => step + 1);
+    if (this.canProceed() && this.currentStep() < this.totalSteps()) {
+      this.currentStep.update(step => step + 1);
     }
   }
 
   prevStep() {
     if (this.currentStep() > 1) {
-      this.currentStep.update((step) => step - 1);
+      this.currentStep.update(step => step - 1);
     }
   }
 
-  // Step 1: Capacity Selection (previously step 2)
-  selectCapacity(capacity: number) {
-    this.capacityForm.get('capacity')?.setValue(capacity);
-    // Clear previously selected battery brand when capacity changes
-    this.brandForm.get('batteryTypeId')?.setValue('');
-    this.validateStep1();
-    this.resetFromStep(2); // Reset subsequent steps
+  // Event handlers
+  onCapacitySelected(capacity: number) {
+    this.selectedCapacity.set(capacity);
+    // Reset subsequent selections
+    this.selectedBatteryTypeId.set(null);
+    this.selectedBatteryType.set(null);
+    this.step2Valid.set(false);
   }
 
-  private validateStep1() {
-    const capacity = this.capacityForm.get('capacity')?.value;
-    this.step1Valid.set(!!capacity);
+  onStep1ValidityChanged(isValid: boolean) {
+    this.step1Valid.set(isValid);
   }
 
-  // Step 2: Battery Brand Selection (previously step 3)
-  selectBatteryBrand(batteryType: BatteryType) {
-    this.brandForm.get('batteryTypeId')?.setValue(batteryType.id);
-    this.validateStep2();
+  onBrandSelected(batteryType: BatteryType) {
+    this.selectedBatteryTypeId.set(batteryType.id);
+    this.selectedBatteryType.set(batteryType);
+    this.currentStep.update(step => step + 1);
   }
 
-  private validateStep2() {
-    const batteryTypeId = this.brandForm.get('batteryTypeId')?.value;
-    this.step2Valid.set(!!batteryTypeId);
+  onStep2ValidityChanged(isValid: boolean) {
+    this.step2Valid.set(isValid);
   }
 
-  // Step 3: Accessories (previously step 4) - Optional, always valid
-  addAccessory(accessory: Accessory) {
-    const current = this.selectedAccessories();
-    const index = current.findIndex((a) => a.id === accessory.id);
-
-    if (index >= 0) {
-      const updated = [...current];
-      updated[index] = {
-        ...updated[index],
-        quantity: (updated[index].quantity || 0) + 1,
-      };
-      this.selectedAccessories.set(updated);
-    } else {
-      this.selectedAccessories.set([...current, { ...accessory, quantity: 1 }]);
-    }
+  onAccessoriesChanged(accessories: Accessory[]) {
+    this.selectedAccessories.set(accessories);
   }
 
-  removeAccessory(accessoryId: number) {
-    const current = this.selectedAccessories();
-    const index = current.findIndex((a) => a.id === accessoryId);
-
-    if (index >= 0) {
-      const updated = [...current];
-      if ((updated[index].quantity || 0) > 1) {
-        updated[index] = {
-          ...updated[index],
-          quantity: updated[index].quantity! - 1,
-        };
-      } else {
-        updated.splice(index, 1);
-      }
-      this.selectedAccessories.set(updated);
-    }
+  onSkipAccessoriesEmit(){
+    this.currentStep.update(step => step + 1);
   }
 
-  // Helper method to reset validation from a specific step
-  private resetFromStep(step: number) {
-    if (step <= 2) {
-      this.step2Valid.set(false);
-      this.brandForm.reset();
-    }
-    if (step <= 3) {
-      this.selectedAccessories.set([]);
-    }
-    if (step <= 4) {
-      this.step4Valid.set(false);
-      this.customerForm.reset();
-    }
+  onCustomerDataChanged(data: CustomerData) {
+    this.customerData.set(data);
+    console.log(data);
+    this.laborCost.set(Number(data?.laborCost))
+    
   }
 
-  private calculateSubtotal(): number {
-    let total = 0;
-
-    try {
-      // Add battery cost
-      const batteryTypeId = this.brandForm?.get('batteryTypeId')?.value;
-
-      console.log('Battery calculation:', {
-        batteryTypeId,
-        batteryTypes: this.batteryTypes(),
-      }); // Debug log
-
-      if (batteryTypeId) {
-        const battery = this.batteryTypes().find((b) => b.id == batteryTypeId); // Use == instead of === for type flexibility
-        console.log('Found battery:', battery); // Debug log
-        if (battery && battery.price) {
-          const batteryCost = Number(battery.price);
-          total += batteryCost;
-          console.log('Battery cost added:', batteryCost); // Debug log
-        }
-      }
-
-      // Add accessories cost
-      const accessories = this.selectedAccessories();
-      console.log('Accessories calculation:', accessories); // Debug log
-
-      if (accessories && Array.isArray(accessories)) {
-        accessories.forEach((acc) => {
-          if (acc && acc.price && acc.quantity) {
-            const accessoryCost = Number(acc.price) * Number(acc.quantity);
-            total += accessoryCost;
-            console.log(
-              'Accessory cost added:',
-              accessoryCost,
-              'for',
-              acc.name
-            ); // Debug log
-          }
-        });
-      }
-
-      console.log('Final total:', total); // Debug log
-    } catch (error) {
-      console.error('Error calculating subtotal:', error);
-      return 0;
-    }
-
-    return total || 0;
+  onStep4ValidityChanged(isValid: boolean) {
+    this.step4Valid.set(isValid);
   }
 
+  // Helper methods
+  getCapacityLabel(): string {
+    const capacity = this.selectedCapacity();
+    const option = this.capacityOptions().find(opt => opt.value === capacity);
+    return option ? option.label : '';
+  }
+
+  getServiceSummary(): ServiceSummary {
+    return {
+      capacityLabel: this.getCapacityLabel(),
+      batteryType: this.selectedBatteryType(),
+      accessories: this.selectedAccessories(),
+      subtotal: this.subtotal(),
+      vatAmount: this.vatAmount(),
+      totalAmount: this.subtotal()
+      // totalAmount: this.totalAmount()
+    };
+  }
+
+  // Submit booking
   async submitBooking() {
-    if (!this.canProceed()) {
-      return;
-    }
+    if (!this.canProceed()) return;
+
+    const customer = this.customerData();
+    if (!customer) return;
 
     this.isSubmitting.set(true);
     try {
       const bookingData = {
         customer: {
-          name: this.customerForm.get('name')?.value,
-          mobile: this.customerForm.get('mobile')?.value,
+          name: customer.name,
+          mobile: customer.mobile,
         },
         vehicle: {
           brandId: 1, // Default brand for battery service
           modelId: 1, // Default model for battery service
-          plateNumber: this.customerForm.get('plateNumber')?.value,
+          plateNumber: customer.plateNumber,
         },
         service: {
           type: 'battery_replacement' as const,
           date: new Date().toISOString().split('T')[0],
           time: new Date().toTimeString().split(' ')[0],
-          batteryTypeId: this.brandForm.get('batteryTypeId')?.value,
+          batteryTypeId: this.selectedBatteryTypeId(),
           subtotal: this.subtotal(),
           vatAmount: this.vatAmount(),
-          totalAmount: this.totalAmount(),
+          totalAmount: this.subtotal(),
         },
         accessories: this.selectedAccessories(),
       };
 
-      const response = await this.apiService
-        .createBooking(bookingData)
-        .toPromise();
-      alert(
-        `Booking created successfully! Total: AED ${this.totalAmount().toFixed(
-          2
-        )}`
-      );
+      const response = await this.apiService.createBooking(bookingData as any).toPromise();
+      alert(`Booking created successfully! Total: AED ${this.totalAmount().toFixed(2)}`);
       this.router.navigate(['/']);
     } catch (error) {
       console.error('Booking failed:', error);
@@ -367,32 +243,12 @@ export class BatteryServiceComponent implements OnInit {
     }
   }
 
-  getSelectedCapacity(): number {
-    return this.capacityForm.get('capacity')?.value;
-  }
-
-  getSelectedBatteryType(): BatteryType | undefined {
-    const batteryTypeId = this.brandForm.get('batteryTypeId')?.value;
-    return this.batteryTypes().find((battery) => battery.id == batteryTypeId);
-  }
-
-  getCapacityLabel(): string {
-    const capacity = this.getSelectedCapacity();
-    const option = this.capacityOptions().find((opt) => opt.value === capacity);
-    return option ? option.label : '';
-  }
-
-  getBatteryPrice(): number {
-    const battery = this.getSelectedBatteryType();
-    return battery?.price ? Number(battery.price) : 0;
-  }
-
-  formatPrice(price: any): string {
-    const numPrice = Number(price) || 0;
-    return numPrice.toFixed(2);
-  }
-
   backToHome() {
     this.router.navigate(['/']);
   }
+
+    gotToNextStep(){
+    this.currentStep.update(step => step + 1);
+  }
+
 }
