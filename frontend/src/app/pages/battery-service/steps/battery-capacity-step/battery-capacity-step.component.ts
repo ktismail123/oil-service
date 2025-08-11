@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SearchPipe } from '../../../../pipes/search.pipe';
+import { ApiService } from '../../../../services/api.service';
+import { take } from 'rxjs';
 
 export interface CapacityOption {
   value: number;
@@ -19,6 +21,7 @@ export interface CapacityOption {
 export class BatteryCapacityStepComponent {
 
   private fb = inject(FormBuilder);
+  private apiService = inject(ApiService);
 
   // Inputs
   initialCapacity = input<number | null>(null);
@@ -44,6 +47,16 @@ export class BatteryCapacityStepComponent {
   ngOnInit() {
     this.initializeForm();
     this.subscribeToChanges();
+    this.loadBatteryTpes();
+  }
+
+  loadBatteryTpes(): void {
+    this.apiService
+      .getBatteryTypes()
+      .pipe(take(1))
+      .subscribe({
+        next: (res: any) => [this.capacityOptions.set(res)],
+      });
   }
 
   private initializeForm() {

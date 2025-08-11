@@ -107,7 +107,7 @@ export class BatteryServiceComponent implements OnInit {
   totalAmount = computed(() => this.subtotal() + this.vatAmount());
 
   ngOnInit() {
-    this.loadInitialData();
+    // this.loadInitialData();
   }
 
   private async loadInitialData() {

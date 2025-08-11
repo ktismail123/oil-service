@@ -1,8 +1,10 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BatteryType } from '../../../../models';
 import { CommonModule } from '@angular/common';
 import { SearchPipe } from '../../../../pipes/search.pipe';
+import { ApiService } from '../../../../services/api.service';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-battery-brand-step',
@@ -12,6 +14,8 @@ import { SearchPipe } from '../../../../pipes/search.pipe';
 })
 export class BatteryBrandStepComponent {
 private fb = inject(FormBuilder);
+  private apiService = inject(ApiService);
+
 
   // Inputs
   selectedCapacity = input.required<number>();
@@ -29,11 +33,7 @@ private fb = inject(FormBuilder);
   // Signals
   brandForm!: FormGroup;
   
-  availableBrands = computed(() => {
-    return this.batteryTypes().filter(
-      battery => battery.capacity === this.selectedCapacity()
-    );
-  });
+  availableBrands = signal<any[]>([]);
 
   selectedCapacityLabel = computed(() => this.capacityLabel());
   
@@ -42,6 +42,17 @@ private fb = inject(FormBuilder);
   ngOnInit() {
     this.initializeForm();
     this.subscribeToChanges();
+    this.loadBatteriesByAmp();
+  }
+
+
+  loadBatteriesByAmp(): void {
+    this.apiService
+      .getBatteriesByAmp(this.selectedCapacity())
+      .pipe(take(1))
+      .subscribe({
+        next: (res: any) => [this.availableBrands.set(res)],
+      });
   }
 
   private initializeForm() {

@@ -54,6 +54,10 @@ export class ApiService {
     return this.http.get<BatteryType[]>(`${this.baseUrl}/battery-types`);
   }
 
+  getBatteriesByAmp(amp: number): Observable<BatteryType[]> {
+    return this.http.get<BatteryType[]>(`${this.baseUrl}/battery-types/${amp}`);
+  }
+
   // Accessories endpoints
   getAccessories(category?: string): Observable<Accessory[]> {
     const params = category ? `?category=${category}` : '';
