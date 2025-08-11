@@ -24,7 +24,7 @@ export class ServiceSelectionComponent {
     } else if (serviceType === 'battery_replacement') {
       this.router.navigate(['/battery-service']);
     } else if (serviceType === 'control_panel') {
-      this.router.navigate(['/control_panel']);
+      this.router.navigate(['/control-panel']);
     }
   }
 

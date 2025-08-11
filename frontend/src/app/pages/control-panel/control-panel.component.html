@@ -17,12 +17,25 @@
           <p class="page-title">{{ getCurrentTitle() }}</p>
           <!-- <p class="page-subtitle">Manage your {{ getCurrentTitle().toLowerCase() }} efficiently</p> -->
         </div>
-        <!-- <div class="header-actions">
-          <button class="action-btn primary" (click)="addNew()">
+        <div class="header-actions">
+          <!-- <button class="action-btn primary" (click)="addNew()">
             <i class="fas fa-plus"></i>
             <span>Add New</span>
+          </button> -->
+          <button class="action-btn" (click)="onSidebarToggle(!sidebarCollapsed())">
+            @if(sidebarCollapsed()){
+              <i class="fas fa-bars"></i>
+              <span>Show</span>
+            }@else {
+              <i class="fas fa-xmark"></i>
+              <span>Hides</span>
+            }
           </button>
-        </div> -->
+          <button class="action-btn primary" routerLink="/">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </button>
+        </div>
       </div>
     </div>
 

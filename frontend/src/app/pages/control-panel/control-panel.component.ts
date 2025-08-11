@@ -13,6 +13,7 @@ import { OilFiltersComponent } from '../../components/oil-filters/oil-filters.co
 import { BatteryTypesComponent } from '../../components/battery-types/battery-types.component';
 import { AccessoriesComponent } from '../../components/accessories/accessories.component';
 import { UserManagementComponent } from '../../components/user-management/user-management.component';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-control-panel',
@@ -26,7 +27,8 @@ import { UserManagementComponent } from '../../components/user-management/user-m
     OilFiltersComponent,
     BatteryTypesComponent,
     AccessoriesComponent,
-    UserManagementComponent
+    UserManagementComponent,
+    RouterModule
   ],
   templateUrl: './control-panel.component.html',
   styleUrl: './control-panel.component.scss',
