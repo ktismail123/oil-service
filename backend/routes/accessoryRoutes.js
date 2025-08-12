@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { getAllAccessorys, createAccessory } = require('../controllers/accessoryController');
+const { getAllAccessorys, createAccessory, updateAccessory, deleteAccessory } = require('../controllers/accessoryController');
 
 router.get('/', getAllAccessorys);
-// router.post('/', createAccessory);
+router.post('/create', createAccessory);
+router.put('/:id', updateAccessory);
+router.delete('/:id', deleteAccessory);
 
 module.exports = router;

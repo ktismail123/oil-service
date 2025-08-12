@@ -273,7 +273,7 @@ private triggerCalculation() {
       const [brands, filters, accessories] = await Promise.all([
         this.apiService.getBrands().toPromise(),
         this.apiService.getOilFilters().toPromise(),
-        this.apiService.getAccessories('oil_service').toPromise(),
+        this.apiService.getAccessories().toPromise(),
       ]);
       this.brands.set(brands || []);
       this.oilFilters.set(filters || []);

@@ -122,6 +122,19 @@ export class ApiService {
     return this.http.get<Accessory[]>(`${this.baseUrl}/accessories${params}`);
   }
 
+  createAccessory(payload: any): Observable<any>{
+    return this.http.post<any>(`${this.baseUrl}/accessories/create`, payload)
+  }
+
+  updateAccessory(id: number, payload: any): Observable<any>{
+    return this.http.put<any>(`${this.baseUrl}/accessories/${id}`, payload)
+  }
+
+  deleteAccessory(id: number): Observable<any>{
+    return this.http.delete<any>(`${this.baseUrl}/accessories/${id}`);
+  }
+
+
   // Customer endpoints
   checkCustomer(mobile?: string, plate?: string): Observable<any[]> {
     const params = new URLSearchParams();

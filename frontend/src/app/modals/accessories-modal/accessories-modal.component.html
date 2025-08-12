@@ -1,0 +1,85 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2>{{ isEditMode() ? 'Edit Accessory' : 'Add New Accessory' }}</h2>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <form [formGroup]="accessoryForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Name and Category Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Accessory Name *</label>
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              class="form-input"
+              placeholder="Enter accessory name">
+            <div *ngIf="isNameInvalid()" class="error-msg">
+              {{ getNameErrorMessage() }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" formControlName="category" class="form-select">
+              <option value="">Select category</option>
+              <option value="oil_service">Oil Service</option>
+              <option value="battery_service">Battery Service</option>
+              <option value="general">General</option>
+            </select>
+            <div *ngIf="isCategoryInvalid()" class="error-msg">
+              {{ getCategoryErrorMessage() }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Price Row -->
+        <div class="form-group">
+          <label for="price">Price *</label>
+          <input
+            id="price"
+            type="number"
+            step="0.01"
+            min="0"
+            formControlName="price"
+            class="form-input"
+            placeholder="Enter price">
+          <div *ngIf="isPriceInvalid()" class="error-msg">
+            {{ getPriceErrorMessage() }}
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="successMessage()" class="success-msg">
+          {{ successMessage() }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage()" class="error-msg">
+          {{ errorMessage() }}
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting()">
+            <span *ngIf="isSubmitting()">{{ isEditMode() ? 'Updating...' : 'Creating...' }}</span>
+            <span *ngIf="!isSubmitting()">{{ isEditMode() ? 'Update Accessory' : 'Create Accessory' }}</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
