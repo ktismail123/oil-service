@@ -19,8 +19,12 @@ export class ApiService {
   private http = inject(HttpClient);
   private baseUrl = environment.apiUrl;
 
-  login(payload:{email: string, password: string, role: string}): Observable<any>{
-    return this.http.post<any>(`${this.baseUrl}/auth/login`, payload)
+  login(payload: {
+    email: string;
+    password: string;
+    role: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/auth/login`, payload);
   }
 
   // Vehicle endpoints
@@ -36,16 +40,22 @@ export class ApiService {
     return this.http.get<VehicleModel[]>(`${this.baseUrl}/models/${brandId}`);
   }
 
-  createVehicleModel(payload:{name: string, brand_id: string}): Observable<any>{
-    return this.http.post<any>(`${this.baseUrl}/models/create`, payload)
+  createVehicleModel(payload: {
+    name: string;
+    brand_id: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/models/create`, payload);
   }
 
-  updateVehicleModel(payload:{name: string, brand_id: string}, id: number): Observable<any>{
-    return this.http.put<any>(`${this.baseUrl}/models/${id}`, payload)
+  updateVehicleModel(
+    payload: { name: string; brand_id: string },
+    id: number
+  ): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/models/${id}`, payload);
   }
 
-  deleteVehicleModel(id: number): Observable<any>{
-    return this.http.delete<any>(`${this.baseUrl}/models/${id}`)
+  deleteVehicleModel(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/models/${id}`);
   }
 
   // Oil service endpoints
@@ -92,6 +102,18 @@ export class ApiService {
 
   getBatteriesByAmp(amp: number): Observable<BatteryType[]> {
     return this.http.get<BatteryType[]>(`${this.baseUrl}/battery-types/${amp}`);
+  }
+
+  createBatteryType(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/battery-types/create`, payload);
+  }
+
+  updateBatteryType(id: number, payload: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/battery-types/${id}`, payload);
+  }
+
+  deleteBatteryType(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/battery-types/${id}`);
   }
 
   // Accessories endpoints
@@ -158,18 +180,26 @@ export class ApiService {
   }
 
   updateBrand(brandId: number, brandData: { name: string }): Observable<any> {
-    return this.http.put<any>(`${this.baseUrl}/brands/${brandId}/update`, brandData);
+    return this.http.put<any>(
+      `${this.baseUrl}/brands/${brandId}/update`,
+      brandData
+    );
   }
 
   deleteBrand(brandId: number): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/brands/${brandId}/delete`);
   }
 
-  createUser(postData:{name: string, email: string, role: string, password: string}): Observable<any>{
+  createUser(postData: {
+    name: string;
+    email: string;
+    role: string;
+    password: string;
+  }): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/user/create`, postData);
   }
 
-  getUsers(): Observable<any>{
-    return this.http.get<any>(`${this.baseUrl}/user/all`)
+  getUsers(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/user/all`);
   }
 }
