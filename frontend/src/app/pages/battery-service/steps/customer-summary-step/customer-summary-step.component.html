@@ -50,25 +50,7 @@
     </div>
   </div>
 
-  <!-- Receipt Style Layout -->
-  <div class="max-w-md mx-auto bg-white shadow-lg p-5" id="receipt-content">
-    <!-- Receipt Header -->
-    <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
-      <h1 class="text-2xl font-bold text-gray-800 mb-1">TECH LUBE</h1>
-      <p class="text-sm text-gray-600">Premium Auto Service Center</p>
-      <p class="text-xs text-gray-500 mt-1">Tel: +971-XXX-XXXX</p>
-      <p class="text-xs text-gray-500">Email: {{'info@techlube.ae'}}</p>
-    </div>
-
-    <!-- Receipt Number & Date -->
-    <div class="text-center mb-4">
-      <p class="text-xs text-gray-500">RECEIPT #TL-{{ 'JKHJH' }}</p>
-      <p class="text-xs text-gray-500">{{ 24-5-2025 }}</p>
-      <!-- <p class="text-xs text-gray-500">RECEIPT #TL-{{ generateReceiptNumber() }}</p>
-      <p class="text-xs text-gray-500">{{ getCurrentDate() }}</p> -->
-    </div>
-
-    <!-- Customer Information Form -->
+   <!-- Customer Information Form -->
     <div class="border-b border-dashed border-gray-300 pb-4 mb-4">
       <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center">
         CUSTOMER DETAILS
@@ -111,7 +93,7 @@
             </app-form-field>
           </div>
           <div class="w-full">
-            <label class="block text-xs text-gray-500 mb-1">Labour Cost *</label>
+            <label class="block text-xs text-gray-500 mb-1">Labour Cost </label>
             <app-form-field
               [control]="customerForm.get('laborCost')!"
               placeholder="Labour Cost"
@@ -123,6 +105,26 @@
         </div>
       </form>
     </div>
+
+  <!-- Receipt Style Layout -->
+  <div class="max-w-md mx-auto bg-white shadow-lg p-5" id="receipt-content">
+    <!-- Receipt Header -->
+    <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
+      <h1 class="text-2xl font-bold text-gray-800 mb-1">TECH LUBE</h1>
+      <p class="text-sm text-gray-600">Premium Auto Service Center</p>
+      <p class="text-xs text-gray-500 mt-1">Tel: +971-XXX-XXXX</p>
+      <p class="text-xs text-gray-500">Email: {{'info@techlube.ae'}}</p>
+    </div>
+
+    <!-- Receipt Number & Date -->
+    <div class="text-center mb-4">
+      <p class="text-xs text-gray-500">RECEIPT #TL-{{ 'JKHJH' }}</p>
+      <p class="text-xs text-gray-500">{{ 24-5-2025 }}</p>
+      <!-- <p class="text-xs text-gray-500">RECEIPT #TL-{{ generateReceiptNumber() }}</p>
+      <p class="text-xs text-gray-500">{{ getCurrentDate() }}</p> -->
+    </div>
+
+   
 
     <!-- Service Details -->
     <div class="border-b border-dashed border-gray-300 pb-4 mb-4">

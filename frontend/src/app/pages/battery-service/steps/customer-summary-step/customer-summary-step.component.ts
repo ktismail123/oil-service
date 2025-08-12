@@ -67,7 +67,7 @@ export class CustomerSummaryStepComponent {
         ],
       ],
       plateNumber: ['', [Validators.required, Validators.minLength(1)]],
-      laborCost: ['', [Validators.required]],
+      laborCost: [''],
     });
   }
 
