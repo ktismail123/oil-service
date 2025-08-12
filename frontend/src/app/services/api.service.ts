@@ -53,6 +53,18 @@ export class ApiService {
     return this.http.get<OilType[]>(`${this.baseUrl}/oil-types`);
   }
 
+  createOilType(payloadData: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/oil-types/create`, payloadData);
+  }
+
+  updateOilType(id: number, payloadData: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/oil-types/${id}`, payloadData);
+  }
+
+  deleteOililType(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/oil-types/${id}`);
+  }
+
   getOilTypesByIntervell(intervell: number): Observable<OilType[]> {
     return this.http.get<OilType[]>(`${this.baseUrl}/oil-types/${intervell}`);
   }
