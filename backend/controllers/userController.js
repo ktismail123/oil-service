@@ -55,9 +55,84 @@ const getAllUsers = async (req, res) => {
     }
 };
 
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = parseInt(id);
+    const db = getDB();
+    
+    console.log('Deleting user with ID:', userId);
+    
+    // Validate user ID
+    if (!userId || isNaN(userId)) {
+      return res.status(400).json({ 
+        message: 'Valid user ID is required' 
+      });
+    }
+    
+    // Check if user exists and get their details
+    const [existingUser] = await db.query(
+      'SELECT id, name, email, role FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (existingUser.length === 0) {
+      return res.status(404).json({ 
+        message: 'User not found' 
+      });
+    }
+    
+    const user = existingUser[0];
+    
+    // Optional: Check if user has created any bookings (prevent deletion if they have data)
+    const [userBookings] = await db.query(
+      'SELECT COUNT(*) as count FROM service_bookings WHERE created_at = ? OR updated_at = ?',
+      [userId, userId]
+    );
+    
+    if (userBookings[0].count > 0) {
+      return res.status(409).json({ 
+        message: 'Cannot delete user. They have associated booking records.' 
+      });
+    }
+    
+    // Delete the user
+    const [result] = await db.query(
+      'DELETE FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ 
+        message: 'User not found or already deleted' 
+      });
+    }
+    
+    console.log('User deleted successfully:', userId);
+    
+    res.json({
+      message: 'User deleted successfully',
+      success: true,
+      deletedUser: {
+        id: userId,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+    
+  } catch (err) {
+    console.error('Delete user failed:', err);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: err.message 
+    });
+  }
+};
 
 
 module.exports = {
     createUser,
-    getAllUsers
+    getAllUsers,
+    deleteUser
 }

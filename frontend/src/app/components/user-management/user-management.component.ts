@@ -18,13 +18,13 @@ export class UserManagementComponent implements OnInit {
 
   users = signal<any[]>([]);
 
-  actionConfig: ActionConfig = ACTION_CONFIGS.FULL;
+  actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
 
   ngOnInit(): void {
-    this.loadBrands();
+    this.loadUsers();
   }
 
-  loadBrands(): void {
+  loadUsers(): void {
     this.apiService
       .getUsers()
       .pipe(take(1))
@@ -37,23 +37,32 @@ export class UserManagementComponent implements OnInit {
     event: 'add' | 'edit' | 'view' | 'delete';
     data?: any;
   }) {
-    console.log(action);
-    
-      if (action.event === 'add' || action.event === 'edit') {
-          this.dialog
-            .open(UserManagementModalComponent, {
-              width: '500px',
-              data: {
-                mode: action.event,
-                rowData: action?.data,
-              },
-            })
-            .afterClosed()
-            .subscribe({
-              next: (res) => {
-                this.loadBrands();
-              },
-            });
-        }
+    if (action.event === 'add' || action.event === 'edit') {
+      this.dialog
+        .open(UserManagementModalComponent, {
+          width: '500px',
+          data: {
+            mode: action.event,
+            rowData: action?.data,
+          },
+        })
+        .afterClosed()
+        .subscribe({
+          next: (res) => {
+            this.loadUsers();
+          },
+        });
+    }
+
+    if (action.event === 'delete') {
+      this.apiService.deleteUser(action.data?.id).subscribe({
+        next: (res) => {
+          if (res.success) {
+            alert('Successfully Deleetd');
+            this.loadUsers();
+          }
+        },
+      });
+    }
   }
 }

@@ -215,4 +215,10 @@ export class ApiService {
   getUsers(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/user/all`);
   }
+  
+  deleteUser(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/user/${id}`);
+  }
+
+
 }

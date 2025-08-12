@@ -186,6 +186,7 @@ export class UserManagementModalComponent {
             this.apiService.createUser(formData).subscribe({
               next:(res => {
                 this._successMessage.set(`User "${formData.name}" has been created successfully!`);
+                this.closeModal();
               })
             })
           }
