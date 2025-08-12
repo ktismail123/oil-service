@@ -1,0 +1,102 @@
+
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2>{{ isEditMode() ? 'Edit Oil Filter' : 'Add New Oil Filter' }}</h2>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <form [formGroup]="oilFilterForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Code and Brand Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="code">Filter Code *</label>
+            <input
+              id="code"
+              type="text"
+              formControlName="code"
+              class="form-input"
+              placeholder="Enter filter code (e.g., OF-001)">
+            <div *ngIf="isCodeInvalid()" class="error-msg">
+              {{ getCodeErrorMessage() }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="brand">Brand *</label>
+            <input
+              id="brand"
+              type="text"
+              formControlName="brand"
+              class="form-input"
+              placeholder="Enter brand name">
+            <div *ngIf="isBrandInvalid()" class="error-msg">
+              {{ getBrandErrorMessage() }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Price and Quantity Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="price">Price *</label>
+            <input
+              id="price"
+              type="number"
+              step="0.01"
+              min="0"
+              formControlName="price"
+              class="form-input"
+              placeholder="Enter price">
+            <div *ngIf="isPriceInvalid()" class="error-msg">
+              {{ getPriceErrorMessage() }}
+            </div>
+          </div>
+
+          <!-- <div class="form-group">
+            <label for="quantity">Quantity Available</label>
+            <input
+              id="quantity"
+              type="number"
+              min="0"
+              formControlName="quantity_available"
+              class="form-input"
+              placeholder="Enter quantity (default: 0)">
+            <div *ngIf="isQuantityInvalid()" class="error-msg">
+              {{ getQuantityErrorMessage() }}
+            </div>
+          </div> -->
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="successMessage()" class="success-msg">
+          {{ successMessage() }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage()" class="error-msg">
+          {{ errorMessage() }}
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting()">
+            <span *ngIf="isSubmitting()">{{ isEditMode() ? 'Updating...' : 'Creating...' }}</span>
+            <span *ngIf="!isSubmitting()">{{ isEditMode() ? 'Update Oil Filter' : 'Create Oil Filter' }}</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>

@@ -3,6 +3,8 @@ import { DataTableComponent } from '../data-table/data-table.component';
 import { ApiService } from '../../services/api.service';
 import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs';
+import { OilFilterModalComponent } from '../../modals/oil-filter-modal/oil-filter-modal.component';
+import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
 
 @Component({
   selector: 'app-oil-filters',
@@ -13,6 +15,7 @@ import { take } from 'rxjs';
 export class OilFiltersComponent implements OnInit {
   private apiService = inject(ApiService);
   private dialog = inject(MatDialog);
+  actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
 
   oilFilters = signal<any[]>([]);
 
@@ -33,23 +36,33 @@ export class OilFiltersComponent implements OnInit {
     event: 'add' | 'edit' | 'view' | 'delete';
     data?: any;
   }) {
-    console.log(event);
 
-    // if (event.event === 'add' || event.event === 'edit') {
-    //   this.dialog
-    //     .open(AddBrandModalComponent, {
-    //       width: '500px',
-    //       data: {
-    //         mode: event.event,
-    //         rowData: event?.data,
-    //       },
-    //     })
-    //     .afterClosed()
-    //     .subscribe({
-    //       next: (res) => {
-    //         this.loadBrands();
-    //       },
-    //     });
-    // }
+    if (event.event === 'add' || event.event === 'edit') {
+      this.dialog
+        .open(OilFilterModalComponent, {
+          width: '500px',
+          data: {
+            mode: event.event,
+            rowData: event?.data,
+          },
+        })
+        .afterClosed()
+        .subscribe({
+          next: (res) => {
+            this.loadOilFilters();
+          },
+        });
+    }
+
+    if(event.event === 'delete'){
+      this.apiService.deleteOilFilter(event.data?.id).subscribe({
+        next:(res => {
+          if(res.success){
+            alert('Successfully Deleetd');
+            this.loadOilFilters();
+          }
+        })
+      })
+    }
   }
 }

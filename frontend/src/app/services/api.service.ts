@@ -73,6 +73,18 @@ export class ApiService {
     return this.http.get<OilFilter[]>(`${this.baseUrl}/oil-filters`);
   }
 
+  createOilFilter(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/oil-filters/create`, payload);
+  }
+
+  updateOilFilter(id: number, payload: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/oil-filters/${id}`, payload);
+  }
+
+  deleteOilFilter(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/oil-filters/${id}`);
+  }
+
   // Battery service endpoints
   getBatteryTypes(): Observable<BatteryType[]> {
     return this.http.get<BatteryType[]>(`${this.baseUrl}/battery-types`);
