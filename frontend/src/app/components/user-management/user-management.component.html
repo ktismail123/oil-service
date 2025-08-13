@@ -1,1 +1,1 @@
-<app-data-table [height]="'40px'" [displayedColumns]="['id', 'name', 'email', 'role']" [rowDatas]="users()" (addNew)="actionEvents($event)" [showAddButton]="true" [actionConfig]="actionConfig"/>
+<app-data-table [height]="'40px'" [displayedColumns]="['id', 'name', 'email', 'role']" [rowDatas]="users()" [totalRecords]="users().length" (addNew)="actionEvents($event)" [showAddButton]="true" [actionConfig]="actionConfig"/>

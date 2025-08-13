@@ -1,1 +1,1 @@
-<app-data-table [height]="'40px'" [displayedColumns]="['id', 'brand', 'capacity', 'price']" [rowDatas]="batteryTypes()" (addNew)="actionEvents($event)" [showAddButton]="true" [actionConfig]="actionConfig"/>
+<app-data-table [height]="'40px'" [displayedColumns]="['id', 'brand', 'capacity', 'price']" [rowDatas]="batteryTypes()" [totalRecords]="batteryTypes().length" (addNew)="actionEvents($event)" [showAddButton]="true" [actionConfig]="actionConfig"/>

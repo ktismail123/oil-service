@@ -1,1 +1,1 @@
-<app-data-table [height]="'40px'" [displayedColumns]="['id', 'code', 'brand', 'price']" [rowDatas]="oilFilters()" (addNew)="actionEvents($event)"[showAddButton]="true" [actionConfig]="actionConfig" />
+<app-data-table [height]="'40px'" [displayedColumns]="['id', 'code', 'brand', 'price']" [rowDatas]="oilFilters()" [totalRecords]="oilFilters().length" (addNew)="actionEvents($event)"[showAddButton]="true" [actionConfig]="actionConfig" />
