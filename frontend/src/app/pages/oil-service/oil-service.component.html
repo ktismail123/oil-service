@@ -118,7 +118,8 @@
         [laborCost]="customerForm.get('laborCost')?.value || 0"
         [totalAmount]="totalAmount()"
         [oilQuantity]="oilForm.get('quantity')?.value || 0"
-        (submitBooking)="submitBooking()">
+        (submitBooking)="submitBooking()"
+        (updateBooking)="updateBooking()">
       </app-step7-customer-summary>
     </div>
 

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -8,7 +8,6 @@ import {
 import { Accessory, OilFilter, OilType } from '../../../../models';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
 import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-step7-customer-summary',
@@ -17,11 +16,6 @@ import { ActivatedRoute } from '@angular/router';
   styleUrl: './step7-customer-summary.component.scss',
 })
 export class Step7CustomerSummaryComponent {
-
-  private route = inject(ActivatedRoute);
-
-  editMode = this.route.snapshot.queryParams['mode'];
-
   @Input() customerForm!: FormGroup;
   @Input() oilForm!: FormGroup;
   @Input() selectedBrandName: string = '';
@@ -37,7 +31,6 @@ export class Step7CustomerSummaryComponent {
   @Input() oilQuantity: number = 0;
 
   @Output() submitBooking = new EventEmitter();
-  @Output() updateBooking = new EventEmitter();
 
   get totalWithLabor(): number {
     return (+this.totalAmount || 0) + (+this.laborCost || 0);
@@ -47,24 +40,24 @@ export class Step7CustomerSummaryComponent {
     return this.oilForm?.get('totalPrice')?.value || 0
   }
 
-printReceipt(): void {
-  const receiptContent = document.getElementById('receipt-content');
+  printReceipt(): void {
+    const receiptContent = document.getElementById('receipt-content');
 
-  if (receiptContent) {
-    const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
+    if (receiptContent) {
+      const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
 
-    // Remove customer details form section
-    const customerDetailsSection = clonedContent.querySelector(
-      '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
-    );
-    if (customerDetailsSection) {
-      customerDetailsSection.remove();
-    }
+      // Remove customer details form section from the cloned content
+      const customerDetailsSection = clonedContent.querySelector(
+        '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
+      );
+      if (customerDetailsSection) {
+        customerDetailsSection.remove();
+      }
 
-    const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
+      const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
 
-    if (printWindow) {
-      printWindow.document.write(`
+      if (printWindow) {
+        printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -74,6 +67,7 @@ printReceipt(): void {
               size: 80mm auto;
               margin: 0mm;
             }
+
             html, body {
               width: 80mm;
               margin: 0 auto;
@@ -81,17 +75,11 @@ printReceipt(): void {
               font-family: 'Courier New', monospace;
               font-size: 12px;
               line-height: 1.4;
+              color: #333;
               background: white;
             }
 
-            /* FORCE ALL TEXT AND BORDERS TO BLACK */
-            * {
-              color: #000 !important;
-              border-color: #000 !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-
+            /* Wrapper to center content visually */
             .print-wrapper {
               width: 100%;
               display: flex;
@@ -124,13 +112,18 @@ printReceipt(): void {
             .text-sm { font-size: 11px; }
             .text-lg { font-size: 14px; font-weight: bold; }
 
+            .text-gray-500 { color: #6b7280; }
+            .text-gray-600 { color: #4b5563; }
+            .text-gray-700 { color: #374151; }
+            .text-gray-800 { color: #1f2937; }
+
             .font-medium { font-weight: 500; }
             .font-semibold { font-weight: 600; }
             .font-bold { font-weight: bold; }
 
-            .border-b-2 { border-bottom: 2px dashed #000; }
-            .border-b { border-bottom: 1px dashed #000; }
-            .border-t-2 { border-top: 2px dashed #000; }
+            .border-b-2 { border-bottom: 2px dashed #9ca3af; }
+            .border-b { border-bottom: 1px dashed #d1d5db; }
+            .border-t-2 { border-top: 2px dashed #9ca3af; }
 
             .mb-1 { margin-bottom: 4px; }
             .mb-2 { margin-bottom: 8px; }
@@ -153,6 +146,7 @@ printReceipt(): void {
             .print\\:hidden, .hidden {
               display: none !important;
             }
+
             .print\\:block {
               display: block !important;
             }
@@ -168,18 +162,16 @@ printReceipt(): void {
         </html>
       `);
 
-      printWindow.document.close();
+        printWindow.document.close();
 
-      printWindow.onload = function () {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-      };
+        printWindow.onload = function () {
+          printWindow.focus();
+          printWindow.print();
+          printWindow.close();
+        };
+      }
     }
   }
-}
-
-
 
   // Alternative function for ESC/POS thermal printers
   printThermalReceipt(): void {
@@ -293,10 +285,6 @@ printReceipt(): void {
   }
 
   onSubmitBooking() {
-    if(this.editMode == 'edit'){
-      this.updateBooking.emit();
-    }else{
-      this.submitBooking.emit();
-    }
+    this.submitBooking.emit();
   }
 }

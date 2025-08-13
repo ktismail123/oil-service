@@ -1,3 +1,12 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
+// Exit if SECRET_KEY is missing
+if (!process.env.SECRET_KEY) {
+  console.error('FATAL ERROR: SECRET_KEY is not defined.');
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -7,10 +16,10 @@ const authMiddleware = require('./middleware/authMiddleware');
 app.use(cors());
 app.use(express.json());
 
-// Auth routes
+// Public auth routes (no token required)
 app.use('/api/auth', require('./routes/authRoutes'));
 
-
+// Auth middleware protects all routes below
 app.use(authMiddleware);
 
 app.use('/api/brands', require('./routes/brandRoutes'));
@@ -23,6 +32,7 @@ app.use('/api/user', require('./routes/userRoutes'));
 // app.use('/api/customer', require('./routes/customerRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 // app.use('/api/settings', require('./routes/settingRoutes'));
+app.use('/api/print', require('./routes/printRoutes'));
 
 initDB().then(() => {
   const PORT = process.env.PORT || 3000;
@@ -30,6 +40,5 @@ initDB().then(() => {
     console.log(`Server running on port ${PORT}`);
   });
 });
-
 
 module.exports = app;

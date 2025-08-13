@@ -154,6 +154,10 @@ export class ApiService {
     return this.http.post<any>(`${this.baseUrl}/bookings`, bookingData);
   }
 
+  updateBooking(id: number, bookingData: BookingRequest): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/bookings/${id}`, bookingData);
+  }
+
   // Settings endpoints
   getSettings(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/settings`);

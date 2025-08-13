@@ -8,6 +8,9 @@ import { ApiService } from '../../services/api.service';
 import { take } from 'rxjs';
 import { DataTableComponent } from '../data-table/data-table.component';
 import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
+import { MatDialog } from '@angular/material/dialog';
+import { EditOilServiceBookingComponent } from '../../modals/edit-oil-service-booking/edit-oil-service-booking.component';
+import { Router } from '@angular/router';
 
 interface ServiceData {
   id: number;
@@ -40,33 +43,39 @@ interface ServiceData {
     LoadingComponent,
     FormFieldComponent,
     CurrencyPipe,
-    DataTableComponent
+    DataTableComponent,
   ],
   templateUrl: './booking-list.component.html',
-  styleUrls: ['./booking-list.component.css']
+  styleUrls: ['./booking-list.component.css'],
 })
 export class BookingListComponent implements OnInit {
   serviceData: ServiceData[] = [];
   private apiService = inject(ApiService);
+  private dialog = inject(MatDialog);
+  private router = inject(Router);
 
-   displayedColumns = [
-    'id', 'customer', 'vehicle', 'service_type', 
-    'service_date', 'oil_quantity', 'subtotal', 
+  displayedColumns = [
+    'id',
+    'customer',
+    'vehicle',
+    'service_type',
+    'service_date',
+    'oil_quantity',
+    'subtotal',
   ];
 
   actionConfig: ActionConfig = ACTION_CONFIGS.FULL;
 
   ngOnInit() {
     // Replace this with your actual API call
-    this.apiService.getBookings()
-    .pipe(
-      take(1)
-    )
-    .subscribe({
-      next:(res => {
-        this.serviceData = res.data;
-      })
-    })
+    this.apiService
+      .getBookings()
+      .pipe(take(1))
+      .subscribe({
+        next: (res) => {
+          this.serviceData = res.data;
+        },
+      });
   }
 
   formatDate(dateString: string): string {
@@ -91,12 +100,19 @@ export class BookingListComponent implements OnInit {
   }
 
   onTableAction(event: any) {
-    switch(event.event) {
+    switch (event.event) {
       case 'add':
         // Handle add new record
         break;
       case 'edit':
         // Handle edit record
+        // this.editBooking(event);
+        // From your current component
+        this.router.navigate(['/oil-service'], {
+          queryParams: { mode: 'edit' },
+          state: { item: event.data },
+        });
+
         console.log('Edit:', event.data);
         break;
       case 'view':
@@ -108,5 +124,15 @@ export class BookingListComponent implements OnInit {
         console.log('Delete:', event.data);
         break;
     }
+  }
+
+  editBooking(event: any): void {
+    this.dialog.open(EditOilServiceBookingComponent, {
+      width: '500px',
+      data: {
+        mode: event.event,
+        rowData: event?.data,
+      },
+    });
   }
 }

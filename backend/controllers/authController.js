@@ -1,8 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getDB } = require('../config/db');
+require('dotenv').config();
 
-const SECRET_KEY = 'your_jwt_secret'; // Move to .env in production
+const SECRET_KEY = process.env.SECRET_KEY;
 
 // Register
 exports.register = async (req, res) => {

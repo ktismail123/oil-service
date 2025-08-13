@@ -5,7 +5,7 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { ApiService } from '../../services/api.service';
@@ -48,7 +48,7 @@ import { Step7CustomerSummaryComponent } from './steps/step7-customer-summary/st
     Step4OilTypeComponent,
     Step5OilFilterComponent,
     Step6AccessoriesComponent,
-    Step7CustomerSummaryComponent
+    Step7CustomerSummaryComponent,
   ],
   templateUrl: './oil-service.component.html',
   styleUrls: ['./oil-service.component.css'],
@@ -58,9 +58,14 @@ export class OilServiceComponent implements OnInit {
   private apiService = inject(ApiService);
   private bookingService = inject(BookingService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   // Oil package selection tracking
-  private selectedOilPackages = signal<Map<number, OilPackageSelection>>(new Map());
+  private selectedOilPackages = signal<Map<number, OilPackageSelection>>(
+    new Map()
+  );
+
+  mode = '';
 
   currentStep = signal(1);
   totalSteps = signal(7);
@@ -105,75 +110,75 @@ export class OilServiceComponent implements OnInit {
     }
   });
 
-// Manual trigger signal to force recalculation
-private calculationTrigger = signal(0);
+  // Manual trigger signal to force recalculation
+  private calculationTrigger = signal(0);
 
-subtotal = computed(() => {
-  // this.calculationTrigger();
-  const result = this.calculateSubtotal(); // This already includes labor cost
-  return typeof result === 'number' ? result : 0;
-});
+  subtotal = computed(() => {
+    // this.calculationTrigger();
+    const result = this.calculateSubtotal(); // This already includes labor cost
+    return typeof result === 'number' ? result : 0;
+  });
 
-vatAmount = computed(() => {
-  const sub = this.subtotal();
-  return typeof sub === 'number' ? (sub * 5) / 100 : 0;
-});
+  vatAmount = computed(() => {
+    const sub = this.subtotal();
+    return typeof sub === 'number' ? (sub * 5) / 100 : 0;
+  });
 
-// ✅ FIXED: Simple total calculation (subtotal + VAT only)
-totalAmount = computed(() => {
-  const sub = this.subtotal(); // Already includes labor cost
-  const vat = this.vatAmount();
-  
-  // ✅ SIMPLE: Just add subtotal + VAT (no additional labor cost)
-  return (
-    (typeof sub === 'number' ? sub : 0) + (typeof vat === 'number' ? vat : 0)
-  );
-});
+  // ✅ FIXED: Simple total calculation (subtotal + VAT only)
+  totalAmount = computed(() => {
+    const sub = this.subtotal(); // Already includes labor cost
+    const vat = this.vatAmount();
 
-private calculateSubtotal(): number {
-  let total = 0;
+    // ✅ SIMPLE: Just add subtotal + VAT (no additional labor cost)
+    return (
+      (typeof sub === 'number' ? sub : 0) + (typeof vat === 'number' ? vat : 0)
+    );
+  });
 
-  try {
-    // Oil cost
-    const oilTotalPrice = this.oilForm?.get('totalPrice')?.value || 0;
-    if (oilTotalPrice > 0) {
-      total += Number(oilTotalPrice);
-    }
+  private calculateSubtotal(): number {
+    let total = 0;
 
-    // Filter cost
-    const filterId = this.filterForm?.get('filterId')?.value;
-    if (filterId) {
-      const filter = this.oilFilters().find((f) => f.id == filterId);
-      if (filter && filter.price) {
-        total += Number(filter.price);
+    try {
+      // Oil cost
+      const oilTotalPrice = this.oilForm?.get('totalPrice')?.value || 0;
+      if (oilTotalPrice > 0) {
+        total += Number(oilTotalPrice);
       }
-    }
 
-    // Accessories cost
-    const accessories = this.selectedAccessories();
-    if (accessories && Array.isArray(accessories)) {
-      accessories.forEach((acc) => {
-        if (acc && acc.price && acc.quantity) {
-          total += Number(acc.price) * Number(acc.quantity);
+      // Filter cost
+      const filterId = this.filterForm?.get('filterId')?.value;
+      if (filterId) {
+        const filter = this.oilFilters().find((f) => f.id == filterId);
+        if (filter && filter.price) {
+          total += Number(filter.price);
         }
-      });
+      }
+
+      // Accessories cost
+      const accessories = this.selectedAccessories();
+      if (accessories && Array.isArray(accessories)) {
+        accessories.forEach((acc) => {
+          if (acc && acc.price && acc.quantity) {
+            total += Number(acc.price) * Number(acc.quantity);
+          }
+        });
+      }
+
+      // ✅ Labor cost (included in subtotal)
+      const laborCost = this.laborCostSignal();
+      console.log(laborCost, '---------');
+
+      total += Number(laborCost);
+
+      console.log('Final subtotal (including labor):', total);
+    } catch (error) {
+      console.error('Error calculating subtotal:', error);
+      return 0;
     }
+    console.log(total, '+++++++++++');
 
-    // ✅ Labor cost (included in subtotal)
-    const laborCost = this.laborCostSignal();
-    console.log(laborCost, '---------');
-    
-    total += Number(laborCost);
-
-    console.log('Final subtotal (including labor):', total);
-  } catch (error) {
-    console.error('Error calculating subtotal:', error);
-    return 0;
+    return total || 0;
   }
-console.log(total, '+++++++++++');
-
-  return total || 0;
-}
 
   private laborCostSignal = signal(0);
 
@@ -183,6 +188,8 @@ console.log(total, '+++++++++++');
   oilForm!: FormGroup;
   filterForm!: FormGroup;
   customerForm!: FormGroup;
+
+  editData: any;
 
   serviceIntervals = [
     { value: 5000, label: '5,000 KM' },
@@ -200,9 +207,28 @@ console.log(total, '+++++++++++');
     'Summary',
   ];
 
+  constructor() {
+  // Get router state data
+    const nav = this.router.getCurrentNavigation();
+    if (nav?.extras.state?.['item']) {
+      this.editData = nav.extras.state['item'];
+      console.log('Edit data:', this.editData);
+    }
+
+    // Get query param
+    this.route.queryParams.subscribe(params => {
+      this.mode = params['mode'] || null;
+      console.log('Mode:', this.mode);
+    });
+  
+  }
+
   ngOnInit() {
     this.initializeForms();
     this.loadInitialData();
+    if(this.mode === 'edit'){
+      this.patchValues();
+    }
   }
 
   private initializeForms() {
@@ -227,7 +253,7 @@ console.log(total, '+++++++++++');
       quantity: [4, [Validators.min(0.5), Validators.max(20)]],
       totalPrice: [0],
       requiredQuantity: [4, [Validators.min(0.5), Validators.max(20)]],
-      oilQuantityDetails:[]
+      oilQuantityDetails: [],
       // Dynamic controls for bulk quantities will be added as needed
     });
 
@@ -239,17 +265,17 @@ console.log(total, '+++++++++++');
       name: ['', Validators.required],
       mobile: ['', [Validators.required, Validators.pattern(/^\d{10,15}$/)]],
       plateNumber: ['', Validators.required],
-      laborCost: [0]
+      laborCost: [0],
     });
 
     // Subscribe to customer form changes for step 7 validation
     this.customerForm.valueChanges.subscribe(() => {
       this.step7Valid.set(this.customerForm.valid);
     });
-    this.customerForm.get('laborCost')?.valueChanges.subscribe(value => {
-    this.laborCostSignal.set(value || 0);
-    // this.triggerCalculation(); // Trigger recalculation
-  });
+    this.customerForm.get('laborCost')?.valueChanges.subscribe((value) => {
+      this.laborCostSignal.set(value || 0);
+      // this.triggerCalculation(); // Trigger recalculation
+    });
 
     this.customerForm
       .get('mobile')
@@ -262,10 +288,50 @@ console.log(total, '+++++++++++');
       });
   }
 
+  patchValues() {
+    this.brandForm.patchValue({
+       brandId: this.editData?.brand_id
+    })
+
+    this.loadModels(this.editData?.brand_id);
+
+    this.modelForm.patchValue({
+      modelId: this.editData?.model_id
+    })
+
+    this.intervalForm.patchValue({
+      interval: this.editData?.service_interval
+    })
+
+    this.oilForm.patchValue({
+      oilTypeId: this.editData?.oil_type_id,
+      requiredQuantity: 4,
+      totalPrice: this.editData?.oil_package_details?.totalPrice,
+      oilQuantityDetails: this.editData?.oil_package_details
+    })
+
+    this.loadOilTypes(this.editData?.service_interval);
+
+    this.filterForm.patchValue({
+      filterId : this.editData?.oil_filter_id
+    })
+
+    this.selectedAccessories.set(this.editData?.accessories);
+
+    this.customerForm.patchValue({
+      name: this.editData?.customer_name,
+      mobile: this.editData?.customer_mobile,
+      plateNumber: this.editData?.plate_number,
+      laborCost: this.editData?.labour_cost,
+    })
+
+    this.currentStep.set(7)
+  }
+
   // ✅ Manual trigger methods to update calculations
-private triggerCalculation() {
-  this.calculationTrigger.update(val => val + 1);
-}
+  private triggerCalculation() {
+    this.calculationTrigger.update((val) => val + 1);
+  }
 
   private async loadInitialData() {
     this.isLoading.set(true);
@@ -315,12 +381,12 @@ private triggerCalculation() {
       }
 
       // Load oil types when moving to step 4
-      if(this.currentStep() === 4){
+      if (this.currentStep() === 4) {
         const interval = this.intervalForm.get('interval')?.value;
         const customInterval = this.intervalForm.get('customInterval')?.value;
         const serviceInterval = interval === 0 ? customInterval : interval;
-        
-        if(serviceInterval){
+
+        if (serviceInterval) {
           this.loadOilTypes(serviceInterval);
         }
       }
@@ -391,7 +457,9 @@ private triggerCalculation() {
 
   private async loadOilTypes(interval: number) {
     try {
-      const oilTypes = await this.apiService.getOilTypesByIntervell(interval).toPromise();
+      const oilTypes = await this.apiService
+        .getOilTypesByIntervell(interval)
+        .toPromise();
       this.oilTypes.set(oilTypes || []);
     } catch (error) {
       console.error('Oil Types loading failed:', error);
@@ -436,24 +504,43 @@ private triggerCalculation() {
   // Updated validation for step 4 to handle package selections
   private validateStep4() {
     console.log(this.oilForm.value);
-    
+
     const oilTypeId = this.oilForm.get('oilTypeId')?.value;
     const totalPrice = this.oilForm.get('totalPrice')?.value;
     const quantity = this.oilForm.get('quantity')?.value;
-    const requiredQuantity = Number(this.oilForm.get('requiredQuantity')?.value);
-    console.log(!!(oilTypeId && totalPrice && totalPrice > 0  && (quantity >= requiredQuantity)));
-    
-    
+    const requiredQuantity = Number(
+      this.oilForm.get('requiredQuantity')?.value
+    );
+    console.log(
+      !!(
+        oilTypeId &&
+        totalPrice &&
+        totalPrice > 0 &&
+        quantity >= requiredQuantity
+      )
+    );
+
     // Oil is valid if we have an oil type selected with valid price and quantity
-    this.step4Valid.set(!!(oilTypeId && totalPrice && totalPrice > 0 && (quantity >= requiredQuantity)));
+    this.step4Valid.set(
+      !!(
+        oilTypeId &&
+        totalPrice &&
+        totalPrice > 0 &&
+        quantity >= requiredQuantity
+      )
+    );
   }
 
   // Method to update oil form when packages are selected (called from Step4 component)
-  updateOilSelection(oilTypeId: number, totalQuantity: number, totalPrice: number) {
+  updateOilSelection(
+    oilTypeId: number,
+    totalQuantity: number,
+    totalPrice: number
+  ) {
     this.oilForm.patchValue({
       oilTypeId: oilTypeId,
       quantity: totalQuantity,
-      totalPrice: totalPrice
+      totalPrice: totalPrice,
     });
     this.validateStep4();
   }
@@ -515,11 +602,11 @@ private triggerCalculation() {
     }
     if (step <= 4) {
       this.step4Valid.set(false);
-      this.oilForm.patchValue({ 
-        oilTypeId: '', 
-        quantity: 4, 
+      this.oilForm.patchValue({
+        oilTypeId: '',
+        quantity: 4,
         totalPrice: 0,
-        requiredQuantity: 4 
+        requiredQuantity: 4,
       });
       // Clear package selections
       this.selectedOilPackages.set(new Map());
@@ -537,18 +624,75 @@ private triggerCalculation() {
     }
   }
 
-
-
   async submitBooking() {
     console.log(this.canProceed());
-    
+
     if (!this.canProceed()) {
       return;
     }
 
     this.isSubmitting.set(true);
     console.log(this.oilForm.value);
-    
+
+    try {
+      const bookingData = {
+        customer: {
+          name: this.customerForm.get('name')?.value,
+          mobile: this.customerForm.get('mobile')?.value,
+        },
+        vehicle: {
+          brandId: this.brandForm.get('brandId')?.value,
+          customBrand: this.brandForm.get('customBrand')?.value,
+          modelId: this.modelForm.get('modelId')?.value,
+          customModel: this.modelForm.get('customModel')?.value,
+          plateNumber: this.customerForm.get('plateNumber')?.value,
+        },
+        service: {
+          type: 'oil_change' as const,
+          date: new Date().toISOString().split('T')[0],
+          time: new Date().toTimeString().split(' ')[0],
+          interval: this.getServiceInterval(),
+          oilTypeId: this.oilForm.get('oilTypeId')?.value,
+          oilQuantity: this.oilForm.get('quantity')?.value,
+          oilTotalPrice: this.oilForm.get('totalPrice')?.value,
+          oilRequiredQuantity: this.oilForm.get('requiredQuantity')?.value,
+          oilQuantityDetails: this.oilForm.get('oilQuantityDetails')?.value,
+          oilFilterId: this.filterForm.get('filterId')?.value,
+          subtotal: this.subtotal(),
+          vatAmount: this.vatAmount(),
+          totalAmount: this.totalAmount(),
+          laborCost: this.customerForm.get('laborCost')?.value,
+          // Include package details for backend processing
+          oilPackageDetails: this.getSelectedOilPackageDetails(),
+        },
+        accessories: this.selectedAccessories(),
+      };
+
+      const response = await this.apiService
+        .createBooking(bookingData)
+        .toPromise();
+      alert(
+        `Booking created successfully! Total: AED ${this.subtotal().toFixed(2)}`
+      );
+      this.router.navigate(['/']);
+    } catch (error) {
+      console.error('Booking failed:', error);
+      alert('Booking failed. Please try again.');
+    } finally {
+      this.isSubmitting.set(false);
+    }
+  }
+
+  async updateBooking() {
+    console.log(this.canProceed());
+
+    if (!this.canProceed()) {
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    console.log(this.oilForm.value);
+
     try {
       const bookingData = {
         customer: {
@@ -578,17 +722,16 @@ private triggerCalculation() {
           totalAmount: this.totalAmount(),
           // Include package details for backend processing
           oilPackageDetails: this.getSelectedOilPackageDetails(),
+          laborCost: this.customerForm.get('laborCost')?.value,
         },
         accessories: this.selectedAccessories(),
       };
 
       const response = await this.apiService
-        .createBooking(bookingData)
+        .updateBooking(34,bookingData)
         .toPromise();
       alert(
-        `Booking created successfully! Total: AED ${this.subtotal().toFixed(
-          2
-        )}`
+        `Booking updared successfully! Total: AED ${this.subtotal().toFixed(2)}`
       );
       this.router.navigate(['/']);
     } catch (error) {
@@ -605,13 +748,13 @@ private triggerCalculation() {
     if (!oilTypeId) return null;
 
     const packageSelection = this.selectedOilPackages().get(oilTypeId);
-    
+
     return {
       oilTypeId: oilTypeId,
       requiredQuantity: this.oilForm.get('requiredQuantity')?.value,
       totalQuantity: this.oilForm.get('quantity')?.value,
       totalPrice: this.oilForm.get('totalPrice')?.value,
-      packageSelection: packageSelection || null
+      packageSelection: packageSelection || null,
     };
   }
 
@@ -664,7 +807,7 @@ private triggerCalculation() {
       oilType,
       quantity,
       totalPrice,
-      requiredQuantity
+      requiredQuantity,
     };
   }
 
