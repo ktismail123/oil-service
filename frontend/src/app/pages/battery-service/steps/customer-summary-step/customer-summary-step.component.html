@@ -42,7 +42,7 @@
         <!-- Print Receipt Button -->
         <button
           (click)="printReceipt()"
-          [disabled]="customerForm.invalid"
+          [disabled]="customerForm.invalid || !billNumber()"
           class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-blue-300"
         >
           <span class="flex items-center justify-center">
@@ -102,7 +102,7 @@
         <!-- Print Button - Smaller on larger screens -->
         <button
           (click)="printReceipt()"
-          [disabled]="customerForm.invalid"
+          [disabled]="customerForm.invalid || !billNumber()"
           class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group"
         >
           <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -141,7 +141,7 @@
         <div class="grid grid-cols-2 gap-3">
           <button
             (click)="printReceipt()"
-            [disabled]="customerForm.invalid"
+            [disabled]="customerForm.invalid || !billNumber()"
             class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center"
           >
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -270,7 +270,7 @@
 
     <!-- Receipt Number & Date -->
     <div class="text-center mb-4">
-      <p class="text-xs text-gray-500">RECEIPT #TL-{{ "JKHJH" }}</p>
+      <p class="text-xs text-gray-500">RECEIPT #{{ billNumber() || '---'  }}</p>
       <p class="text-xs text-gray-500">{{ formattedDate }}</p>
       <!-- <p class="text-xs text-gray-500">RECEIPT #TL-{{ generateReceiptNumber() }}</p>
       <p class="text-xs text-gray-500">{{ getCurrentDate() }}</p> -->

@@ -213,7 +213,7 @@ export class DataTableComponent implements AfterViewInit {
 
   // Utility methods for formatting
   formatServiceType(service: string): string {
-    const serviceType = service === 'battery_replacement' ? 'battery' : 'service'
+    const serviceType = service === 'battery_replacement' ? 'battery' : 'Oil'
     return serviceType.replace(/_/g, ' ').toUpperCase();
   }
 

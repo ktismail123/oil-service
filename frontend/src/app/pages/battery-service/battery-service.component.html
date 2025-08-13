@@ -78,6 +78,7 @@
           <!-- Step 4: Customer Details & Summary -->
           <app-customer-summary-step
             *ngIf="currentStep() === 4"
+            [billNumber]="billNumber()"
             [initialCustomerData]="customerData()"
             [serviceSummary]="getServiceSummary()"
             (customerDataChanged)="onCustomerDataChanged($event)"

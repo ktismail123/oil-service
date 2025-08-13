@@ -36,6 +36,7 @@ export class Step7CustomerSummaryComponent {
   @Input() laborCost: number = 0;
   @Input() vatAmount: number = 0;
   @Input() totalAmount: number = 0;
+  @Input() billNumber = '';
   @Input() oilQuantity: number = 0;
 
   @Output() submitBooking = new EventEmitter();

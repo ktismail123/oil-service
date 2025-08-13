@@ -117,6 +117,7 @@
         [vatAmount]="vatAmount()"
         [laborCost]="customerForm.get('laborCost')?.value || 0"
         [totalAmount]="totalAmount()"
+        [billNumber]="billNumber()"
         [oilQuantity]="oilForm.get('quantity')?.value || 0"
         (submitBooking)="submitBooking()"
         (updateBooking)="updateBooking()">

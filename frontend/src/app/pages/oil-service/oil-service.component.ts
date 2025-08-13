@@ -23,7 +23,7 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { FormFieldComponent } from '../../shared/components/form-field/form-field.component';
 import { StepIndicatorComponent } from '../../shared/components/step-indicator/step-indicator.component';
-import { distinctUntilChanged, filter } from 'rxjs';
+import { distinctUntilChanged, filter, finalize, take } from 'rxjs';
 import { Step1BrandSelectionComponent } from './steps/step1-brand-selection/step1-brand-selection.component';
 import { Step2ModelSelectionComponent } from './steps/step2-model-selection/step2-model-selection.component';
 import { Step3ServiceIntervalComponent } from './steps/step3-service-interval/step3-service-interval.component';
@@ -71,6 +71,7 @@ export class OilServiceComponent implements OnInit {
   totalSteps = signal(7);
   isLoading = signal(false);
   isSubmitting = signal(false);
+  billNumber = signal<string>('');
 
   brands = signal<VehicleBrand[]>([]);
   models = signal<VehicleModel[]>([]);
@@ -288,6 +289,8 @@ export class OilServiceComponent implements OnInit {
   }
 
   patchValues() {
+    this.billNumber.set(this.editData?.bill_number)
+
     this.brandForm.patchValue({
       brandId: this.editData?.brand_id,
     });
@@ -623,63 +626,65 @@ export class OilServiceComponent implements OnInit {
     }
   }
 
-  async submitBooking() {
-    console.log(this.canProceed());
-
+  submitBooking() {
     if (!this.canProceed()) {
       return;
     }
 
+    const bookingData = {
+      customer: {
+        name: this.customerForm.get('name')?.value,
+        mobile: this.customerForm.get('mobile')?.value,
+      },
+      vehicle: {
+        brandId: this.brandForm.get('brandId')?.value,
+        customBrand: this.brandForm.get('customBrand')?.value,
+        modelId: this.modelForm.get('modelId')?.value,
+        customModel: this.modelForm.get('customModel')?.value,
+        plateNumber: this.customerForm.get('plateNumber')?.value,
+      },
+      service: {
+        type: 'oil_change' as const,
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toTimeString().split(' ')[0],
+        interval: this.getServiceInterval(),
+        oilTypeId: this.oilForm.get('oilTypeId')?.value,
+        oilQuantity: this.oilForm.get('quantity')?.value,
+        oilTotalPrice: this.oilForm.get('totalPrice')?.value,
+        oilRequiredQuantity: this.oilForm.get('requiredQuantity')?.value,
+        oilQuantityDetails: this.oilForm.get('oilQuantityDetails')?.value,
+        oilFilterId: this.filterForm.get('filterId')?.value,
+        subtotal: this.subtotal(),
+        vatAmount: this.vatAmount(),
+        totalAmount: this.totalAmount(),
+        laborCost: this.customerForm.get('laborCost')?.value,
+        // Include package details for backend processing
+        oilPackageDetails: this.getSelectedOilPackageDetails(),
+      },
+      accessories: this.selectedAccessories(),
+    };
+
     this.isSubmitting.set(true);
-    console.log(this.oilForm.value);
 
-    try {
-      const bookingData = {
-        customer: {
-          name: this.customerForm.get('name')?.value,
-          mobile: this.customerForm.get('mobile')?.value,
+    this.apiService
+      .createBooking(bookingData)
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.isSubmitting.set(false);
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            alert(`Booking created successfully!`);
+            this.billNumber.set(res?.billNumber);
+          }
         },
-        vehicle: {
-          brandId: this.brandForm.get('brandId')?.value,
-          customBrand: this.brandForm.get('customBrand')?.value,
-          modelId: this.modelForm.get('modelId')?.value,
-          customModel: this.modelForm.get('customModel')?.value,
-          plateNumber: this.customerForm.get('plateNumber')?.value,
+        error: (err) => {
+          alert(err.error.error);
         },
-        service: {
-          type: 'oil_change' as const,
-          date: new Date().toISOString().split('T')[0],
-          time: new Date().toTimeString().split(' ')[0],
-          interval: this.getServiceInterval(),
-          oilTypeId: this.oilForm.get('oilTypeId')?.value,
-          oilQuantity: this.oilForm.get('quantity')?.value,
-          oilTotalPrice: this.oilForm.get('totalPrice')?.value,
-          oilRequiredQuantity: this.oilForm.get('requiredQuantity')?.value,
-          oilQuantityDetails: this.oilForm.get('oilQuantityDetails')?.value,
-          oilFilterId: this.filterForm.get('filterId')?.value,
-          subtotal: this.subtotal(),
-          vatAmount: this.vatAmount(),
-          totalAmount: this.totalAmount(),
-          laborCost: this.customerForm.get('laborCost')?.value,
-          // Include package details for backend processing
-          oilPackageDetails: this.getSelectedOilPackageDetails(),
-        },
-        accessories: this.selectedAccessories(),
-      };
-
-      const response = await this.apiService
-        .createBooking(bookingData)
-        .toPromise();
-      alert(
-        `Booking created successfully! Total: AED ${this.subtotal().toFixed(2)}`
-      );
-      this.router.navigate(['/']);
-    } catch (error) {
-      console.error('Booking failed:', error);
-      alert('Booking failed. Please try again.');
-    } finally {
-      this.isSubmitting.set(false);
-    }
+      });
   }
 
   async updateBooking() {

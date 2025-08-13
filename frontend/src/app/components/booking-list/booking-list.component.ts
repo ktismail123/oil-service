@@ -88,7 +88,7 @@ export class BookingListComponent implements OnInit {
 
   // Table configuration
   displayedColumns = [
-    'id',
+    'bill_number',
     'customer',
     'vehicle',
     'service_type',

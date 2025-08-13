@@ -47,6 +47,7 @@ export class CustomerSummaryStepComponent {
   customerDataChanged = output<CustomerData>();
   validityChanged = output<boolean>();
   submitBooking = output();
+  billNumber = input('');
 
   // Signals
   customerForm!: FormGroup;

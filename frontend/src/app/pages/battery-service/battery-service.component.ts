@@ -1,5 +1,5 @@
 // battery-service.component.ts - Updated Main Component
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { distinctUntilChanged, filter, finalize, take } from 'rxjs';
@@ -55,6 +55,7 @@ export class BatteryServiceComponent implements OnInit {
   // Loading states
   isLoading = signal(false);
   isSubmitting = signal(false);
+  billNumber = signal('');
 
   // Data signals
   batteryTypes = signal<BatteryType[]>([]);
@@ -92,19 +93,7 @@ export class BatteryServiceComponent implements OnInit {
     }
   });
 
-  capacityOptions = signal<CapacityOption[]>([
-    {
-      value: 80,
-      label: '80 Amp',
-      description: 'Suitable for small to medium cars',
-    },
-    { value: 90, label: '90 Amp', description: 'Suitable for medium cars' },
-    {
-      value: 110,
-      label: '110 Amp',
-      description: 'Suitable for large cars and SUVs',
-    },
-  ]);
+  capacityOptions = signal<CapacityOption[]>([]);
   laborCost = signal(0);
 
   subtotal = computed(() => {
@@ -161,6 +150,7 @@ export class BatteryServiceComponent implements OnInit {
       laborCost: this.editData?.labour_cost,
     });
     this.currentStep.set(4);
+    this.billNumber.set(this.editData?.bill_number);
   }
 
   private async loadInitialData() {
@@ -256,28 +246,6 @@ export class BatteryServiceComponent implements OnInit {
 
   // Submit booking
   submitBooking() {
-    //   if (this.mode == 'edit') {
-    //     const response = await this.apiService
-    //       .updateBooking(this.editData?.id, bookingData as any)
-    //       .toPromise();
-    //   } else {
-    //     const response = await this.apiService
-    //       .createBooking(bookingData as any)
-    //       .toPromise();
-    //   }
-    //   alert(
-    //     `Booking ${
-    //       this.mode == 'edit' ? 'updated' : 'created'
-    //     } successfully! Total: AED ${this.totalAmount().toFixed(2)}`
-    //   );
-    //   this.router.navigate(['/']);
-    // } catch (error) {
-    //   console.error('Booking failed:', error);
-    //   alert('Booking failed. Please try again.');
-    // } finally {
-    //   this.isSubmitting.set(false);
-    // }
-
     if (!this.canProceed()) return;
     const customer = this.customerData();
     if (!customer) return;
@@ -317,7 +285,7 @@ export class BatteryServiceComponent implements OnInit {
         )
         .subscribe({
           next: (res) => {
-            alert('Successfyllu Updated');
+            alert('Successfyll Updated');
             this.router.navigate(['/control-panel']);
           },
         });
@@ -332,7 +300,10 @@ export class BatteryServiceComponent implements OnInit {
         )
         .subscribe({
           next: (res) => {
-            alert('Successfyllu Created');
+            if(res.success){
+              this.billNumber.set(res?.billNumber)
+            }
+            // alert('Successfyll Created');
             this.router.navigate(['/']);
           },
         });

@@ -51,7 +51,8 @@ const getAllBookings = async (req, res) => {
         vb.name LIKE ${searchTerm} OR 
         vm.name LIKE ${searchTerm} OR
         sb.id LIKE ${searchTerm} OR
-        sb.subtotal LIKE ${searchTerm}
+        sb.subtotal LIKE ${searchTerm} OR
+        sb.bill_number LIKE ${searchTerm}
       )`);
     }
 
@@ -101,6 +102,7 @@ const getAllBookings = async (req, res) => {
         sb.status,
         sb.created_at,
         sb.updated_at,
+        sb.bill_number,
         c.name as customer_name,
         c.mobile as customer_mobile,
         cv.plate_number,
@@ -327,6 +329,15 @@ const createNewBooking = async (req, res) => {
 
     const bookingId = bookingResult.insertId;
 
+    // Generate bill number
+    const billNumber = `TKN-${bookingId}`;
+
+    // Update bill_number for this booking
+    await db.execute(
+      'UPDATE service_bookings SET bill_number = ? WHERE id = ?',
+      [billNumber, bookingId]
+    );
+
     // Insert accessories
     for (const accessory of accessories) {
       await db.execute(
@@ -340,6 +351,7 @@ const createNewBooking = async (req, res) => {
     res.json({
       success: true,
       bookingId: bookingId,
+      billNumber: billNumber,
       totalAmount: totalAmount,
       laborCost: laborCost
     });
