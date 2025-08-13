@@ -14,24 +14,50 @@ const getAllOilTypes = async (req, res) => {
 }
 
 const getAllOilTypesByIntervell = async (req, res) => {
-  try {
+try {
     const db = getDB();
 
     const interval = parseInt(req.params.interval, 10);
 
-    if (![5000, 10000, 15000].includes(interval)) {
-      return res.status(400).json({ error: 'Invalid interval. Must be 5000, 10000, or 15000' });
+    // if (![5000, 10000, 15000].includes(interval)) {
+    //   return res.status(400).json({ error: 'Invalid interval. Must be 5000, 10000, or 15000' });
+    // }
+
+    let query;
+    let params;
+
+    if (interval === 5000) {
+      // For 5000 interval: get only items with service_interval = 5000
+      query = 'SELECT * FROM oil_types WHERE service_interval = ? ORDER BY grade';
+      params = ['5000'];
+      console.log('Fetching oil types for 5000km interval only');
+    } else {
+      // For other intervals (10000, 15000): get all items EXCEPT service_interval = 5000
+      query = 'SELECT * FROM oil_types WHERE service_interval != ? ORDER BY grade';
+      params = ['5000'];
+      console.log(`Fetching oil types for ${interval}km interval (excluding 5000km items)`);
     }
 
-    const [results] = await db.execute(
-      'SELECT * FROM oil_types WHERE service_interval = ? ORDER BY grade',
-      [interval.toString()] // ENUM values must be strings
-    );
+    console.log('Executing query:', query);
+    console.log('With parameters:', params);
 
-    res.json(results);
+    const [results] = await db.execute(query, params);
+
+    console.log(`Found ${results.length} oil types for interval ${interval}`);
+
+    res.json({
+      success: true,
+      interval: interval,
+      count: results.length,
+      data: results
+    });
+
   } catch (error) {
     console.error('Error fetching oil types by interval:', error);
-    res.status(500).json({ error: 'Failed to fetch oil types' });
+    res.status(500).json({ 
+      error: 'Failed to fetch oil types',
+      details: error.message 
+    });
   }
 };
 

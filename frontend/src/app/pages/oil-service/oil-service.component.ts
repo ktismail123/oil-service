@@ -289,7 +289,7 @@ export class OilServiceComponent implements OnInit {
   }
 
   patchValues() {
-    this.billNumber.set(this.editData?.bill_number)
+    this.billNumber.set(this.editData?.bill_number);
 
     this.brandForm.patchValue({
       brandId: this.editData?.brand_id,
@@ -457,16 +457,26 @@ export class OilServiceComponent implements OnInit {
     }
   }
 
-  private async loadOilTypes(interval: number) {
-    try {
-      const oilTypes = await this.apiService
-        .getOilTypesByIntervell(interval)
-        .toPromise();
-      this.oilTypes.set(oilTypes || []);
-    } catch (error) {
-      console.error('Oil Types loading failed:', error);
-      this.oilTypes.set([]);
-    }
+  // private async loadOilTypes(interval: number) {
+  //   try {
+  //     const oilTypes = await this.apiService
+  //       .getOilTypesByIntervell(interval)
+  //       .toPromise();
+  //     this.oilTypes.set(oilTypes.data || []);
+  //   } catch (error) {
+  //     console.error('Oil Types loading failed:', error);
+  //     this.oilTypes.set([]);
+  //   }
+  // }
+
+  loadOilTypes(interval: number) {
+    this.apiService.getOilTypesByIntervell(interval).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          this.oilTypes.set(res?.data);
+        }
+      },
+    });
   }
 
   // Step 3: Service Interval

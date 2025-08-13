@@ -97,8 +97,8 @@ export class ApiService {
     return this.http.delete<any>(`${this.baseUrl}/oil-types/${id}`);
   }
 
-  getOilTypesByIntervell(intervell: number): Observable<OilType[]> {
-    return this.http.get<OilType[]>(`${this.baseUrl}/oil-types/${intervell}`);
+  getOilTypesByIntervell(intervell: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/oil-types/${intervell}`);
   }
 
   getOilFilters(): Observable<OilFilter[]> {
