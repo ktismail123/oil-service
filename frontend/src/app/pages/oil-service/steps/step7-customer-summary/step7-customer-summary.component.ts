@@ -13,7 +13,14 @@ import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-step7-customer-summary',
-  imports: [ReactiveFormsModule, FormFieldComponent, NgIf, NgFor, CurrencyPipe, DatePipe],
+  imports: [
+    ReactiveFormsModule,
+    FormFieldComponent,
+    NgIf,
+    NgFor,
+    CurrencyPipe,
+    DatePipe,
+  ],
   templateUrl: './step7-customer-summary.component.html',
   styleUrl: './step7-customer-summary.component.scss',
 })

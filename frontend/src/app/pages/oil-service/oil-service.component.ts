@@ -23,7 +23,13 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { FormFieldComponent } from '../../shared/components/form-field/form-field.component';
 import { StepIndicatorComponent } from '../../shared/components/step-indicator/step-indicator.component';
-import { distinctUntilChanged, filter, finalize, take } from 'rxjs';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  finalize,
+  take,
+} from 'rxjs';
 import { Step1BrandSelectionComponent } from './steps/step1-brand-selection/step1-brand-selection.component';
 import { Step2ModelSelectionComponent } from './steps/step2-model-selection/step2-model-selection.component';
 import { Step3ServiceIntervalComponent } from './steps/step3-service-interval/step3-service-interval.component';
@@ -274,17 +280,37 @@ export class OilServiceComponent implements OnInit {
     });
     this.customerForm.get('laborCost')?.valueChanges.subscribe((value) => {
       this.laborCostSignal.set(value || 0);
-      // this.triggerCalculation(); // Trigger recalculation
     });
+    this.setupPlateNumberCheck();
+  }
 
+  private setupPlateNumberCheck() {
     this.customerForm
-      .get('mobile')
+      .get('plateNumber')
       ?.valueChanges.pipe(
-        filter((value) => value?.length === 10),
-        distinctUntilChanged()
+        filter((plateNumber) => plateNumber?.length >= 4), // Adjust minimum length as needed
+        distinctUntilChanged(),
+        debounceTime(500) // Add debounce to avoid too many API calls
       )
-      .subscribe((mobile) => {
-        this.getUserDetails(mobile);
+      .subscribe((plateNumber) => {
+        console.log('Plate number changed:', plateNumber);
+        this.checkUserByPlate(plateNumber);
+      });
+  }
+
+  checkUserByPlate(plateNumber: string) {
+    this.apiService
+      .checkCustomerByPlate(plateNumber)
+      .pipe(take(1))
+      .subscribe({
+        next: (res) => {
+          if (res) {
+            this.customerForm.patchValue({
+              name: res[0]?.customer_name,
+              mobile: res[0]?.customer_mobile,
+            });
+          }
+        },
       });
   }
 

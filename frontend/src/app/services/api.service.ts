@@ -144,18 +144,17 @@ export class ApiService {
     return this.http.get<Accessory[]>(`${this.baseUrl}/accessories${params}`);
   }
 
-  createAccessory(payload: any): Observable<any>{
-    return this.http.post<any>(`${this.baseUrl}/accessories/create`, payload)
+  createAccessory(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/accessories/create`, payload);
   }
 
-  updateAccessory(id: number, payload: any): Observable<any>{
-    return this.http.put<any>(`${this.baseUrl}/accessories/${id}`, payload)
+  updateAccessory(id: number, payload: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/accessories/${id}`, payload);
   }
 
-  deleteAccessory(id: number): Observable<any>{
+  deleteAccessory(id: number): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/accessories/${id}`);
   }
-
 
   // Customer endpoints
   checkCustomer(mobile?: string, plate?: string): Observable<any[]> {
@@ -164,6 +163,12 @@ export class ApiService {
     if (plate) params.append('plate', plate);
     return this.http.get<any[]>(`${this.baseUrl}/customer/check?${params}`);
   }
+
+checkCustomerByPlate(plate: string): Observable<any[]> {
+  const params = new URLSearchParams();
+  params.append('plate', plate);
+  return this.http.get<any[]>(`${this.baseUrl}/customer?${params}`);
+}
 
   getCustomerHistory(customerId: number): Observable<any[]> {
     return this.http.get<any[]>(
@@ -192,13 +197,17 @@ export class ApiService {
   /**
    * Get all bookings with optional filters and pagination
    */
- getBookings(params?: any): Observable<BookingResponse> {
+  getBookings(params?: any): Observable<BookingResponse> {
     let httpParams = new HttpParams();
-    
+
     // Add parameters to HTTP request
     if (params) {
-      Object.keys(params).forEach(key => {
-        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+      Object.keys(params).forEach((key) => {
+        if (
+          params[key] !== null &&
+          params[key] !== undefined &&
+          params[key] !== ''
+        ) {
           httpParams = httpParams.set(key, params[key].toString());
         }
       });
@@ -207,8 +216,8 @@ export class ApiService {
     console.log('API Service - Making request with params:', params);
     console.log('HTTP Params:', httpParams.toString());
 
-    return this.http.get<BookingResponse>(`${this.baseUrl}/bookings`, { 
-      params: httpParams 
+    return this.http.get<BookingResponse>(`${this.baseUrl}/bookings`, {
+      params: httpParams,
     });
   }
 
@@ -258,10 +267,8 @@ export class ApiService {
   getUsers(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/user/all`);
   }
-  
+
   deleteUser(id: number): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/user/${id}`);
   }
-
-
 }

@@ -10,6 +10,8 @@ import { CommonModule } from '@angular/common';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
 import { ActivatedRoute } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
+import { debounceTime, distinctUntilChanged, filter, take } from 'rxjs';
+import { ApiService } from '../../../../services/api.service';
 export interface CustomerData {
   name: string;
   mobile: string;
@@ -35,6 +37,7 @@ export interface ServiceSummary {
 export class CustomerSummaryStepComponent {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
+  private apiService = inject(ApiService);
   environment = environment;
   editMode = this.route.snapshot.queryParams['mode'];
   buttonText = this.editMode === 'edit' ? 'Update' : 'Confirm Booking';
@@ -53,7 +56,7 @@ export class CustomerSummaryStepComponent {
   customerForm!: FormGroup;
   formattedDate: string;
 
-  constructor(){
+  constructor() {
     const today = new Date();
     this.formattedDate = today.toISOString().split('T')[0];
   }
@@ -82,6 +85,37 @@ export class CustomerSummaryStepComponent {
       plateNumber: ['', [Validators.required, Validators.minLength(1)]],
       laborCost: [''],
     });
+    this.setupPlateNumberCheck();
+  }
+
+  private setupPlateNumberCheck() {
+    this.customerForm
+      .get('plateNumber')
+      ?.valueChanges.pipe(
+        filter((plateNumber) => plateNumber?.length >= 4), // Adjust minimum length as needed
+        distinctUntilChanged(),
+        debounceTime(500) // Add debounce to avoid too many API calls
+      )
+      .subscribe((plateNumber) => {
+        console.log('Plate number changed:', plateNumber);
+        this.checkUserByPlate(plateNumber);
+      });
+  }
+
+  checkUserByPlate(plateNumber: string) {
+    this.apiService
+      .checkCustomerByPlate(plateNumber)
+      .pipe(take(1))
+      .subscribe({
+        next: (res) => {
+          if (res) {
+            this.customerForm.patchValue({
+              name: res[0]?.customer_name,
+              mobile: res[0]?.customer_mobile,
+            });
+          }
+        },
+      });
   }
 
   private subscribeToChanges() {
