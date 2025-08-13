@@ -229,4 +229,11 @@ export class UserManagementModalComponent {
     this._successMessage.set('');
     this._errorMessage.set('');
   }
+
+  showPassword = false;
+
+  // Add this method to toggle password visibility
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
 }

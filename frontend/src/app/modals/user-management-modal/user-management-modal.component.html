@@ -41,15 +41,31 @@
           </div>
         </div>
 
-        <!-- Password Field -->
+        <!-- Password Field with Show/Hide Toggle -->
         <div class="form-group">
           <label for="password">Password *</label>
-          <input
-            id="password"
-            type="password"
-            formControlName="password"
-            class="form-input"
-            [placeholder]="isEditMode() ? 'Enter new password (leave blank to keep current)' : 'Enter password (min. 8 characters)'">
+          <div class="password-input-container">
+            <input
+              id="password"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              class="form-input password-input"
+              [placeholder]="isEditMode() ? 'Enter new password (leave blank to keep current)' : 'Enter password (min. 8 characters)'">
+            
+            <!-- Password Toggle Button -->
+            <button 
+              type="button"
+              class="password-toggle-btn"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+              tabindex="-1">
+              <i class="fas" [ngClass]="{
+                'fa-eye': !showPassword,
+                'fa-eye-slash': showPassword
+              }"></i>
+            </button>
+          </div>
+          
           <div *ngIf="isPasswordInvalid()" class="error-msg">
             {{ getPasswordErrorMessage() }}
           </div>
@@ -83,7 +99,7 @@
           <button type="button" class="btn btn-secondary" (click)="closeModal()">
             Cancel
           </button>
-          <button type="submit" class="btn btn-primary" >
+          <button type="submit" class="btn btn-primary">
             <span *ngIf="isSubmitting()">{{ isEditMode() ? 'Updating...' : 'Creating...' }}</span>
             <span *ngIf="!isSubmitting()">{{ isEditMode() ? 'Update User' : 'Create User' }}</span>
           </button>
