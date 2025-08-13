@@ -9,11 +9,29 @@ import {
   computed,
   output,
 } from '@angular/core';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { ActionConfig } from '../../models/action';
+
+// Interface for pagination data
+export interface PaginationData {
+  pageIndex: number;
+  pageSize: number;
+  length: number;
+}
+
+// Interface for search data
+export interface SearchData {
+  searchTerm: string;
+}
+
+// Interface for table events
+export interface TableEvent {
+  type: 'pagination' | 'search';
+  data: PaginationData | SearchData;
+}
 
 @Component({
   selector: 'app-data-table',
@@ -38,10 +56,21 @@ export class DataTableComponent implements AfterViewInit {
   displayedColumns = input<string[]>(['id', 'customer', 'vehicle', 'service_type', 'service_date', 'oil_quantity', 'subtotal', 'vat', 'total', 'status']);
   rowDatas = input<any[]>();
   showAddButton = input<boolean>(false);
+  refreshButton = input<boolean>(false);
   height = input<string>('80px');
+  
+  // NEW: Pagination inputs from parent (API response)
+  totalRecords = input<number>(0);
+  currentPage = input<number>(0);
+  pageSize = input<number>(10);
+  loading = input<boolean>(false);
   
   // Output signals
   addNew = output<{ event: 'add' | 'edit' | 'view' | 'delete', data?: any }>();
+  refreshTable = output();
+  
+  // NEW: Output for pagination and search events
+  tableEvent = output<TableEvent>();
 
   // Action Configuration Input
   actionConfig = input<ActionConfig>({
@@ -58,6 +87,10 @@ export class DataTableComponent implements AfterViewInit {
   // Action menu state
   activeMenuId: number | null = null;
 
+  // Search state
+  private searchTimeout: any;
+  currentSearchTerm = '';
+
   // Computed signal for custom columns (columns not in predefined list)
   customDisplayedColumns = computed(() => 
     this.displayedColumns().filter(col => !this.predefinedColumns.includes(col) && col !== 'action')
@@ -69,7 +102,17 @@ export class DataTableComponent implements AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
+    // Don't set paginator for dataSource since we're handling pagination externally
+    // this.dataSource.paginator = this.paginator;
+    
+    // Configure paginator with external data
+    effect(() => {
+      if (this.paginator) {
+        this.paginator.length = this.totalRecords();
+        this.paginator.pageIndex = this.currentPage();
+        this.paginator.pageSize = this.pageSize();
+      }
+    });
     
     // Close menu when clicking outside
     document.addEventListener('click', () => {
@@ -83,6 +126,23 @@ export class DataTableComponent implements AfterViewInit {
       const data = this.rowDatas();
       if (data) {
         this.dataSource.data = data;
+        // Disable client-side pagination and filtering since we handle it server-side
+        this.dataSource.paginator = null;
+        this.dataSource.filter = '';
+      }
+    });
+  }
+
+  // NEW: Handle pagination events
+  onPageChange(event: PageEvent) {
+    console.log('Page change event:', event);
+    
+    this.tableEvent.emit({
+      type: 'pagination',
+      data: {
+        pageIndex: event.pageIndex,
+        pageSize: event.pageSize,
+        length: event.length
       }
     });
   }
@@ -114,25 +174,46 @@ export class DataTableComponent implements AfterViewInit {
     this.addNew.emit({ event: 'add' });
   }
 
-  // Filter methods
+  refresh() {
+    this.refreshTable.emit();
+  }
+
+  // UPDATED: Filter methods - now emit search events instead of local filtering
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.currentSearchTerm = filterValue.trim();
     
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
+    // Clear previous timeout
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
     }
+    
+    // Debounce search to avoid too many API calls
+    this.searchTimeout = setTimeout(() => {
+      this.emitSearchEvent(this.currentSearchTerm);
+    }, 500); // 500ms delay
   }
 
   clearSearch() {
-    this.dataSource.filter = '';
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
+    this.currentSearchTerm = '';
+    this.emitSearchEvent('');
+  }
+
+  // NEW: Emit search event
+  private emitSearchEvent(searchTerm: string) {
+    console.log('Search event:', searchTerm);
+    
+    this.tableEvent.emit({
+      type: 'search',
+      data: {
+        searchTerm: searchTerm
+      }
+    });
   }
 
   // Utility methods for formatting
-  formatServiceType(serviceType: string): string {
+  formatServiceType(service: string): string {
+    const serviceType = service === 'battery_replacement' ? 'battery' : 'service'
     return serviceType.replace(/_/g, ' ').toUpperCase();
   }
 
@@ -150,60 +231,61 @@ export class DataTableComponent implements AfterViewInit {
     return path.split('.').reduce((current, key) => current?.[key], obj) || '';
   }
 
-  // Paginator helper methods
+  // UPDATED: Paginator helper methods - now use external data
   getStartIndex(): number {
-    if (!this.paginator) return 0;
-    return this.paginator.pageIndex * this.paginator.pageSize;
+    const pageIndex = this.currentPage();
+    const pageSize = this.pageSize();
+    return pageIndex * pageSize;
   }
 
   getEndIndex(): number {
-    if (!this.paginator) return 0;
-    const endIndex = (this.paginator.pageIndex + 1) * this.paginator.pageSize;
-    return Math.min(endIndex, this.getTotalCount());
+    const pageIndex = this.currentPage();
+    const pageSize = this.pageSize();
+    const total = this.totalRecords();
+    const endIndex = (pageIndex + 1) * pageSize;
+    return Math.min(endIndex, total);
   }
 
   getTotalCount(): number {
-    return this.dataSource.filteredData.length;
+    return this.totalRecords();
   }
 
-  // Add these properties and methods to your component class for custom modal
+  // Properties for custom delete modal
+  showDeleteConfirmation = false;
+  itemToDelete: any = null;
 
-// Properties for custom delete modal
-showDeleteConfirmation = false;
-itemToDelete: any = null;
-
-// Method to show delete confirmation (replace confirmDelete)
-confirmDelete(element: any) {
-  this.itemToDelete = element;
-  this.showDeleteConfirmation = true;
-}
-
-// Get display name for item being deleted
-getDeleteItemName(): string {
-  if (!this.itemToDelete) return '';
-  
-  return this.itemToDelete.customer_name || 
-         this.itemToDelete.name || 
-         this.itemToDelete.title || 
-         `Record #${this.itemToDelete.id}` ||
-         'this item';
-}
-
-// Cancel delete operation
-cancelDelete() {
-  this.showDeleteConfirmation = false;
-  this.itemToDelete = null;
-}
-
-// Proceed with delete operation
-proceedDelete() {
-  if (this.itemToDelete) {
-    this.onDelete(this.itemToDelete);
-    this.cancelDelete();
+  // Method to show delete confirmation (replace confirmDelete)
+  confirmDelete(element: any) {
+    this.itemToDelete = element;
+    this.showDeleteConfirmation = true;
   }
-}
 
-// Custom action handler
+  // Get display name for item being deleted
+  getDeleteItemName(): string {
+    if (!this.itemToDelete) return '';
+    
+    return this.itemToDelete.customer_name || 
+           this.itemToDelete.name || 
+           this.itemToDelete.title || 
+           `Record #${this.itemToDelete.id}` ||
+           'this item';
+  }
+
+  // Cancel delete operation
+  cancelDelete() {
+    this.showDeleteConfirmation = false;
+    this.itemToDelete = null;
+  }
+
+  // Proceed with delete operation
+  proceedDelete() {
+    if (this.itemToDelete) {
+      this.onDelete(this.itemToDelete);
+      this.cancelDelete();
+    }
+  }
+
+  // Custom action handler
   onCustomAction(actionKey: string, element: any) {
     // this.addNew.emit({ 
     //   event: 'custom', 
@@ -218,6 +300,4 @@ proceedDelete() {
     const disableCondition = config?.disableConditions?.[actionKey];
     return disableCondition ? disableCondition(element) : false;
   }
-
-  
 }

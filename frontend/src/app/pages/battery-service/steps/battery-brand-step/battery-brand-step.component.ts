@@ -1,5 +1,17 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { BatteryType } from '../../../../models';
 import { CommonModule } from '@angular/common';
 import { SearchPipe } from '../../../../pipes/search.pipe';
@@ -10,12 +22,11 @@ import { take } from 'rxjs';
   selector: 'app-battery-brand-step',
   imports: [ReactiveFormsModule, CommonModule, SearchPipe, FormsModule],
   templateUrl: './battery-brand-step.component.html',
-  styleUrl: './battery-brand-step.component.scss'
+  styleUrl: './battery-brand-step.component.scss',
 })
 export class BatteryBrandStepComponent {
-private fb = inject(FormBuilder);
+  private fb = inject(FormBuilder);
   private apiService = inject(ApiService);
-
 
   // Inputs
   selectedCapacity = input.required<number>();
@@ -32,19 +43,20 @@ private fb = inject(FormBuilder);
 
   // Signals
   brandForm!: FormGroup;
-  
+
   availableBrands = signal<any[]>([]);
 
   selectedCapacityLabel = computed(() => this.capacityLabel());
-  
+
   isValid = computed(() => !!this.brandForm?.get('batteryTypeId')?.value);
 
   ngOnInit() {
     this.initializeForm();
     this.subscribeToChanges();
     this.loadBatteriesByAmp();
+    console.log(this.initialBatteryTypeId());
+    
   }
-
 
   loadBatteriesByAmp(): void {
     this.apiService
@@ -57,15 +69,17 @@ private fb = inject(FormBuilder);
 
   private initializeForm() {
     this.brandForm = this.fb.group({
-      batteryTypeId: [this.initialBatteryTypeId()]
+      batteryTypeId: [this.initialBatteryTypeId()],
     });
   }
 
   private subscribeToChanges() {
-    this.brandForm.get('batteryTypeId')?.valueChanges.subscribe(value => {
+    this.brandForm.get('batteryTypeId')?.valueChanges.subscribe((value) => {
       this.validityChanged.emit(!!value);
       if (value) {
-        const selectedBattery = this.availableBrands().find(b => b.id == value);
+        const selectedBattery = this.availableBrands().find(
+          (b) => b.id == value
+        );
         if (selectedBattery) {
           this.brandSelected.emit(selectedBattery);
         }
@@ -79,7 +93,10 @@ private fb = inject(FormBuilder);
 
   getSelectedBatteryType(): BatteryType | null {
     const batteryTypeId = this.brandForm.get('batteryTypeId')?.value;
-    return this.availableBrands().find(battery => battery.id == batteryTypeId) || null;
+    return (
+      this.availableBrands().find((battery) => battery.id == batteryTypeId) ||
+      null
+    );
   }
 
   formatPrice(price: number): any {
@@ -87,7 +104,5 @@ private fb = inject(FormBuilder);
     return price;
   }
 
-  onBrandSelected(){
-
-  }
+  onBrandSelected() {}
 }

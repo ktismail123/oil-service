@@ -1,3 +1,4 @@
+import { environment } from './../../../../../environments/environment.prod';
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import {
   FormControl,
@@ -7,20 +8,21 @@ import {
 } from '@angular/forms';
 import { Accessory, OilFilter, OilType } from '../../../../models';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
-import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-step7-customer-summary',
-  imports: [ReactiveFormsModule, FormFieldComponent, NgIf, NgFor, CurrencyPipe],
+  imports: [ReactiveFormsModule, FormFieldComponent, NgIf, NgFor, CurrencyPipe, DatePipe],
   templateUrl: './step7-customer-summary.component.html',
   styleUrl: './step7-customer-summary.component.scss',
 })
 export class Step7CustomerSummaryComponent {
-
   private route = inject(ActivatedRoute);
 
   editMode = this.route.snapshot.queryParams['mode'];
+
+  environment = environment;
 
   @Input() customerForm!: FormGroup;
   @Input() oilForm!: FormGroup;
@@ -39,32 +41,40 @@ export class Step7CustomerSummaryComponent {
   @Output() submitBooking = new EventEmitter();
   @Output() updateBooking = new EventEmitter();
 
+  buttonText = this.editMode === 'edit' ? 'Update' : 'Confirm Booking';
+  formattedDate: string;
+
   get totalWithLabor(): number {
     return (+this.totalAmount || 0) + (+this.laborCost || 0);
   }
 
   get oilTotalPrice(): number {
-    return this.oilForm?.get('totalPrice')?.value || 0
+    return this.oilForm?.get('totalPrice')?.value || 0;
   }
 
-printReceipt(): void {
-  const receiptContent = document.getElementById('receipt-content');
+  constructor() {
+    const today = new Date();
+    this.formattedDate = today.toISOString().split('T')[0];
+  }
 
-  if (receiptContent) {
-    const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
+  printReceipt(): void {
+    const receiptContent = document.getElementById('receipt-content');
 
-    // Remove customer details form section
-    const customerDetailsSection = clonedContent.querySelector(
-      '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
-    );
-    if (customerDetailsSection) {
-      customerDetailsSection.remove();
-    }
+    if (receiptContent) {
+      const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
 
-    const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
+      // Remove customer details form section
+      const customerDetailsSection = clonedContent.querySelector(
+        '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
+      );
+      if (customerDetailsSection) {
+        customerDetailsSection.remove();
+      }
 
-    if (printWindow) {
-      printWindow.document.write(`
+      const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
+
+      if (printWindow) {
+        printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -168,18 +178,16 @@ printReceipt(): void {
         </html>
       `);
 
-      printWindow.document.close();
+        printWindow.document.close();
 
-      printWindow.onload = function () {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-      };
+        printWindow.onload = function () {
+          printWindow.focus();
+          printWindow.print();
+          printWindow.close();
+        };
+      }
     }
   }
-}
-
-
 
   // Alternative function for ESC/POS thermal printers
   printThermalReceipt(): void {
@@ -293,9 +301,9 @@ printReceipt(): void {
   }
 
   onSubmitBooking() {
-    if(this.editMode == 'edit'){
+    if (this.editMode == 'edit') {
       this.updateBooking.emit();
-    }else{
+    } else {
       this.submitBooking.emit();
     }
   }

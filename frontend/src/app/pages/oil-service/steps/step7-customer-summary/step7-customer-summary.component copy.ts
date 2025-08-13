@@ -1,290 +1,290 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import {
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { Accessory, OilFilter, OilType } from '../../../../models';
-import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
-import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+// import { Component, EventEmitter, Input, Output } from '@angular/core';
+// import {
+//   FormControl,
+//   FormGroup,
+//   ReactiveFormsModule,
+//   Validators,
+// } from '@angular/forms';
+// import { Accessory, OilFilter, OilType } from '../../../../models';
+// import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
+// import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
 
-@Component({
-  selector: 'app-step7-customer-summary',
-  imports: [ReactiveFormsModule, FormFieldComponent, NgIf, NgFor, CurrencyPipe],
-  templateUrl: './step7-customer-summary.component.html',
-  styleUrl: './step7-customer-summary.component.scss',
-})
-export class Step7CustomerSummaryComponent {
-  @Input() customerForm!: FormGroup;
-  @Input() oilForm!: FormGroup;
-  @Input() selectedBrandName: string = '';
-  @Input() selectedModelName: string = '';
-  @Input() serviceInterval: number = 0;
-  @Input() selectedOilType: OilType | undefined;
-  @Input() selectedFilter: OilFilter | undefined;
-  @Input() selectedAccessories: Accessory[] = [];
-  @Input() subtotal: number = 0;
-  @Input() laborCost: number = 0;
-  @Input() vatAmount: number = 0;
-  @Input() totalAmount: number = 0;
-  @Input() oilQuantity: number = 0;
+// @Component({
+//   selector: 'app-step7-customer-summary',
+//   imports: [ReactiveFormsModule, FormFieldComponent, NgIf, NgFor, CurrencyPipe],
+//   templateUrl: './step7-customer-summary.component.html',
+//   styleUrl: './step7-customer-summary.component.scss',
+// })
+// export class Step7CustomerSummaryComponent {
+//   @Input() customerForm!: FormGroup;
+//   @Input() oilForm!: FormGroup;
+//   @Input() selectedBrandName: string = '';
+//   @Input() selectedModelName: string = '';
+//   @Input() serviceInterval: number = 0;
+//   @Input() selectedOilType: OilType | undefined;
+//   @Input() selectedFilter: OilFilter | undefined;
+//   @Input() selectedAccessories: Accessory[] = [];
+//   @Input() subtotal: number = 0;
+//   @Input() laborCost: number = 0;
+//   @Input() vatAmount: number = 0;
+//   @Input() totalAmount: number = 0;
+//   @Input() oilQuantity: number = 0;
 
-  @Output() submitBooking = new EventEmitter();
+//   @Output() submitBooking = new EventEmitter();
 
-  get totalWithLabor(): number {
-    return (+this.totalAmount || 0) + (+this.laborCost || 0);
-  }
+//   get totalWithLabor(): number {
+//     return (+this.totalAmount || 0) + (+this.laborCost || 0);
+//   }
 
-  get oilTotalPrice(): number {
-    return this.oilForm?.get('totalPrice')?.value || 0
-  }
+//   get oilTotalPrice(): number {
+//     return this.oilForm?.get('totalPrice')?.value || 0
+//   }
 
-  printReceipt(): void {
-    const receiptContent = document.getElementById('receipt-content');
+//   printReceipt(): void {
+//     const receiptContent = document.getElementById('receipt-content');
 
-    if (receiptContent) {
-      const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
+//     if (receiptContent) {
+//       const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
 
-      // Remove customer details form section from the cloned content
-      const customerDetailsSection = clonedContent.querySelector(
-        '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
-      );
-      if (customerDetailsSection) {
-        customerDetailsSection.remove();
-      }
+//       // Remove customer details form section from the cloned content
+//       const customerDetailsSection = clonedContent.querySelector(
+//         '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
+//       );
+//       if (customerDetailsSection) {
+//         customerDetailsSection.remove();
+//       }
 
-      const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
+//       const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
 
-      if (printWindow) {
-        printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Tech Lube Receipt</title>
-          <style>
-            @page {
-              size: 80mm auto;
-              margin: 0mm;
-            }
+//       if (printWindow) {
+//         printWindow.document.write(`
+//         <!DOCTYPE html>
+//         <html>
+//         <head>
+//           <title>Tech Lube Receipt</title>
+//           <style>
+//             @page {
+//               size: 80mm auto;
+//               margin: 0mm;
+//             }
 
-            html, body {
-              width: 80mm;
-              margin: 0 auto;
-              padding: 0;
-              font-family: 'Courier New', monospace;
-              font-size: 12px;
-              line-height: 1.4;
-              color: #333;
-              background: white;
-            }
+//             html, body {
+//               width: 80mm;
+//               margin: 0 auto;
+//               padding: 0;
+//               font-family: 'Courier New', monospace;
+//               font-size: 12px;
+//               line-height: 1.4;
+//               color: #333;
+//               background: white;
+//             }
 
-            /* Wrapper to center content visually */
-            .print-wrapper {
-              width: 100%;
-              display: flex;
-              justify-content: center;
-            }
+//             /* Wrapper to center content visually */
+//             .print-wrapper {
+//               width: 100%;
+//               display: flex;
+//               justify-content: center;
+//             }
 
-            .receipt-container {
-              width: 80mm;
-              max-width: 80mm;
-              padding: 5mm;
-              box-sizing: border-box;
-            }
+//             .receipt-container {
+//               width: 80mm;
+//               max-width: 80mm;
+//               padding: 5mm;
+//               box-sizing: border-box;
+//             }
 
-            h1 {
-              font-size: 18px;
-              font-weight: bold;
-              text-align: center;
-              margin-bottom: 4px;
-            }
+//             h1 {
+//               font-size: 18px;
+//               font-weight: bold;
+//               text-align: center;
+//               margin-bottom: 4px;
+//             }
 
-            h3 {
-              font-size: 14px;
-              font-weight: bold;
-              text-align: center;
-              margin: 12px 0 8px 0;
-            }
+//             h3 {
+//               font-size: 14px;
+//               font-weight: bold;
+//               text-align: center;
+//               margin: 12px 0 8px 0;
+//             }
 
-            .text-center { text-align: center; }
-            .text-xs { font-size: 10px; }
-            .text-sm { font-size: 11px; }
-            .text-lg { font-size: 14px; font-weight: bold; }
+//             .text-center { text-align: center; }
+//             .text-xs { font-size: 10px; }
+//             .text-sm { font-size: 11px; }
+//             .text-lg { font-size: 14px; font-weight: bold; }
 
-            .text-gray-500 { color: #6b7280; }
-            .text-gray-600 { color: #4b5563; }
-            .text-gray-700 { color: #374151; }
-            .text-gray-800 { color: #1f2937; }
+//             .text-gray-500 { color: #6b7280; }
+//             .text-gray-600 { color: #4b5563; }
+//             .text-gray-700 { color: #374151; }
+//             .text-gray-800 { color: #1f2937; }
 
-            .font-medium { font-weight: 500; }
-            .font-semibold { font-weight: 600; }
-            .font-bold { font-weight: bold; }
+//             .font-medium { font-weight: 500; }
+//             .font-semibold { font-weight: 600; }
+//             .font-bold { font-weight: bold; }
 
-            .border-b-2 { border-bottom: 2px dashed #9ca3af; }
-            .border-b { border-bottom: 1px dashed #d1d5db; }
-            .border-t-2 { border-top: 2px dashed #9ca3af; }
+//             .border-b-2 { border-bottom: 2px dashed #9ca3af; }
+//             .border-b { border-bottom: 1px dashed #d1d5db; }
+//             .border-t-2 { border-top: 2px dashed #9ca3af; }
 
-            .mb-1 { margin-bottom: 4px; }
-            .mb-2 { margin-bottom: 8px; }
-            .mb-3 { margin-bottom: 12px; }
-            .mb-4 { margin-bottom: 16px; }
-            .mt-1 { margin-top: 4px; }
-            .pb-4 { padding-bottom: 16px; }
-            .pt-2 { padding-top: 8px; }
-            .pt-4 { padding-top: 16px; }
+//             .mb-1 { margin-bottom: 4px; }
+//             .mb-2 { margin-bottom: 8px; }
+//             .mb-3 { margin-bottom: 12px; }
+//             .mb-4 { margin-bottom: 16px; }
+//             .mt-1 { margin-top: 4px; }
+//             .pb-4 { padding-bottom: 16px; }
+//             .pt-2 { padding-top: 8px; }
+//             .pt-4 { padding-top: 16px; }
 
-            .flex { display: flex; }
-            .justify-between { justify-content: space-between; }
-            .items-center { align-items: center; }
-            .flex-1 { flex: 1; }
-            .text-right { text-align: right; }
+//             .flex { display: flex; }
+//             .justify-between { justify-content: space-between; }
+//             .items-center { align-items: center; }
+//             .flex-1 { flex: 1; }
+//             .text-right { text-align: right; }
 
-            .space-y-1 > * + * { margin-top: 4px; }
-            .space-y-2 > * + * { margin-top: 8px; }
+//             .space-y-1 > * + * { margin-top: 4px; }
+//             .space-y-2 > * + * { margin-top: 8px; }
 
-            .print\\:hidden, .hidden {
-              display: none !important;
-            }
+//             .print\\:hidden, .hidden {
+//               display: none !important;
+//             }
 
-            .print\\:block {
-              display: block !important;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="print-wrapper">
-            <div class="receipt-container">
-              ${clonedContent.innerHTML}
-            </div>
-          </div>
-        </body>
-        </html>
-      `);
+//             .print\\:block {
+//               display: block !important;
+//             }
+//           </style>
+//         </head>
+//         <body>
+//           <div class="print-wrapper">
+//             <div class="receipt-container">
+//               ${clonedContent.innerHTML}
+//             </div>
+//           </div>
+//         </body>
+//         </html>
+//       `);
 
-        printWindow.document.close();
+//         printWindow.document.close();
 
-        printWindow.onload = function () {
-          printWindow.focus();
-          printWindow.print();
-          printWindow.close();
-        };
-      }
-    }
-  }
+//         printWindow.onload = function () {
+//           printWindow.focus();
+//           printWindow.print();
+//           printWindow.close();
+//         };
+//       }
+//     }
+//   }
 
-  // Alternative function for ESC/POS thermal printers
-  printThermalReceipt(): void {
-    // This generates ESC/POS commands for direct thermal printing
-    const escPos = this.generateESCPOSCommands();
+//   // Alternative function for ESC/POS thermal printers
+//   printThermalReceipt(): void {
+//     // This generates ESC/POS commands for direct thermal printing
+//     const escPos = this.generateESCPOSCommands();
 
-    // You can send these commands to a thermal printer via:
-    // 1. Serial/USB connection
-    // 2. Network printer
-    // 3. Bluetooth
-    console.log('ESC/POS Commands:', escPos);
+//     // You can send these commands to a thermal printer via:
+//     // 1. Serial/USB connection
+//     // 2. Network printer
+//     // 3. Bluetooth
+//     console.log('ESC/POS Commands:', escPos);
 
-    // Example: Send to network thermal printer
-    this.sendToThermalPrinter(escPos);
-  }
+//     // Example: Send to network thermal printer
+//     this.sendToThermalPrinter(escPos);
+//   }
 
-  private generateESCPOSCommands(): string {
-    const ESC = '\x1B';
-    const GS = '\x1D';
+//   private generateESCPOSCommands(): string {
+//     const ESC = '\x1B';
+//     const GS = '\x1D';
 
-    let commands = '';
+//     let commands = '';
 
-    // Initialize printer
-    commands += ESC + '@';
+//     // Initialize printer
+//     commands += ESC + '@';
 
-    // Center align and bold
-    commands += ESC + 'a' + '1'; // Center
-    commands += ESC + 'E' + '1'; // Bold on
-    commands += 'TECH LUBE\n';
-    commands += ESC + 'E' + '0'; // Bold off
-    commands += 'Premium Auto Service Center\n';
-    commands += 'Tel: +971-XXX-XXXX\n';
-    commands += 'info@techlube.ae\n\n';
+//     // Center align and bold
+//     commands += ESC + 'a' + '1'; // Center
+//     commands += ESC + 'E' + '1'; // Bold on
+//     commands += 'TECH LUBE\n';
+//     commands += ESC + 'E' + '0'; // Bold off
+//     commands += 'Premium Auto Service Center\n';
+//     commands += 'Tel: +971-XXX-XXXX\n';
+//     commands += 'info@techlube.ae\n\n';
 
-    // Receipt info
-    commands += 'RECEIPT #TL-THG6765\n';
-    commands += '01-02-2025\n';
-    commands += '--------------------------------\n';
+//     // Receipt info
+//     commands += 'RECEIPT #TL-THG6765\n';
+//     commands += '01-02-2025\n';
+//     commands += '--------------------------------\n';
 
-    // Customer details
-    commands += ESC + 'a' + '0'; // Left align
-    commands += 'CUSTOMER DETAILS\n';
-    commands += '--------------------------------\n';
+//     // Customer details
+//     commands += ESC + 'a' + '0'; // Left align
+//     commands += 'CUSTOMER DETAILS\n';
+//     commands += '--------------------------------\n';
 
-    const customerName = this.customerForm.get('name')?.value || 'N/A';
-    const mobile = this.customerForm.get('mobile')?.value || 'N/A';
-    const plateNumber = this.customerForm.get('plateNumber')?.value || 'N/A';
+//     const customerName = this.customerForm.get('name')?.value || 'N/A';
+//     const mobile = this.customerForm.get('mobile')?.value || 'N/A';
+//     const plateNumber = this.customerForm.get('plateNumber')?.value || 'N/A';
 
-    commands += `Name: ${customerName}\n`;
-    commands += `Mobile: ${mobile}\n`;
-    commands += `Plate: ${plateNumber}\n`;
-    commands += '--------------------------------\n';
+//     commands += `Name: ${customerName}\n`;
+//     commands += `Mobile: ${mobile}\n`;
+//     commands += `Plate: ${plateNumber}\n`;
+//     commands += '--------------------------------\n';
 
-    // Service details
-    commands += 'SERVICE DETAILS\n';
-    commands += '--------------------------------\n';
-    commands += `Vehicle: ${this.selectedBrandName} ${this.selectedModelName}\n`;
-    commands += `Service: ${this.serviceInterval} KM\n`;
-    commands += '--------------------------------\n';
+//     // Service details
+//     commands += 'SERVICE DETAILS\n';
+//     commands += '--------------------------------\n';
+//     commands += `Vehicle: ${this.selectedBrandName} ${this.selectedModelName}\n`;
+//     commands += `Service: ${this.serviceInterval} KM\n`;
+//     commands += '--------------------------------\n';
 
-    // Items
-    commands += 'ITEMS & SERVICES\n';
-    commands += '--------------------------------\n';
+//     // Items
+//     commands += 'ITEMS & SERVICES\n';
+//     commands += '--------------------------------\n';
 
-    if (this.selectedOilType) {
-      commands += `${this.selectedOilType.grade} ${this.selectedOilType.brand}\n`;
-      commands += `Engine Oil (${this.oilQuantity}L)\n`;
-      commands += `                    AED 156.00\n\n`;
-    }
+//     if (this.selectedOilType) {
+//       commands += `${this.selectedOilType.grade} ${this.selectedOilType.brand}\n`;
+//       commands += `Engine Oil (${this.oilQuantity}L)\n`;
+//       commands += `                    AED 156.00\n\n`;
+//     }
 
-    if (this.selectedFilter) {
-      commands += `${this.selectedFilter.brand} Oil Filter\n`;
-      commands += `Code: ${this.selectedFilter.code}\n`;
-      commands += `                AED ${this.selectedFilter.price}\n\n`;
-    }
+//     if (this.selectedFilter) {
+//       commands += `${this.selectedFilter.brand} Oil Filter\n`;
+//       commands += `Code: ${this.selectedFilter.code}\n`;
+//       commands += `                AED ${this.selectedFilter.price}\n\n`;
+//     }
 
-    const laborCost = this.customerForm.get('laborCost')?.value;
-    if (laborCost && laborCost > 0) {
-      commands += 'Labor & Service Charges\n';
-      commands += `                AED ${laborCost}\n\n`;
-    }
+//     const laborCost = this.customerForm.get('laborCost')?.value;
+//     if (laborCost && laborCost > 0) {
+//       commands += 'Labor & Service Charges\n';
+//       commands += `                AED ${laborCost}\n\n`;
+//     }
 
-    // Totals
-    commands += '================================\n';
-    commands += ESC + 'E' + '1'; // Bold on
-    commands += `TOTAL: AED ${(this.totalAmount || 0).toFixed(2)}\n`;
-    commands += ESC + 'E' + '0'; // Bold off
-    commands += '================================\n\n';
+//     // Totals
+//     commands += '================================\n';
+//     commands += ESC + 'E' + '1'; // Bold on
+//     commands += `TOTAL: AED ${(this.totalAmount || 0).toFixed(2)}\n`;
+//     commands += ESC + 'E' + '0'; // Bold off
+//     commands += '================================\n\n';
 
-    // Footer
-    commands += ESC + 'a' + '1'; // Center
-    commands += 'Thank you for choosing Tech Lube!\n';
-    commands += `Next Service: ${this.serviceInterval + 5000} KM\n\n`;
-    commands += 'Follow us: @TechLubeUAE\n';
-    commands += 'Visit: www.techlube.ae\n\n\n';
+//     // Footer
+//     commands += ESC + 'a' + '1'; // Center
+//     commands += 'Thank you for choosing Tech Lube!\n';
+//     commands += `Next Service: ${this.serviceInterval + 5000} KM\n\n`;
+//     commands += 'Follow us: @TechLubeUAE\n';
+//     commands += 'Visit: www.techlube.ae\n\n\n';
 
-    // Cut paper
-    commands += GS + 'V' + '1';
+//     // Cut paper
+//     commands += GS + 'V' + '1';
 
-    return commands;
-  }
+//     return commands;
+//   }
 
-  // Method to send commands to thermal printer (implement based on your setup)
-  private sendToThermalPrinter(commands: string): void {
-    // Option 1: Send via WebUSB (requires HTTPS)
-    // this.sendViaWebUSB(commands);
-    // Option 2: Send via WebSocket to local service
-    // this.sendViaWebSocket(commands);
-    // Option 3: Send via HTTP to printer's IP
-    // this.sendViaHTTP(commands);
-  }
+//   // Method to send commands to thermal printer (implement based on your setup)
+//   private sendToThermalPrinter(commands: string): void {
+//     // Option 1: Send via WebUSB (requires HTTPS)
+//     // this.sendViaWebUSB(commands);
+//     // Option 2: Send via WebSocket to local service
+//     // this.sendViaWebSocket(commands);
+//     // Option 3: Send via HTTP to printer's IP
+//     // this.sendViaHTTP(commands);
+//   }
 
-  onSubmitBooking() {
-    this.submitBooking.emit();
-  }
-}
+//   onSubmitBooking() {
+//     this.submitBooking.emit();
+//   }
+// }

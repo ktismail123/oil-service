@@ -120,6 +120,22 @@
   box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5) !important;
 }
 
+.modern-sync-button {
+  background: linear-gradient(135deg, #35dcbd 0%, #19ac65 100%) !important;
+  color: white !important;
+  border-radius: 0.75rem !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.modern-add-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5) !important;
+}
+
 .add-icon {
   margin-right: 0.5rem !important;
   font-size: 1.125rem !important;
@@ -251,14 +267,14 @@
 
 /* Specific column width control */
 .enhanced-table .mat-column-vehicle {
-  width: 150px !important;
-  min-width: 150px !important;
-  max-width: 150px !important;
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
 }
 
 /* Alternative: Use flex-basis for more flexible width */
 .enhanced-table .mat-column-vehicle {
-  flex: 0 0 150px !important; /* Don't grow, don't shrink, 250px base */
+  flex: 0 0 200px !important; /* Don't grow, don't shrink, 250px base */
 }
 
 .vehicle-brand {
@@ -893,3 +909,4 @@
     flex-direction: column;
   }
 }
+

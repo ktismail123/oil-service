@@ -4,7 +4,84 @@ const { getDB } = require("../config/db");
 const getAllBookings = async (req, res) => {
   try {
     const db = getDB();
-    const [results] = await db.execute(`
+    
+    // Extract and validate query parameters
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
+    const search = req.query.search || '';
+    const status = req.query.status || '';
+    const service_type = req.query.service_type || '';
+    const date_from = req.query.date_from || '';
+    const date_to = req.query.date_to || '';
+    const sort_by = req.query.sort_by || 'created_at';
+    const sort_order = (req.query.sort_order || 'DESC').toUpperCase();
+
+    const offset = (page - 1) * limit;
+
+    console.log('Query params:', { page, limit, search, status, service_type, date_from, date_to });
+
+    // Validate sort parameters to prevent SQL injection
+    const allowedSortFields = ['created_at', 'service_date', 'total_amount', 'status', 'customer_name'];
+    const sortField = allowedSortFields.includes(sort_by) ? sort_by : 'created_at';
+    const sortDirection = sort_order === 'ASC' ? 'ASC' : 'DESC';
+
+    // Helper function to escape string values for SQL
+    const escapeString = (str) => {
+      if (!str) return "''";
+      return "'" + str.replace(/'/g, "''") + "'";
+    };
+
+    // Helper function to escape LIKE values
+    const escapeLike = (str) => {
+      if (!str) return "''";
+      const escaped = str.replace(/'/g, "''").replace(/%/g, '\\%').replace(/_/g, '\\_');
+      return "'%" + escaped + "%'";
+    };
+
+    // Build WHERE conditions safely
+    let whereConditions = [];
+
+    // Search functionality - using LIKE with escaped values
+    if (search && search.trim()) {
+      const searchTerm = escapeLike(search.trim());
+      whereConditions.push(`(
+        c.name LIKE ${searchTerm} OR 
+        c.mobile LIKE ${searchTerm} OR 
+        cv.plate_number LIKE ${searchTerm} OR 
+        vb.name LIKE ${searchTerm} OR 
+        vm.name LIKE ${searchTerm} OR
+        sb.id LIKE ${searchTerm} OR
+        sb.subtotal LIKE ${searchTerm}
+      )`);
+    }
+
+    // Status filter
+    if (status && status.trim()) {
+      whereConditions.push(`sb.status = ${escapeString(status.trim())}`);
+    }
+
+    // Service type filter
+    if (service_type && service_type.trim()) {
+      whereConditions.push(`sb.service_type = ${escapeString(service_type.trim())}`);
+    }
+
+    // Date range filters
+    if (date_from && date_from.trim()) {
+      whereConditions.push(`sb.service_date >= ${escapeString(date_from.trim())}`);
+    }
+
+    if (date_to && date_to.trim()) {
+      whereConditions.push(`sb.service_date <= ${escapeString(date_to.trim())}`);
+    }
+
+    const whereClause = whereConditions.length > 0 
+      ? `WHERE ${whereConditions.join(' AND ')}`
+      : '';
+
+    // Build the main query
+    const sortColumn = sortField === 'customer_name' ? 'c.name' : `sb.${sortField}`;
+    
+    const mainQuery = `
       SELECT 
         sb.id,
         sb.service_type,
@@ -34,16 +111,7 @@ const getAllBookings = async (req, res) => {
         oil_f.code as oil_filter_code,
         oil_f.brand as oil_filter_brand,
         bt.capacity as battery_capacity,
-        bt.brand as battery_brand,
-        GROUP_CONCAT(
-          CONCAT(
-            '{"id":', ba.accessory_id, 
-            ',"name":"', a.name, 
-            '","category":"', a.category,
-            '","quantity":', ba.quantity,
-            ',"price":', ba.price, '}'
-          ) SEPARATOR ','
-        ) as accessories_json
+        bt.brand as battery_brand
       FROM service_bookings sb
       JOIN customers c ON sb.customer_id = c.id
       JOIN customer_vehicles cv ON sb.vehicle_id = cv.id
@@ -51,42 +119,121 @@ const getAllBookings = async (req, res) => {
       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
       LEFT JOIN oil_filters oil_f ON sb.oil_filter_id = oil_f.id
       LEFT JOIN battery_types bt ON sb.battery_type_id = bt.id
-      LEFT JOIN booking_accessories ba ON sb.id = ba.booking_id
-      LEFT JOIN accessories a ON ba.accessory_id = a.id
-      GROUP BY sb.id
-      ORDER BY sb.created_at DESC
-    `);
+      ${whereClause}
+      ORDER BY ${sortColumn} ${sortDirection}
+      LIMIT ${limit} OFFSET ${offset}
+    `;
 
-    console.log('Query executed successfully, found bookings:', results.length);
+    console.log('Executing main query...');
+    console.log('WHERE clause:', whereClause);
 
-    // Parse accessories JSON
-    results.forEach(booking => {
-      if (booking.accessories_json) {
-        try {
-          booking.accessories = JSON.parse(`[${booking.accessories_json}]`);
-        } catch (e) {
-          console.error('Error parsing accessories JSON for booking', booking.id, ':', e);
+    // Execute main query using db.query()
+    const [results] = await db.query(mainQuery);
+
+    // Get accessories for the returned bookings
+    if (results.length > 0) {
+      const bookingIds = results.map(r => r.id);
+      const idsString = bookingIds.join(',');
+      
+      const accessoriesQuery = `
+        SELECT 
+          ba.booking_id,
+          ba.accessory_id,
+          a.name,
+          a.category,
+          ba.quantity,
+          ba.price
+        FROM booking_accessories ba
+        JOIN accessories a ON ba.accessory_id = a.id
+        WHERE ba.booking_id IN (${idsString})
+        ORDER BY ba.booking_id, a.name
+      `;
+
+      try {
+        const [accessoriesResults] = await db.query(accessoriesQuery);
+
+        // Group accessories by booking_id
+        const accessoriesMap = {};
+        accessoriesResults.forEach(acc => {
+          if (!accessoriesMap[acc.booking_id]) {
+            accessoriesMap[acc.booking_id] = [];
+          }
+          accessoriesMap[acc.booking_id].push({
+            id: acc.accessory_id,
+            name: acc.name,
+            category: acc.category,
+            quantity: acc.quantity,
+            price: acc.price
+          });
+        });
+
+        // Add accessories to results
+        results.forEach(booking => {
+          booking.accessories = accessoriesMap[booking.id] || [];
+        });
+      } catch (accessoriesError) {
+        console.error('Error fetching accessories:', accessoriesError);
+        // Continue without accessories if there's an error
+        results.forEach(booking => {
           booking.accessories = [];
-        }
-      } else {
-        booking.accessories = [];
+        });
       }
-      delete booking.accessories_json; // Remove the raw JSON field
-    });
+    } else {
+      results.forEach(booking => {
+        booking.accessories = [];
+      });
+    }
 
+    // Get total count for pagination
+    const countQuery = `
+      SELECT COUNT(DISTINCT sb.id) as total
+      FROM service_bookings sb
+      JOIN customers c ON sb.customer_id = c.id
+      JOIN customer_vehicles cv ON sb.vehicle_id = cv.id
+      LEFT JOIN vehicle_brands vb ON cv.brand_id = vb.id
+      LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
+      LEFT JOIN oil_filters oil_f ON sb.oil_filter_id = oil_f.id
+      LEFT JOIN battery_types bt ON sb.battery_type_id = bt.id
+      ${whereClause}
+    `;
+
+    const [countResult] = await db.query(countQuery);
+    const totalRecords = countResult[0].total;
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    console.log(`✅ Query successful. Found ${results.length} bookings out of ${totalRecords} total`);
+
+    // Return response
     res.json({
+      success: true,
       data: results,
-      total: results.length
+      pagination: {
+        current_page: page,
+        per_page: limit,
+        total_records: totalRecords,
+        total_pages: totalPages,
+        has_next_page: page < totalPages,
+        has_prev_page: page > 1
+      },
+      filters: {
+        search,
+        status,
+        service_type,
+        date_from,
+        date_to,
+        sort_by: sortField,
+        sort_order: sortDirection
+      }
     });
 
   } catch (error) {
-    console.error('Failed to fetch bookings:', error);
+    console.error('❌ Error in getAllBookings:', error);
     res.status(500).json({
       error: 'Failed to fetch bookings',
       details: error.message
     });
   }
-}
+};
 
 const createNewBooking = async (req, res) => {
   const db = getDB();
@@ -217,8 +364,8 @@ const updateBooking = async (req, res) => {
 
     // Validate booking ID
     if (!bookingId || isNaN(bookingId)) {
-      return res.status(400).json({ 
-        error: 'Valid booking ID is required' 
+      return res.status(400).json({
+        error: 'Valid booking ID is required'
       });
     }
 
@@ -229,8 +376,8 @@ const updateBooking = async (req, res) => {
     );
 
     if (existingBooking.length === 0) {
-      return res.status(404).json({ 
-        error: 'Booking not found' 
+      return res.status(404).json({
+        error: 'Booking not found'
       });
     }
 
@@ -239,16 +386,16 @@ const updateBooking = async (req, res) => {
     // Validate status transition if status is being updated
     const validStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
     if (status && !validStatuses.includes(status)) {
-      return res.status(400).json({ 
-        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` 
+      return res.status(400).json({
+        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
       });
     }
 
     // Check if booking can be updated based on current status
     if (currentBooking.status === 'completed' || currentBooking.status === 'cancelled') {
       if (!status) {
-        return res.status(400).json({ 
-          error: `Cannot update ${currentBooking.status} booking details. Only status changes are allowed.` 
+        return res.status(400).json({
+          error: `Cannot update ${currentBooking.status} booking details. Only status changes are allowed.`
         });
       }
     }
@@ -331,8 +478,8 @@ const updateBooking = async (req, res) => {
       const laborCost = parseFloat(sanitizedService.laborCost) || 0;
       if (laborCost < 0) {
         await db.rollback();
-        return res.status(400).json({ 
-          error: 'Labor cost cannot be negative' 
+        return res.status(400).json({
+          error: 'Labor cost cannot be negative'
         });
       }
 
@@ -366,8 +513,8 @@ const updateBooking = async (req, res) => {
 
     if (updateFields.length === 1) { // Only timestamp update
       await db.rollback();
-      return res.status(400).json({ 
-        error: 'No valid fields to update' 
+      return res.status(400).json({
+        error: 'No valid fields to update'
       });
     }
 
@@ -382,8 +529,8 @@ const updateBooking = async (req, res) => {
 
     if (bookingResult.affectedRows === 0) {
       await db.rollback();
-      return res.status(404).json({ 
-        error: 'Booking not found or no changes made' 
+      return res.status(404).json({
+        error: 'Booking not found or no changes made'
       });
     }
 
@@ -427,8 +574,80 @@ const updateBooking = async (req, res) => {
   }
 };
 
+const deleteBooking = async (req, res) => {
+  const db = getDB();
+  try {
+    const { id } = req.params; // or req.body depending on your route setup
+    const bookingId = parseInt(id);
+    // Validate booking ID
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking ID is required'
+      });
+    }
+
+    // Start transaction
+    await db.beginTransaction();
+
+    // Check if booking exists
+    const [existingBooking] = await db.execute(
+      'SELECT id, customer_id, vehicle_id FROM service_bookings WHERE id = ?',
+      [bookingId]
+    );
+
+    if (existingBooking.length === 0) {
+      await db.rollback();
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found'
+      });
+    }
+
+    // Delete related accessories first (foreign key constraint)
+    await db.execute(
+      'DELETE FROM booking_accessories WHERE booking_id = ?',
+      [bookingId]
+    );
+
+    // Delete the main booking
+    const [deleteResult] = await db.execute(
+      'DELETE FROM service_bookings WHERE id = ?',
+      [bookingId]
+    );
+
+    // Check if deletion was successful
+    if (deleteResult.affectedRows === 0) {
+      await db.rollback();
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to delete booking'
+      });
+    }
+
+    await db.commit();
+
+    res.json({
+      success: true,
+      message: 'Booking deleted successfully',
+      deletedBookingId: bookingId
+    });
+
+  } catch (error) {
+    await db.rollback();
+    console.error('Booking deletion failed:', error);
+    console.error('Booking ID:', req.params.bookingId || req.body.bookingId);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete booking',
+      details: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllBookings,
   createNewBooking,
-  updateBooking
+  updateBooking,
+  deleteBooking
 }

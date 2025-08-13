@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, OnChanges, output, signal, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SearchPipe } from '../../../../pipes/search.pipe';
 import { ApiService } from '../../../../services/api.service';
@@ -32,11 +32,7 @@ export class BatteryCapacityStepComponent {
   capacityChange = output();
 
   // Signals
-  capacityOptions = signal<CapacityOption[]>([
-    { value: 80, label: '80 Amp', description: 'Suitable for small to medium cars' },
-    { value: 90, label: '90 Amp', description: 'Suitable for medium cars' },
-    { value: 110, label: '110 Amp', description: 'Suitable for large cars and SUVs' },
-  ]);
+  capacityOptions = signal<any[]>([]);
 
   capacityForm!: FormGroup;
    searchTerm: string = '';
@@ -55,7 +51,9 @@ export class BatteryCapacityStepComponent {
       .getBatteryTypes()
       .pipe(take(1))
       .subscribe({
-        next: (res: any) => [this.capacityOptions.set(res)],
+        next: (res: any) => {
+          this.capacityOptions.set(res)
+        }
       });
   }
 

@@ -1,4 +1,12 @@
-import { Component, Input, Output, EventEmitter, signal, inject } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  signal,
+  inject,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 
@@ -8,7 +16,7 @@ export interface SidebarMenuItem {
   icon: string;
   count?: number;
   active?: boolean;
-  slug: string
+  slug: string;
 }
 
 @Component({
@@ -17,7 +25,7 @@ export interface SidebarMenuItem {
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
 })
-export class SideBarComponent {
+export class SideBarComponent implements OnInit {
   @Input() title = 'Control Panel';
   @Input() menuItems: SidebarMenuItem[] = [];
   @Input() collapsed = false;
@@ -28,6 +36,12 @@ export class SideBarComponent {
   private router = inject(Router);
 
   activeItem = signal<string>('');
+
+  userDetails: any;
+
+  ngOnInit(): void {
+    this.userDetails = JSON.parse(localStorage.getItem('userData') || '');
+  }
 
   selectMenuItem(itemId: string) {
     this.activeItem.set(itemId);

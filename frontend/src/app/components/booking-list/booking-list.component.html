@@ -1,7 +1,60 @@
-<!-- In your template -->
-<app-data-table
-  [rowDatas]="serviceData"
-  [displayedColumns]="displayedColumns"
-  (addNew)="onTableAction($event)"
-  [actionConfig]="actionConfig">
-</app-data-table>
+<!-- booking-list.component.html -->
+<div class="booking-list-container">
+  
+  <!-- Optional: Additional Filters Row -->
+  <div class="additional-filters" *ngIf="false"> <!-- Set to true if you want additional filters -->
+    <div class="filter-group">
+      <label for="status-filter">Status:</label>
+      <select 
+        id="status-filter"
+        [(ngModel)]="selectedStatus" 
+        (change)="loadBookings()"
+        [disabled]="loading">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="service-type-filter">Service Type:</label>
+      <select 
+        id="service-type-filter"
+        [(ngModel)]="selectedServiceType" 
+        (change)="loadBookings()"
+        [disabled]="loading">
+        <option value="">All Services</option>
+        <option value="oil_change">Oil Change</option>
+        <option value="battery_replacement">Battery Replacement</option>
+        <option value="maintenance">Maintenance</option>
+      </select>
+    </div>
+
+    <button 
+      class="reset-filters-btn"
+      (click)="resetFilters()"
+      [disabled]="loading">
+      <i class="fas fa-times"></i>
+      Reset Filters
+    </button>
+  </div>
+
+  <!-- Data Table with Pagination & Search -->
+  <app-data-table
+    [rowDatas]="serviceData"
+    [displayedColumns]="displayedColumns"
+    [showAddButton]="true"
+    [refreshButton]="true"
+    [totalRecords]="totalRecords"
+    [currentPage]="currentPage"
+    [pageSize]="pageSize"
+    [loading]="loading"
+    [actionConfig]="actionConfig"
+    (addNew)="onTableAction($event)"
+    (tableEvent)="onTableEvent($event)"
+    (refreshTable)="refreshData()">
+  </app-data-table>
+
+</div>

@@ -208,7 +208,7 @@ export class OilServiceComponent implements OnInit {
   ];
 
   constructor() {
-  // Get router state data
+    // Get router state data
     const nav = this.router.getCurrentNavigation();
     if (nav?.extras.state?.['item']) {
       this.editData = nav.extras.state['item'];
@@ -216,17 +216,16 @@ export class OilServiceComponent implements OnInit {
     }
 
     // Get query param
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       this.mode = params['mode'] || null;
       console.log('Mode:', this.mode);
     });
-  
   }
 
   ngOnInit() {
     this.initializeForms();
     this.loadInitialData();
-    if(this.mode === 'edit'){
+    if (this.mode === 'edit') {
       this.patchValues();
     }
   }
@@ -290,31 +289,31 @@ export class OilServiceComponent implements OnInit {
 
   patchValues() {
     this.brandForm.patchValue({
-       brandId: this.editData?.brand_id
-    })
+      brandId: this.editData?.brand_id,
+    });
 
     this.loadModels(this.editData?.brand_id);
 
     this.modelForm.patchValue({
-      modelId: this.editData?.model_id
-    })
+      modelId: this.editData?.model_id,
+    });
 
     this.intervalForm.patchValue({
-      interval: this.editData?.service_interval
-    })
+      interval: this.editData?.service_interval,
+    });
 
     this.oilForm.patchValue({
       oilTypeId: this.editData?.oil_type_id,
       requiredQuantity: 4,
       totalPrice: this.editData?.oil_package_details?.totalPrice,
-      oilQuantityDetails: this.editData?.oil_package_details
-    })
+      oilQuantityDetails: this.editData?.oil_package_details,
+    });
 
     this.loadOilTypes(this.editData?.service_interval);
 
     this.filterForm.patchValue({
-      filterId : this.editData?.oil_filter_id
-    })
+      filterId: this.editData?.oil_filter_id,
+    });
 
     this.selectedAccessories.set(this.editData?.accessories);
 
@@ -323,9 +322,9 @@ export class OilServiceComponent implements OnInit {
       mobile: this.editData?.customer_mobile,
       plateNumber: this.editData?.plate_number,
       laborCost: this.editData?.labour_cost,
-    })
+    });
 
-    this.currentStep.set(7)
+    this.currentStep.set(7);
   }
 
   // ✅ Manual trigger methods to update calculations
@@ -728,11 +727,9 @@ export class OilServiceComponent implements OnInit {
       };
 
       const response = await this.apiService
-        .updateBooking(34,bookingData)
+        .updateBooking(this.editData?.id, bookingData)
         .toPromise();
-      alert(
-        `Booking updared successfully! Total: AED ${this.subtotal().toFixed(2)}`
-      );
+      alert(`Successfully updated! Total: AED ${this.subtotal().toFixed(2)}`);
       this.router.navigate(['/']);
     } catch (error) {
       console.error('Booking failed:', error);

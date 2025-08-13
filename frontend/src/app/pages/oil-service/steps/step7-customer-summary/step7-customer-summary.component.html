@@ -1,37 +1,122 @@
 <!-- Customer Information Form -->
  <!-- Action Buttons (visible on screen, hidden when printing) -->
 <div class="text-center mb-6 print:hidden space-y-3">
-  <!-- Confirm Booking Button -->
-  <button 
-  (click)="onSubmitBooking()"
-    [disabled]="customerForm.invalid"
-    class="w-full m-auto max-w-md bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-colors duration-200 flex items-center justify-center mb-3">
-    
-    Confirm Booking
-  </button>
 
-  <!-- Print Buttons Row -->
-  <div class="flex gap-3 justify-center max-w-md mx-auto">
+<!-- Fixed Responsive Button Layout -->
+<div class="w-full max-w-md mx-auto">
+  <div class="flex flex-col sm:flex-row gap-3 items-stretch">
+    
+    <!-- Submit Button -->
+    <button 
+      (click)="onSubmitBooking()"
+      [disabled]="customerForm.invalid"
+      class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-green-300">
+      <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+      </svg>
+      <span class="hidden sm:inline">{{buttonText}}</span>
+      <span class="sm:hidden">Save</span>
+    </button>
+
+    <!-- Print Receipt Button -->
     <button 
       (click)="printReceipt()" 
       [disabled]="customerForm.invalid"
-      class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center justify-center">
+      class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-blue-300">
+      <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"></path>
+      </svg>
+      <span class="hidden sm:inline">Print Receipt</span>
+      <span class="sm:hidden">Print</span>
+    </button>
+  </div>
+</div>
+
+<!-- Alternative: Grid Layout -->
+<div class="w-full max-w-md mx-auto" *ngIf="false">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    
+    <!-- Submit Button -->
+    <button 
+      (click)="onSubmitBooking()"
+      [disabled]="customerForm.invalid"
+      class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group">
+      <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+      </svg>
+      {{buttonText}}
+    </button>
+
+    <!-- Print Receipt Button -->
+    <button 
+      (click)="printReceipt()" 
+      [disabled]="customerForm.invalid"
+      class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group">
       <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"></path>
       </svg>
       Print Receipt
     </button>
+  </div>
+</div>
+
+<!-- Mobile-First Compact Layout -->
+<div class="w-full max-w-sm mx-auto" *ngIf="false">
+  <div class="space-y-3">
     
+    <!-- Primary Action - Submit -->
     <button 
-      (click)="printThermalReceipt()" 
+      (click)="onSubmitBooking()"
       [disabled]="customerForm.invalid"
-      class="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center justify-center">
-      <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+      class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl shadow-xl transition-all duration-200 flex items-center justify-center text-lg group">
+      <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
       </svg>
-      Thermal Print
+      {{buttonText}}
+    </button>
+
+    <!-- Secondary Action - Print -->
+    <button 
+      (click)="printReceipt()" 
+      [disabled]="customerForm.invalid"
+      class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group">
+      <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"></path>
+      </svg>
+      Print Receipt
     </button>
   </div>
+</div>
+
+<!-- Ultra Compact for Very Small Screens -->
+<div class="w-full px-4" *ngIf="false">
+  <div class="flex flex-col xs:flex-row gap-2 max-w-xs mx-auto">
+    
+    <!-- Submit Button -->
+    <button 
+      (click)="onSubmitBooking()"
+      [disabled]="customerForm.invalid"
+      class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center text-sm">
+      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+      </svg>
+      <span class="hidden xs:inline">Submit</span>
+      <span class="xs:hidden">✓</span>
+    </button>
+
+    <!-- Print Button -->
+    <button 
+      (click)="printReceipt()" 
+      [disabled]="customerForm.invalid"
+      class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 flex items-center justify-center text-sm">
+      <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"></path>
+      </svg>
+      <span class="hidden xs:inline">Print</span>
+      <span class="xs:hidden">🖨</span>
+    </button>
+  </div>
+</div>
   
   <!-- Form Validation Message -->
   <div *ngIf="customerForm.invalid" class="text-center">
@@ -109,14 +194,14 @@
   <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
     <h1 class="text-2xl font-bold text-gray-800 mb-1">TECH LUBE</h1>
     <p class="text-sm text-gray-600">Premium Auto Service Center</p>
-    <p class="text-xs text-gray-500 mt-1">Tel: +971-XXX-XXXX</p>
-    <p class="text-xs text-gray-500">Email: {{ "info@techlube.ae" }}</p>
+    <p class="text-xs text-gray-500 mt-1">Tel: {{environment.contact_number}}</p>
+    <p class="text-xs text-gray-500">Email: {{ environment.email }}</p>
   </div>
 
   <!-- Receipt Number & Date -->
   <div class="text-center mb-4">
     <p class="text-xs text-gray-500">RECEIPT #TL-{{ "THG6765" }}</p>
-    <p class="text-xs text-gray-500">{{ "1-2-2025" }}</p>
+    <p class="text-xs text-gray-500">{{ formattedDate | date: 'MM-dd-yyyy' }}</p>
   </div>
 
   <!-- Service Details -->

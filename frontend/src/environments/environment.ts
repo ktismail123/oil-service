@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
-  // apiUrl: 'http://192.168.70.168:3000/api',
   apiUrl: 'http://localhost:3000/api',
-  appName: 'Car Garage Service'
+  appName: 'Tech Lube',
+  contact_number: '+971 55 860 7006',
+  email:'info@techlube.ae'
 };

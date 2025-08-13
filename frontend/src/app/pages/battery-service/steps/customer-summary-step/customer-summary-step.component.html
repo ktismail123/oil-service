@@ -1,110 +1,262 @@
 <div class="step-content">
   <div class="flex items-center mb-6">
-    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+    <div
+      class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4"
+    >
       <span class="text-green-600 font-bold">4</span>
     </div>
-    <h2 class="text-2xl font-semibold text-gray-800">Customer Details & Summary</h2>
+    <h2 class="text-2xl font-semibold text-gray-800">
+      Customer Details & Summary
+    </h2>
   </div>
 
   <!-- Action Buttons (visible on screen, hidden when printing) -->
   <div class="text-center mb-6 print:hidden space-y-3">
     <!-- Confirm Booking Button -->
-    <button 
-      (click)="onSubmitBooking()"
-      [disabled]="customerForm.invalid"
-      class="w-full m-auto max-w-md bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-colors duration-200 flex items-center justify-center mb-3">
-      Confirm Booking
-    </button>
+    <!-- Button Container -->
+    <div class="w-full max-w-2xl mx-auto space-y-4">
+      <!-- Buttons Row - Responsive Grid Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
+        <!-- Submit Button -->
+        <button
+          (click)="onSubmitBooking()"
+          [disabled]="customerForm.invalid"
+          class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-green-300"
+        >
+          <span class="flex items-center justify-center">
+            <svg
+              class="w-5 h-5 mr-2 transition-transform group-hover:scale-110"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            {{ buttonText }}
+          </span>
+        </button>
 
-    <!-- Print Buttons Row -->
-    <div class="flex gap-3 justify-center max-w-md mx-auto">
-      <button 
-        (click)="printReceipt()" 
-        [disabled]="customerForm.invalid"
-        class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center justify-center">
-        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd"></path>
-        </svg>
-        Print Receipt
-      </button>
-      
-      <button 
-        (click)="printThermalReceipt()" 
-        [disabled]="customerForm.invalid"
-        class="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center justify-center">
-        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+        <!-- Print Receipt Button -->
+        <button
+          (click)="printReceipt()"
+          [disabled]="customerForm.invalid"
+          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-blue-300"
+        >
+          <span class="flex items-center justify-center">
+            <svg
+              class="w-5 h-5 mr-2 transition-transform group-hover:scale-110"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            <span class="hidden sm:inline">Print Receipt</span>
+            <span class="sm:hidden">Print</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Optional: Thermal Print Button (Uncomment if needed) -->
+      <!-- <div class="flex justify-center">
+    <button 
+      (click)="printThermalReceipt()" 
+      [disabled]="customerForm.invalid"
+      class="w-full md:w-auto md:min-w-[200px] bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-purple-300">
+      <span class="flex items-center justify-center">
+        <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
           <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
         </svg>
-        Thermal Print
-      </button>
+        <span class="hidden sm:inline">Thermal Print</span>
+        <span class="sm:hidden">Thermal</span>
+      </span>
+    </button>
+  </div> -->
     </div>
-    
+
+    <!-- Alternative Layout: Stacked on Small, Side-by-side on Medium+ -->
+    <div class="w-full max-w-2xl mx-auto" *ngIf="false">
+      <div class="flex flex-col sm:flex-row gap-3 lg:gap-4">
+        <!-- Submit Button - Takes more space on larger screens -->
+        <button
+          (click)="onSubmitBooking()"
+          [disabled]="customerForm.invalid"
+          class="flex-1 sm:flex-[2] bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group"
+        >
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+          {{ buttonText }}
+        </button>
+
+        <!-- Print Button - Smaller on larger screens -->
+        <button
+          (click)="printReceipt()"
+          [disabled]="customerForm.invalid"
+          class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group"
+        >
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+          <span class="hidden lg:inline">Print Receipt</span>
+          <span class="lg:hidden">Print</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Compact Mobile-First Layout -->
+    <div class="w-full max-w-lg mx-auto" *ngIf="false">
+      <div class="space-y-3">
+        <!-- Primary Action Button -->
+        <button
+          (click)="onSubmitBooking()"
+          [disabled]="customerForm.invalid"
+          class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-xl shadow-xl transition-all duration-200 flex items-center justify-center text-lg"
+        >
+          <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+          {{ buttonText }}
+        </button>
+
+        <!-- Secondary Actions -->
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            (click)="printReceipt()"
+            [disabled]="customerForm.invalid"
+            class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center"
+          >
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            Print
+          </button>
+
+          <!-- Add more secondary actions here if needed -->
+          <button
+            class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center"
+          >
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Form Validation Message -->
     <div *ngIf="customerForm.invalid" class="text-center">
-      <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 px-4 max-w-md mx-auto">
-        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+      <p
+        class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg py-2 px-4 max-w-md mx-auto"
+      >
+        <svg
+          class="w-4 h-4 inline mr-1"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+            clip-rule="evenodd"
+          ></path>
         </svg>
         Please fill in all required fields before proceeding
       </p>
     </div>
   </div>
 
-   <!-- Customer Information Form -->
-    <div class="border-b border-dashed border-gray-300 pb-4 mb-4">
-      <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center">
-        CUSTOMER DETAILS
-      </h3>
-      <form [formGroup]="customerForm" class="space-y-3">
-        <div class="flex justify-between w-full gap-3">
-          <div class="w-full">
-            <label class="block text-xs text-gray-500 mb-1">Customer Name *</label>
-            <app-form-field
-              [control]="customerForm.get('name')!"
-              placeholder="Enter customer name"
-              fieldId="customerName"
-              [required]="true"
-              class="w-full text-sm">
-            </app-form-field>
-          </div>
-
-          <div class="w-full">
-            <label class="block text-xs text-gray-500 mb-1">Mobile Number *</label>
-            <app-form-field
-              type="tel"
-              [control]="customerForm.get('mobile')!"
-              placeholder="Enter mobile number"
-              fieldId="customerMobile"
-              [required]="true"
-              class="w-full text-sm">
-            </app-form-field>
-          </div>
+  <!-- Customer Information Form -->
+  <div class="border-b border-dashed border-gray-300 pb-4 mb-4">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center">
+      CUSTOMER DETAILS
+    </h3>
+    <form [formGroup]="customerForm" class="space-y-3">
+      <div class="flex justify-between w-full gap-3">
+        <div class="w-full">
+          <label class="block text-xs text-gray-500 mb-1"
+            >Customer Name *</label
+          >
+          <app-form-field
+            [control]="customerForm.get('name')!"
+            placeholder="Enter customer name"
+            fieldId="customerName"
+            [required]="true"
+            class="w-full text-sm"
+          >
+          </app-form-field>
         </div>
 
-        <div class="flex justify-between w-full gap-3">
-          <div class="w-full">
-            <label class="block text-xs text-gray-500 mb-1">Vehicle Plate Number *</label>
-            <app-form-field
-              [control]="customerForm.get('plateNumber')!"
-              placeholder="Enter plate number"
-              fieldId="plateNumber"
-              [required]="true"
-              class="w-full text-sm">
-            </app-form-field>
-          </div>
-          <div class="w-full">
-            <label class="block text-xs text-gray-500 mb-1">Labour Cost </label>
-            <app-form-field
-              [control]="customerForm.get('laborCost')!"
-              placeholder="Labour Cost"
-              fieldId="laborCost"
-              [required]="true"
-              class="w-full text-sm">
-            </app-form-field>
-          </div>
+        <div class="w-full">
+          <label class="block text-xs text-gray-500 mb-1"
+            >Mobile Number *</label
+          >
+          <app-form-field
+            type="tel"
+            [control]="customerForm.get('mobile')!"
+            placeholder="Enter mobile number"
+            fieldId="customerMobile"
+            [required]="true"
+            class="w-full text-sm"
+          >
+          </app-form-field>
         </div>
-      </form>
-    </div>
+      </div>
+
+      <div class="flex justify-between w-full gap-3">
+        <div class="w-full">
+          <label class="block text-xs text-gray-500 mb-1"
+            >Vehicle Plate Number *</label
+          >
+          <app-form-field
+            [control]="customerForm.get('plateNumber')!"
+            placeholder="Enter plate number"
+            fieldId="plateNumber"
+            [required]="true"
+            class="w-full text-sm"
+          >
+          </app-form-field>
+        </div>
+        <div class="w-full">
+          <label class="block text-xs text-gray-500 mb-1">Labour Cost </label>
+          <app-form-field
+            [control]="customerForm.get('laborCost')!"
+            placeholder="Labour Cost"
+            fieldId="laborCost"
+            [required]="true"
+            class="w-full text-sm"
+          >
+          </app-form-field>
+        </div>
+      </div>
+    </form>
+  </div>
 
   <!-- Receipt Style Layout -->
   <div class="max-w-md mx-auto bg-white shadow-lg p-5" id="receipt-content">
@@ -112,19 +264,17 @@
     <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
       <h1 class="text-2xl font-bold text-gray-800 mb-1">TECH LUBE</h1>
       <p class="text-sm text-gray-600">Premium Auto Service Center</p>
-      <p class="text-xs text-gray-500 mt-1">Tel: +971-XXX-XXXX</p>
-      <p class="text-xs text-gray-500">Email: {{'info@techlube.ae'}}</p>
+      <p class="text-xs text-gray-500 mt-1">Tel: {{environment.contact_number}}</p>
+      <p class="text-xs text-gray-500">Email: {{ environment.email }}</p>
     </div>
 
     <!-- Receipt Number & Date -->
     <div class="text-center mb-4">
-      <p class="text-xs text-gray-500">RECEIPT #TL-{{ 'JKHJH' }}</p>
-      <p class="text-xs text-gray-500">{{ 24-5-2025 }}</p>
+      <p class="text-xs text-gray-500">RECEIPT #TL-{{ "JKHJH" }}</p>
+      <p class="text-xs text-gray-500">{{ formattedDate }}</p>
       <!-- <p class="text-xs text-gray-500">RECEIPT #TL-{{ generateReceiptNumber() }}</p>
       <p class="text-xs text-gray-500">{{ getCurrentDate() }}</p> -->
     </div>
-
-   
 
     <!-- Service Details -->
     <div class="border-b border-dashed border-gray-300 pb-4 mb-4">
@@ -145,7 +295,10 @@
       </div>
 
       <!-- Battery Brand -->
-      <div *ngIf="summary().batteryType" class="flex justify-between text-xs mb-3">
+      <div
+        *ngIf="summary().batteryType"
+        class="flex justify-between text-xs mb-3"
+      >
         <span class="text-gray-600">Battery Brand:</span>
         <span class="font-medium">{{ summary().batteryType?.brand }}</span>
       </div>
@@ -161,11 +314,15 @@
       <div *ngIf="summary().batteryType" class="mb-3">
         <div class="flex justify-between text-xs">
           <div class="flex-1">
-            <p class="font-medium">{{ summary().batteryType?.brand }} Battery</p>
+            <p class="font-medium">
+              {{ summary().batteryType?.brand }} Battery
+            </p>
             <p class="text-gray-500">{{ summary().capacityLabel }}</p>
           </div>
           <div class="text-right">
-            <p class="font-medium">AED {{ formatPrice(summary().batteryType?.price || 0) }}</p>
+            <p class="font-medium">
+              AED {{ formatPrice(summary().batteryType?.price || 0) }}
+            </p>
           </div>
         </div>
       </div>
@@ -176,12 +333,16 @@
           <div class="flex-1">
             <p class="font-medium">{{ accessory.name }}</p>
             <p class="text-gray-500">
-              Qty: {{ accessory.quantity || 1 }} x AED {{ (accessory.price || 0) }}
+              Qty: {{ accessory.quantity || 1 }} x AED
+              {{ accessory.price || 0 }}
             </p>
           </div>
           <div class="text-right">
             <p class="font-medium">
-              AED {{ ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2) }}
+              AED
+              {{
+                ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2)
+              }}
             </p>
           </div>
         </div>
@@ -222,10 +383,12 @@
     </div>
 
     <!-- Footer -->
-    <div class="text-center border-t-2 border-dashed border-gray-400 pt-4 text-xs text-gray-500">
+    <div
+      class="text-center border-t-2 border-dashed border-gray-400 pt-4 text-xs text-gray-500"
+    >
       <p class="mb-1">Thank you for choosing Tech Lube!</p>
       <div class="space-y-1">
-        <p>Follow us: {{'@TechLubeUAE'}}</p>
+        <p>Follow us: {{ "@TechLubeUAE" }}</p>
         <p>Visit: www.techlube.ae</p>
       </div>
     </div>

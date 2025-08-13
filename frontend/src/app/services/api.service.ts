@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
@@ -11,6 +11,28 @@ import {
   VehicleModel,
 } from '../models';
 import { environment } from '../../environments/environment';
+
+// Interface for booking response
+export interface BookingResponse {
+  success: boolean;
+  data: any[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total_records: number;
+    total_pages: number;
+    has_next_page: boolean;
+    has_prev_page: boolean;
+  };
+  filters: any;
+  debug_info?: string;
+}
+
+// Interface for delete response
+export interface DeleteResponse {
+  success: boolean;
+  message?: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -158,6 +180,10 @@ export class ApiService {
     return this.http.put<any>(`${this.baseUrl}/bookings/${id}`, bookingData);
   }
 
+  deleteBooking(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/bookings/${id}`);
+  }
+
   // Settings endpoints
   getSettings(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/settings`);
@@ -166,11 +192,24 @@ export class ApiService {
   /**
    * Get all bookings with optional filters and pagination
    */
-  getBookings(queryString?: string): Observable<any> {
-    const url = queryString
-      ? `${this.baseUrl}/bookings?${queryString}`
-      : `${this.baseUrl}/bookings`;
-    return this.http.get<any>(url);
+ getBookings(params?: any): Observable<BookingResponse> {
+    let httpParams = new HttpParams();
+    
+    // Add parameters to HTTP request
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+          httpParams = httpParams.set(key, params[key].toString());
+        }
+      });
+    }
+
+    console.log('API Service - Making request with params:', params);
+    console.log('HTTP Params:', httpParams.toString());
+
+    return this.http.get<BookingResponse>(`${this.baseUrl}/bookings`, { 
+      params: httpParams 
+    });
   }
 
   /**

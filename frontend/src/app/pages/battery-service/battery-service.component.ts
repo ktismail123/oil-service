@@ -1,9 +1,8 @@
-
 // battery-service.component.ts - Updated Main Component
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { distinctUntilChanged, filter } from 'rxjs';
+import { distinctUntilChanged, filter, finalize, take } from 'rxjs';
 
 import { ApiService } from '../../services/api.service';
 import { BookingService } from '../../services/booking.service';
@@ -13,10 +12,17 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
 import { StepIndicatorComponent } from '../../shared/components/step-indicator/step-indicator.component';
 
 // Import step components
-import { BatteryCapacityStepComponent, CapacityOption } from './steps/battery-capacity-step/battery-capacity-step.component';
+import {
+  BatteryCapacityStepComponent,
+  CapacityOption,
+} from './steps/battery-capacity-step/battery-capacity-step.component';
 import { BatteryBrandStepComponent } from './steps/battery-brand-step/battery-brand-step.component';
 import { AccessoriesStepComponent } from './steps/accessories-step/accessories-step.component';
-import { CustomerData, CustomerSummaryStepComponent, ServiceSummary } from './steps/customer-summary-step/customer-summary-step.component';
+import {
+  CustomerData,
+  CustomerSummaryStepComponent,
+  ServiceSummary,
+} from './steps/customer-summary-step/customer-summary-step.component';
 import { Accessory, BatteryType } from '../../models';
 
 @Component({
@@ -30,7 +36,7 @@ import { Accessory, BatteryType } from '../../models';
     BatteryCapacityStepComponent,
     BatteryBrandStepComponent,
     AccessoriesStepComponent,
-    CustomerSummaryStepComponent
+    CustomerSummaryStepComponent,
   ],
   templateUrl: './battery-service.component.html',
   styleUrls: ['./battery-service.component.css'],
@@ -39,6 +45,7 @@ export class BatteryServiceComponent implements OnInit {
   private apiService = inject(ApiService);
   private bookingService = inject(BookingService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   // Step management
   currentStep = signal(1);
@@ -52,7 +59,7 @@ export class BatteryServiceComponent implements OnInit {
   // Data signals
   batteryTypes = signal<BatteryType[]>([]);
   accessories = signal<Accessory[]>([]);
-  
+
   // Selection signals
   selectedCapacity = signal<number | null>(null);
   selectedBatteryTypeId = signal<number | null>(null);
@@ -66,35 +73,51 @@ export class BatteryServiceComponent implements OnInit {
   step3Valid = signal(true); // Always valid (optional)
   step4Valid = signal(false);
 
+  mode = '';
+  editData: any;
+
   // Computed properties
   canProceed = computed(() => {
     switch (this.currentStep()) {
-      case 1: return this.step1Valid();
-      case 2: return this.step2Valid();
-      case 3: return this.step3Valid();
-      case 4: return this.step4Valid();
-      default: return false;
+      case 1:
+        return this.step1Valid();
+      case 2:
+        return this.step2Valid();
+      case 3:
+        return this.step3Valid();
+      case 4:
+        return this.step4Valid();
+      default:
+        return false;
     }
   });
 
   capacityOptions = signal<CapacityOption[]>([
-    { value: 80, label: '80 Amp', description: 'Suitable for small to medium cars' },
+    {
+      value: 80,
+      label: '80 Amp',
+      description: 'Suitable for small to medium cars',
+    },
     { value: 90, label: '90 Amp', description: 'Suitable for medium cars' },
-    { value: 110, label: '110 Amp', description: 'Suitable for large cars and SUVs' },
+    {
+      value: 110,
+      label: '110 Amp',
+      description: 'Suitable for large cars and SUVs',
+    },
   ]);
   laborCost = signal(0);
 
   subtotal = computed(() => {
     let total = 0;
-    
+
     // Add battery cost
     const batteryType = this.selectedBatteryType();
     if (batteryType?.price) {
       total += Number(batteryType.price);
     }
-    
+
     // Add accessories cost
-    this.selectedAccessories().forEach(acc => {
+    this.selectedAccessories().forEach((acc) => {
       if (acc.price && acc.quantity) {
         total += Number(acc.price) * Number(acc.quantity);
       }
@@ -106,8 +129,38 @@ export class BatteryServiceComponent implements OnInit {
   vatAmount = computed(() => (this.subtotal() * 5) / 100);
   totalAmount = computed(() => this.subtotal() + this.vatAmount());
 
+  constructor() {
+    // Get router state data
+    const nav = this.router.getCurrentNavigation();
+    if (nav?.extras.state?.['item']) {
+      this.editData = nav.extras.state['item'];
+      console.log(this.editData);
+    }
+
+    // Get query param
+    this.route.queryParams.subscribe((params) => {
+      this.mode = params['mode'] || null;
+    });
+  }
+
   ngOnInit() {
     // this.loadInitialData();
+    if (this.mode === 'edit') {
+      this.patchValues();
+    }
+  }
+
+  patchValues() {
+    this.selectedCapacity.set(this.editData?.battery_capacity);
+    this.selectedBatteryTypeId.set(this.editData?.battery_type_id);
+    this.selectedAccessories.set(this.editData?.accessories);
+    this.customerData.set({
+      name: this.editData?.customer_name,
+      mobile: this.editData?.customer_mobile,
+      plateNumber: this.editData?.plate_number,
+      laborCost: this.editData?.labour_cost,
+    });
+    this.currentStep.set(4);
   }
 
   private async loadInitialData() {
@@ -117,9 +170,11 @@ export class BatteryServiceComponent implements OnInit {
         this.apiService.getBatteryTypes().toPromise(),
         this.apiService.getAccessories('battery_service').toPromise(),
       ]);
-      
+
       this.batteryTypes.set(batteryTypes || []);
-      this.accessories.set((accessories || []).map(acc => ({ ...acc, quantity: 0 })));
+      this.accessories.set(
+        (accessories || []).map((acc) => ({ ...acc, quantity: 0 }))
+      );
     } catch (error) {
       console.error('Data loading failed:', error);
     } finally {
@@ -130,13 +185,13 @@ export class BatteryServiceComponent implements OnInit {
   // Step navigation
   nextStep() {
     if (this.canProceed() && this.currentStep() < this.totalSteps()) {
-      this.currentStep.update(step => step + 1);
+      this.currentStep.update((step) => step + 1);
     }
   }
 
   prevStep() {
     if (this.currentStep() > 1) {
-      this.currentStep.update(step => step - 1);
+      this.currentStep.update((step) => step - 1);
     }
   }
 
@@ -156,7 +211,7 @@ export class BatteryServiceComponent implements OnInit {
   onBrandSelected(batteryType: BatteryType) {
     this.selectedBatteryTypeId.set(batteryType.id);
     this.selectedBatteryType.set(batteryType);
-    this.currentStep.update(step => step + 1);
+    this.currentStep.update((step) => step + 1);
   }
 
   onStep2ValidityChanged(isValid: boolean) {
@@ -167,15 +222,13 @@ export class BatteryServiceComponent implements OnInit {
     this.selectedAccessories.set(accessories);
   }
 
-  onSkipAccessoriesEmit(){
-    this.currentStep.update(step => step + 1);
+  onSkipAccessoriesEmit() {
+    this.currentStep.update((step) => step + 1);
   }
 
   onCustomerDataChanged(data: CustomerData) {
     this.customerData.set(data);
-    console.log(data);
-    this.laborCost.set(Number(data?.laborCost))
-    
+    this.laborCost.set(Number(data?.laborCost));
   }
 
   onStep4ValidityChanged(isValid: boolean) {
@@ -185,7 +238,7 @@ export class BatteryServiceComponent implements OnInit {
   // Helper methods
   getCapacityLabel(): string {
     const capacity = this.selectedCapacity();
-    const option = this.capacityOptions().find(opt => opt.value === capacity);
+    const option = this.capacityOptions().find((opt) => opt.value === capacity);
     return option ? option.label : '';
   }
 
@@ -196,50 +249,93 @@ export class BatteryServiceComponent implements OnInit {
       accessories: this.selectedAccessories(),
       subtotal: this.subtotal(),
       vatAmount: this.vatAmount(),
-      totalAmount: this.subtotal()
+      totalAmount: this.subtotal(),
       // totalAmount: this.totalAmount()
     };
   }
 
   // Submit booking
-  async submitBooking() {
-    if (!this.canProceed()) return;
+  submitBooking() {
+    //   if (this.mode == 'edit') {
+    //     const response = await this.apiService
+    //       .updateBooking(this.editData?.id, bookingData as any)
+    //       .toPromise();
+    //   } else {
+    //     const response = await this.apiService
+    //       .createBooking(bookingData as any)
+    //       .toPromise();
+    //   }
+    //   alert(
+    //     `Booking ${
+    //       this.mode == 'edit' ? 'updated' : 'created'
+    //     } successfully! Total: AED ${this.totalAmount().toFixed(2)}`
+    //   );
+    //   this.router.navigate(['/']);
+    // } catch (error) {
+    //   console.error('Booking failed:', error);
+    //   alert('Booking failed. Please try again.');
+    // } finally {
+    //   this.isSubmitting.set(false);
+    // }
 
+    if (!this.canProceed()) return;
     const customer = this.customerData();
     if (!customer) return;
-
     this.isSubmitting.set(true);
-    try {
-      const bookingData = {
-        customer: {
-          name: customer.name,
-          mobile: customer.mobile,
-        },
-        vehicle: {
-          brandId: 1, // Default brand for battery service
-          modelId: 1, // Default model for battery service
-          plateNumber: customer.plateNumber,
-        },
-        service: {
-          type: 'battery_replacement' as const,
-          date: new Date().toISOString().split('T')[0],
-          time: new Date().toTimeString().split(' ')[0],
-          batteryTypeId: this.selectedBatteryTypeId(),
-          subtotal: this.subtotal(),
-          vatAmount: this.vatAmount(),
-          totalAmount: this.subtotal(),
-        },
-        accessories: this.selectedAccessories(),
-      };
 
-      const response = await this.apiService.createBooking(bookingData as any).toPromise();
-      alert(`Booking created successfully! Total: AED ${this.totalAmount().toFixed(2)}`);
-      this.router.navigate(['/']);
-    } catch (error) {
-      console.error('Booking failed:', error);
-      alert('Booking failed. Please try again.');
-    } finally {
-      this.isSubmitting.set(false);
+    const bookingData = {
+      customer: {
+        name: customer.name,
+        mobile: customer.mobile,
+      },
+      vehicle: {
+        brandId: 1, // Default brand for battery service
+        modelId: 1, // Default model for battery service
+        plateNumber: customer.plateNumber,
+      },
+      service: {
+        type: 'battery_replacement' as const,
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toTimeString().split(' ')[0],
+        batteryTypeId: this.selectedBatteryTypeId(),
+        subtotal: this.subtotal(),
+        vatAmount: this.vatAmount(),
+        totalAmount: this.subtotal(),
+        laborCost: this.laborCost(),
+      },
+      accessories: this.selectedAccessories(),
+    };
+
+    if (this.mode === 'edit') {
+      this.apiService
+        .updateBooking(this.editData?.id, bookingData as any)
+        .pipe(
+          take(1),
+          finalize(() => {
+            this.isSubmitting.set(true);
+          })
+        )
+        .subscribe({
+          next: (res) => {
+            alert('Successfyllu Updated');
+            this.router.navigate(['/control-panel']);
+          },
+        });
+    } else {
+      this.apiService
+        .createBooking(bookingData as any)
+        .pipe(
+          take(1),
+          finalize(() => {
+            this.isSubmitting.set(true);
+          })
+        )
+        .subscribe({
+          next: (res) => {
+            alert('Successfyllu Created');
+            this.router.navigate(['/']);
+          },
+        });
     }
   }
 
@@ -247,8 +343,7 @@ export class BatteryServiceComponent implements OnInit {
     this.router.navigate(['/']);
   }
 
-    gotToNextStep(){
-    this.currentStep.update(step => step + 1);
+  gotToNextStep() {
+    this.currentStep.update((step) => step + 1);
   }
-
 }

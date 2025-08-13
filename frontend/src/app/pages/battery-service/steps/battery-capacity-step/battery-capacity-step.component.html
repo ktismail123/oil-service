@@ -30,22 +30,22 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
       <div *ngFor="let option of capacityOptions() | search:searchTerm:searchKeys" 
            class="capacity-card border-2 border-gray-200 rounded-xl p-3 sm:p-4 cursor-pointer transition-all hover:border-green-300 hover:bg-green-50"
-           [class.border-green-500]="capacityForm.get('capacity')?.value == option.id"
-           [class.bg-green-50]="capacityForm.get('capacity')?.value == option.id"
-           [class.ring-2]="capacityForm.get('capacity')?.value == option.id"
-           [class.ring-green-200]="capacityForm.get('capacity')?.value == option.id"
+           [class.border-green-500]="capacityForm.get('capacity')?.value == option.capacity"
+           [class.bg-green-50]="capacityForm.get('capacity')?.value == option.capacity"
+           [class.ring-2]="capacityForm.get('capacity')?.value == option.capacity"
+           [class.ring-green-200]="capacityForm.get('capacity')?.value == option.capacity"
            (click)="selectCapacity(option.capacity); onCapacityChange()">
         
         <div class="text-center relative">
           <!-- Selection Indicator -->
           <div class="flex justify-center mb-3 absolute top-0 right-0">
-            <div *ngIf="capacityForm.get('capacity')?.value == option.id" 
+            <div *ngIf="capacityForm.get('capacity')?.value == option.capacity" 
                  class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
               <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
               </svg>
             </div>
-            <div *ngIf="capacityForm.get('capacity')?.value != option.id" 
+            <div *ngIf="capacityForm.get('capacity')?.value != option.capacity" 
                  class="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
           </div>
           

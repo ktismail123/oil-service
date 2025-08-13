@@ -8,6 +8,8 @@ import {
 import { Accessory, BatteryType } from '../../../../models';
 import { CommonModule } from '@angular/common';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
+import { ActivatedRoute } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 export interface CustomerData {
   name: string;
   mobile: string;
@@ -32,6 +34,10 @@ export interface ServiceSummary {
 })
 export class CustomerSummaryStepComponent {
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+  environment = environment;
+  editMode = this.route.snapshot.queryParams['mode'];
+  buttonText = this.editMode === 'edit' ? 'Update' : 'Confirm Booking';
 
   // Inputs
   initialCustomerData = input<CustomerData | null>(null);
@@ -44,6 +50,12 @@ export class CustomerSummaryStepComponent {
 
   // Signals
   customerForm!: FormGroup;
+  formattedDate: string;
+
+  constructor(){
+    const today = new Date();
+    this.formattedDate = today.toISOString().split('T')[0];
+  }
 
   // Computed
   summary = computed(() => this.serviceSummary());
@@ -74,7 +86,7 @@ export class CustomerSummaryStepComponent {
   private subscribeToChanges() {
     this.customerForm.valueChanges.subscribe((value) => {
       console.log(value);
-      
+
       if (value.laborCost || value.laborCost == '') {
         this.customerDataChanged.emit({
           name: value.name || '',
