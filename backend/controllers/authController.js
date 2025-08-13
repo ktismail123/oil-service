@@ -1,7 +1,15 @@
+const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getDB } = require('../config/db');
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+dotenv.config({
+  path: path.resolve(
+    process.cwd(),
+    `.env.${process.env.ENVIRONMENT || 'development'}`
+  )
+});
 
 const SECRET_KEY = process.env.SECRET_KEY;
 

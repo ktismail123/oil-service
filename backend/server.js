@@ -1,8 +1,18 @@
-// Load environment variables from .env file
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Load .env based on ENVIRONMENT
+dotenv.config({
+  path: path.resolve(
+    process.cwd(),
+    `.env.${process.env.ENVIRONMENT || 'development'}`
+  )
+});
+
+const SECRET_KEY = process.env.SECRET_KEY;
 
 // Exit if SECRET_KEY is missing
-if (!process.env.SECRET_KEY) {
+if (!SECRET_KEY) {
   console.error('FATAL ERROR: SECRET_KEY is not defined.');
   process.exit(1);
 }
