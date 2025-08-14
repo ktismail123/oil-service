@@ -49,6 +49,7 @@
           <!-- Step 1: Choose Battery Capacity -->
           <app-battery-capacity-step
             *ngIf="currentStep() === 1"
+            [capacityOptions]="capacityOptions()"
             [initialCapacity]="selectedCapacity()"
             (capacitySelected)="onCapacitySelected($event)"
             (validityChanged)="onStep1ValidityChanged($event)"
@@ -79,6 +80,7 @@
           <app-customer-summary-step
             *ngIf="currentStep() === 4"
             [billNumber]="billNumber()"
+            [laborCost]="laborCost()"
             [initialCustomerData]="customerData()"
             [serviceSummary]="getServiceSummary()"
             (customerDataChanged)="onCustomerDataChanged($event)"

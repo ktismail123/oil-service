@@ -272,6 +272,7 @@ export class OilServiceComponent implements OnInit {
       mobile: ['', [Validators.required, Validators.pattern(/^\d{10,15}$/)]],
       plateNumber: ['', Validators.required],
       laborCost: [0],
+      memo: [''],
     });
 
     // Subscribe to customer form changes for step 7 validation
@@ -351,6 +352,7 @@ export class OilServiceComponent implements OnInit {
       mobile: this.editData?.customer_mobile,
       plateNumber: this.editData?.plate_number,
       laborCost: this.editData?.labour_cost,
+      memo: this.editData?.memo,
     });
 
     this.currentStep.set(7);
@@ -696,6 +698,7 @@ export class OilServiceComponent implements OnInit {
         laborCost: this.customerForm.get('laborCost')?.value,
         // Include package details for backend processing
         oilPackageDetails: this.getSelectedOilPackageDetails(),
+        memo: this.customerForm.get('memo')?.value,
       },
       accessories: this.selectedAccessories(),
     };
@@ -723,61 +726,65 @@ export class OilServiceComponent implements OnInit {
       });
   }
 
-  async updateBooking() {
-    console.log(this.canProceed());
-
+  updateBooking() {
     if (!this.canProceed()) {
       return;
     }
 
     this.isSubmitting.set(true);
-    console.log(this.oilForm.value);
 
-    try {
-      const bookingData = {
-        customer: {
-          name: this.customerForm.get('name')?.value,
-          mobile: this.customerForm.get('mobile')?.value,
-        },
-        vehicle: {
-          brandId: this.brandForm.get('brandId')?.value,
-          customBrand: this.brandForm.get('customBrand')?.value,
-          modelId: this.modelForm.get('modelId')?.value,
-          customModel: this.modelForm.get('customModel')?.value,
-          plateNumber: this.customerForm.get('plateNumber')?.value,
-        },
-        service: {
-          type: 'oil_change' as const,
-          date: new Date().toISOString().split('T')[0],
-          time: new Date().toTimeString().split(' ')[0],
-          interval: this.getServiceInterval(),
-          oilTypeId: this.oilForm.get('oilTypeId')?.value,
-          oilQuantity: this.oilForm.get('quantity')?.value,
-          oilTotalPrice: this.oilForm.get('totalPrice')?.value,
-          oilRequiredQuantity: this.oilForm.get('requiredQuantity')?.value,
-          oilQuantityDetails: this.oilForm.get('oilQuantityDetails')?.value,
-          oilFilterId: this.filterForm.get('filterId')?.value,
-          subtotal: this.subtotal(),
-          vatAmount: this.vatAmount(),
-          totalAmount: this.totalAmount(),
-          // Include package details for backend processing
-          oilPackageDetails: this.getSelectedOilPackageDetails(),
-          laborCost: this.customerForm.get('laborCost')?.value,
-        },
-        accessories: this.selectedAccessories(),
-      };
+    const bookingData = {
+      customer: {
+        name: this.customerForm.get('name')?.value,
+        mobile: this.customerForm.get('mobile')?.value,
+      },
+      vehicle: {
+        brandId: this.brandForm.get('brandId')?.value,
+        customBrand: this.brandForm.get('customBrand')?.value,
+        modelId: this.modelForm.get('modelId')?.value,
+        customModel: this.modelForm.get('customModel')?.value,
+        plateNumber: this.customerForm.get('plateNumber')?.value,
+      },
+      service: {
+        type: 'oil_change' as const,
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toTimeString().split(' ')[0],
+        interval: this.getServiceInterval(),
+        oilTypeId: this.oilForm.get('oilTypeId')?.value,
+        oilQuantity: this.oilForm.get('quantity')?.value,
+        oilTotalPrice: this.oilForm.get('totalPrice')?.value,
+        oilRequiredQuantity: this.oilForm.get('requiredQuantity')?.value,
+        oilQuantityDetails: this.oilForm.get('oilQuantityDetails')?.value,
+        oilFilterId: this.filterForm.get('filterId')?.value,
+        subtotal: this.subtotal(),
+        vatAmount: this.vatAmount(),
+        totalAmount: this.totalAmount(),
+        // Include package details for backend processing
+        oilPackageDetails: this.getSelectedOilPackageDetails(),
+        laborCost: this.customerForm.get('laborCost')?.value,
+        memo: this.customerForm.get('memo')?.value,
+      },
+      accessories: this.selectedAccessories(),
+    };
 
-      const response = await this.apiService
-        .updateBooking(this.editData?.id, bookingData)
-        .toPromise();
-      alert(`Successfully updated! Total: AED ${this.subtotal().toFixed(2)}`);
-      this.router.navigate(['/']);
-    } catch (error) {
-      console.error('Booking failed:', error);
-      alert('Booking failed. Please try again.');
-    } finally {
-      this.isSubmitting.set(false);
-    }
+    this.apiService
+      .updateBooking(this.editData?.id, bookingData)
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.isSubmitting.set(false);
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            alert(`Successfully updated!`);
+          }
+        },
+        error: (err) => {
+          alert(err?.error?.error);
+        },
+      });
   }
 
   // Helper method to get oil package details for backend

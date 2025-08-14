@@ -32,7 +32,7 @@ export class BatteryCapacityStepComponent {
   capacityChange = output();
 
   // Signals
-  capacityOptions = signal<any[]>([]);
+  capacityOptions = input<any[]>([]);
 
   capacityForm!: FormGroup;
    searchTerm: string = '';
@@ -43,19 +43,19 @@ export class BatteryCapacityStepComponent {
   ngOnInit() {
     this.initializeForm();
     this.subscribeToChanges();
-    this.loadBatteryTpes();
+    // this.loadBatteryTpes();
   }
 
-  loadBatteryTpes(): void {
-    this.apiService
-      .getBatteryTypes()
-      .pipe(take(1))
-      .subscribe({
-        next: (res: any) => {
-          this.capacityOptions.set(res)
-        }
-      });
-  }
+  // loadBatteryTpes(): void {
+  //   this.apiService
+  //     .getBatteryTypes()
+  //     .pipe(take(1))
+  //     .subscribe({
+  //       next: (res: any) => {
+  //         this.capacityOptions.set(res)
+  //       }
+  //     });
+  // }
 
   private initializeForm() {
     this.capacityForm = this.fb.group({

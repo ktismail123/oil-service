@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -6,7 +6,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Accessory, BatteryType } from '../../../../models';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
 import { ActivatedRoute } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
@@ -17,6 +17,7 @@ export interface CustomerData {
   mobile: string;
   plateNumber: string;
   laborCost: string;
+  memo?: string;
 }
 
 export interface ServiceSummary {
@@ -30,7 +31,7 @@ export interface ServiceSummary {
 
 @Component({
   selector: 'app-customer-summary-step',
-  imports: [ReactiveFormsModule, CommonModule, FormFieldComponent],
+  imports: [ReactiveFormsModule, CommonModule, FormFieldComponent, CurrencyPipe],
   templateUrl: './customer-summary-step.component.html',
   styleUrl: './customer-summary-step.component.scss',
 })
@@ -41,6 +42,8 @@ export class CustomerSummaryStepComponent {
   environment = environment;
   editMode = this.route.snapshot.queryParams['mode'];
   buttonText = this.editMode === 'edit' ? 'Update' : 'Confirm Booking';
+
+  laborCost = input(0);
 
   // Inputs
   initialCustomerData = input<CustomerData | null>(null);
@@ -84,6 +87,7 @@ export class CustomerSummaryStepComponent {
       ],
       plateNumber: ['', [Validators.required, Validators.minLength(1)]],
       laborCost: [''],
+      memo: [''],
     });
     this.setupPlateNumberCheck();
   }
@@ -128,6 +132,7 @@ export class CustomerSummaryStepComponent {
           mobile: value.mobile || '',
           plateNumber: value.plateNumber || '',
           laborCost: value.laborCost || 0,
+          memo: value.memo || '',
         });
       }
 
@@ -138,6 +143,7 @@ export class CustomerSummaryStepComponent {
           mobile: value.mobile,
           plateNumber: value.plateNumber,
           laborCost: value.laborCost,
+          memo: value.memo,
         });
       }
     });
@@ -167,6 +173,7 @@ export class CustomerSummaryStepComponent {
         mobile: value.mobile,
         plateNumber: value.plateNumber,
         laborCost: value.laborCost,
+        memo: value.memo
       };
     }
     return null;
@@ -212,7 +219,137 @@ export class CustomerSummaryStepComponent {
     this.submitBooking.emit();
   }
 
-  printReceipt() {}
+  printReceipt(): void {
+    const receiptContent = document.getElementById('receipt-content');
+
+    if (receiptContent) {
+      const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
+
+      // Remove customer details form section
+      const customerDetailsSection = clonedContent.querySelector(
+        '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
+      );
+      if (customerDetailsSection) {
+        customerDetailsSection.remove();
+      }
+
+      const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
+
+      if (printWindow) {
+        printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Tech Lube Receipt</title>
+          <style>
+            @page {
+              size: 80mm auto;
+              margin: 0mm;
+            }
+            html, body {
+              width: 80mm;
+              margin: 0 auto;
+              padding: 0;
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              line-height: 1.4;
+              background: white;
+            }
+
+            /* FORCE ALL TEXT AND BORDERS TO BLACK */
+            * {
+              color: #000 !important;
+              border-color: #000 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            .print-wrapper {
+              width: 100%;
+              display: flex;
+              justify-content: center;
+            }
+
+            .receipt-container {
+              width: 80mm;
+              max-width: 80mm;
+              padding: 5mm;
+              box-sizing: border-box;
+            }
+
+            h1 {
+              font-size: 18px;
+              font-weight: bold;
+              text-align: center;
+              margin-bottom: 4px;
+            }
+
+            h3 {
+              font-size: 14px;
+              font-weight: bold;
+              text-align: center;
+              margin: 12px 0 8px 0;
+            }
+
+            .text-center { text-align: center; }
+            .text-xs { font-size: 10px; }
+            .text-sm { font-size: 11px; }
+            .text-lg { font-size: 14px; font-weight: bold; }
+
+            .font-medium { font-weight: 500; }
+            .font-semibold { font-weight: 600; }
+            .font-bold { font-weight: bold; }
+
+            .border-b-2 { border-bottom: 2px dashed #000; }
+            .border-b { border-bottom: 1px dashed #000; }
+            .border-t-2 { border-top: 2px dashed #000; }
+
+            .mb-1 { margin-bottom: 4px; }
+            .mb-2 { margin-bottom: 8px; }
+            .mb-3 { margin-bottom: 12px; }
+            .mb-4 { margin-bottom: 16px; }
+            .mt-1 { margin-top: 4px; }
+            .pb-4 { padding-bottom: 16px; }
+            .pt-2 { padding-top: 8px; }
+            .pt-4 { padding-top: 16px; }
+
+            .flex { display: flex; }
+            .justify-between { justify-content: space-between; }
+            .items-center { align-items: center; }
+            .flex-1 { flex: 1; }
+            .text-right { text-align: right; }
+
+            .space-y-1 > * + * { margin-top: 4px; }
+            .space-y-2 > * + * { margin-top: 8px; }
+
+            .print\\:hidden, .hidden {
+              display: none !important;
+            }
+            .print\\:block {
+              display: block !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-wrapper">
+            <div class="receipt-container">
+              ${clonedContent.innerHTML}
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+
+        printWindow.document.close();
+
+        printWindow.onload = function () {
+          printWindow.focus();
+          printWindow.print();
+          printWindow.close();
+        };
+      }
+    }
+  }
 
   printThermalReceipt() {}
 }

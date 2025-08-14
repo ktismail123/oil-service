@@ -1,5 +1,12 @@
 // battery-service.component.ts - Updated Main Component
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { distinctUntilChanged, filter, finalize, take } from 'rxjs';
@@ -93,7 +100,7 @@ export class BatteryServiceComponent implements OnInit {
     }
   });
 
-  capacityOptions = signal<CapacityOption[]>([]);
+  capacityOptions = signal<any[]>([]);
   laborCost = signal(0);
 
   subtotal = computed(() => {
@@ -133,22 +140,44 @@ export class BatteryServiceComponent implements OnInit {
   }
 
   ngOnInit() {
-    // this.loadInitialData();
+    this.loadBatteryTpes();
     if (this.mode === 'edit') {
       this.patchValues();
     }
   }
 
+  loadBatteryTpes(): void {
+    this.apiService
+      .getBatteryTypes()
+      .pipe(take(1))
+      .subscribe({
+        next: (res: any) => {
+          this.capacityOptions.set(res);
+          if (this.mode === 'edit') {
+            const selected = this.capacityOptions().find(
+              (el) => el.id === this.selectedBatteryTypeId()
+            );
+
+            this.selectedBatteryTypeId.set(selected.id);
+            this.selectedBatteryType.set(selected);
+          }
+        },
+      });
+  }
+
   patchValues() {
     this.selectedCapacity.set(this.editData?.battery_capacity);
     this.selectedBatteryTypeId.set(this.editData?.battery_type_id);
+
     this.selectedAccessories.set(this.editData?.accessories);
     this.customerData.set({
       name: this.editData?.customer_name,
       mobile: this.editData?.customer_mobile,
       plateNumber: this.editData?.plate_number,
       laborCost: this.editData?.labour_cost,
+      memo: this.editData?.memo,
     });
+    this.laborCost.set(this.editData?.laborCost);
     this.currentStep.set(4);
     this.billNumber.set(this.editData?.bill_number);
   }
@@ -228,8 +257,13 @@ export class BatteryServiceComponent implements OnInit {
   // Helper methods
   getCapacityLabel(): string {
     const capacity = this.selectedCapacity();
-    const option = this.capacityOptions().find((opt) => opt.value === capacity);
-    return option ? option.label : '';
+    console.log(this.capacityOptions(), ',---------------');
+    console.log(capacity, ',---------------');
+
+    const option = this.capacityOptions().find(
+      (opt) => opt.capacity === capacity
+    );
+    return option ? option.capacity : '';
   }
 
   getServiceSummary(): ServiceSummary {
@@ -270,6 +304,7 @@ export class BatteryServiceComponent implements OnInit {
         vatAmount: this.vatAmount(),
         totalAmount: this.subtotal(),
         laborCost: this.laborCost(),
+        memo: customer.memo,
       },
       accessories: this.selectedAccessories(),
     };
@@ -285,8 +320,7 @@ export class BatteryServiceComponent implements OnInit {
         )
         .subscribe({
           next: (res) => {
-            alert('Successfyll Updated');
-            this.router.navigate(['/control-panel']);
+            alert('Successfully Updated');
           },
         });
     } else {
@@ -300,11 +334,10 @@ export class BatteryServiceComponent implements OnInit {
         )
         .subscribe({
           next: (res) => {
-            if(res.success){
-              this.billNumber.set(res?.billNumber)
+            if (res.success) {
+              alert('Successfully Created');
+              this.billNumber.set(res?.billNumber);
             }
-            // alert('Successfyll Created');
-            this.router.navigate(['/']);
           },
         });
     }

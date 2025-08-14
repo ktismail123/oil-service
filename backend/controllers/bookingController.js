@@ -103,6 +103,7 @@ const getAllBookings = async (req, res) => {
         sb.created_at,
         sb.updated_at,
         sb.bill_number,
+        sb.memo,
         c.name as customer_name,
         c.mobile as customer_mobile,
         cv.plate_number,
@@ -254,9 +255,12 @@ const createNewBooking = async (req, res) => {
       oilFilterId: service.oilFilterId || null,
       batteryTypeId: service.batteryTypeId || null,
       subtotal: service.subtotal,
-      laborCost: service.laborCost || 0, // Added labor cost
-      oilQuantityDetails: service.oilQuantityDetails || null
+      laborCost: service.laborCost || 0,
+      oilQuantityDetails: service.oilQuantityDetails || null,
+      memo: service.memo || null // Added memo field
     };
+
+    console.log('Service data with memo:', sanitizedService);
 
     // Start transaction
     await db.beginTransaction();
@@ -270,12 +274,14 @@ const createNewBooking = async (req, res) => {
 
     if (existingCustomer.length > 0) {
       customerId = existingCustomer[0].id;
+      console.log('Found existing customer:', customerId);
     } else {
       const [customerResult] = await db.execute(
         'INSERT INTO customers (name, mobile) VALUES (?, ?)',
         [customer.name, customer.mobile]
       );
       customerId = customerResult.insertId;
+      console.log('Created new customer:', customerId);
     }
 
     // Insert or get vehicle
@@ -287,47 +293,58 @@ const createNewBooking = async (req, res) => {
 
     if (existingVehicle.length > 0) {
       vehicleId = existingVehicle[0].id;
+      console.log('Found existing vehicle:', vehicleId);
     } else {
       const [vehicleResult] = await db.execute(
         'INSERT INTO customer_vehicles (customer_id, brand_id, model_id, plate_number) VALUES (?, ?, ?, ?)',
         [customerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
       );
       vehicleId = vehicleResult.insertId;
+      console.log('Created new vehicle:', vehicleId);
     }
 
     // Calculate totals
-    const vatPercentage = 5.00; // Get from settings
+    const vatPercentage = 5.00;
     const subtotal = parseFloat(sanitizedService.subtotal);
     const laborCost = parseFloat(sanitizedService.laborCost) || 0;
     const vatAmount = (subtotal * vatPercentage) / 100;
     const totalAmount = subtotal + vatAmount;
 
-    // Before the INSERT, add this debugging:
-    const params = [
-      customerId, vehicleId, service.type, service.date, service.time,
-      service.interval || null, service.oilTypeId || null, service.oilQuantity || null,
-      service.oilFilterId || null, service.batteryTypeId || null,
-      service.subtotal, vatPercentage, vatAmount, totalAmount, laborCost, service.oilQuantityDetails || null
+    // Prepare parameters for booking insertion (including memo)
+    const bookingParams = [
+      customerId, 
+      vehicleId, 
+      sanitizedService.type, 
+      sanitizedService.date, 
+      sanitizedService.time,
+      sanitizedService.interval, 
+      sanitizedService.oilTypeId, 
+      sanitizedService.oilQuantity,
+      sanitizedService.oilFilterId, 
+      sanitizedService.batteryTypeId,
+      sanitizedService.subtotal, 
+      vatPercentage, 
+      vatAmount, 
+      totalAmount, 
+      laborCost, 
+      sanitizedService.oilQuantityDetails,
+      sanitizedService.memo // Added memo to parameters
     ];
 
-    console.log('SQL parameters:', params);
-    console.log('Undefined parameters:', params.map((p, i) => p === undefined ? i : null).filter(i => i !== null));
+    console.log('Booking parameters:', bookingParams);
+    console.log('Memo value:', sanitizedService.memo);
 
-    // Insert service booking with labour_cost
+    // Insert service booking with memo
     const [bookingResult] = await db.execute(`
       INSERT INTO service_bookings (
         customer_id, vehicle_id, service_type, service_date, service_time,
         service_interval, oil_type_id, oil_quantity, oil_filter_id, battery_type_id,
-        subtotal, vat_percentage, vat_amount, total_amount, labour_cost, oil_package_details
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      customerId, vehicleId, sanitizedService.type, sanitizedService.date, sanitizedService.time,
-      sanitizedService.interval || null, sanitizedService.oilTypeId || null, sanitizedService.oilQuantity || null,
-      sanitizedService.oilFilterId || null, sanitizedService.batteryTypeId || null,
-      sanitizedService.subtotal, vatPercentage, vatAmount, totalAmount, laborCost, sanitizedService.oilQuantityDetails || null
-    ]);
+        subtotal, vat_percentage, vat_amount, total_amount, labour_cost, oil_package_details, memo
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, bookingParams);
 
     const bookingId = bookingResult.insertId;
+    console.log('Created booking with ID:', bookingId);
 
     // Generate bill number
     const billNumber = `TKN-${bookingId}`;
@@ -338,6 +355,8 @@ const createNewBooking = async (req, res) => {
       [billNumber, bookingId]
     );
 
+    console.log('Generated bill number:', billNumber);
+
     // Insert accessories
     for (const accessory of accessories) {
       await db.execute(
@@ -346,23 +365,34 @@ const createNewBooking = async (req, res) => {
       );
     }
 
-    await db.commit();
+    console.log('Inserted accessories:', accessories.length);
 
+    await db.commit();
+    console.log('Transaction committed successfully');
+
+    // Enhanced response with memo
     res.json({
       success: true,
       bookingId: bookingId,
       billNumber: billNumber,
       totalAmount: totalAmount,
-      laborCost: laborCost
+      laborCost: laborCost,
+      memo: sanitizedService.memo, // Include memo in response
+      vatAmount: vatAmount,
+      subtotal: subtotal,
+      message: 'Booking created successfully'
     });
 
   } catch (error) {
     await db.rollback();
     console.error('Booking creation failed:', error);
     console.error('Request body:', req.body);
-    res.status(500).json({ error: 'Failed to create booking', details: error.message });
+    res.status(500).json({ 
+      error: 'Failed to create booking', 
+      details: error.message 
+    });
   }
-}
+};
 
 const updateBooking = async (req, res) => {
   const db = getDB();
@@ -373,6 +403,11 @@ const updateBooking = async (req, res) => {
     } = req.body;
 
     const bookingId = parseInt(id);
+
+    console.log('=== UPDATE BOOKING WITH MEMO ===');
+    console.log('Booking ID:', bookingId);
+    console.log('Service data:', service);
+    console.log('Memo in request:', service?.memo);
 
     // Validate booking ID
     if (!bookingId || isNaN(bookingId)) {
@@ -394,6 +429,7 @@ const updateBooking = async (req, res) => {
     }
 
     const currentBooking = existingBooking[0];
+    console.log('Current booking memo:', currentBooking.memo);
 
     // Validate status transition if status is being updated
     const validStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
@@ -470,8 +506,8 @@ const updateBooking = async (req, res) => {
     let updateFields = [];
     let updateValues = [];
 
-    // Update service details only if booking is pending
-    if (currentBooking.status === 'pending' && service) {
+    // Update service details only if booking is pending OR memo is being updated
+    if ((currentBooking.status === 'pending' && service) || (service && service.memo !== undefined)) {
       const sanitizedService = {
         type: service.type || currentBooking.service_type,
         date: service.date || currentBooking.service_date,
@@ -482,9 +518,12 @@ const updateBooking = async (req, res) => {
         oilFilterId: service.oilFilterId || currentBooking.oil_filter_id,
         batteryTypeId: service.batteryTypeId || currentBooking.battery_type_id,
         subtotal: service.subtotal || currentBooking.subtotal,
-        laborCost: service.laborCost !== undefined ? service.laborCost : currentBooking.labour_cost, // Added labor cost
-        oilQuantityDetails: service.oilQuantityDetails || currentBooking.oil_package_details
+        laborCost: service.laborCost !== undefined ? service.laborCost : currentBooking.labour_cost,
+        oilQuantityDetails: service.oilQuantityDetails || currentBooking.oil_package_details,
+        memo: service.memo !== undefined ? service.memo : currentBooking.memo // Added memo handling
       };
+
+      console.log('Sanitized service with memo:', sanitizedService.memo);
 
       // Validate labor cost
       const laborCost = parseFloat(sanitizedService.laborCost) || 0;
@@ -495,29 +534,57 @@ const updateBooking = async (req, res) => {
         });
       }
 
-      // Calculate totals
-      const vatPercentage = 5.00;
-      const subtotal = parseFloat(sanitizedService.subtotal);
-      const vatAmount = (subtotal * vatPercentage) / 100;
-      const totalAmount = subtotal + vatAmount;
+      // Validate memo length
+      if (sanitizedService.memo && sanitizedService.memo.length > 500) {
+        await db.rollback();
+        return res.status(400).json({
+          error: 'Memo cannot exceed 500 characters'
+        });
+      }
 
-      updateFields.push(
-        'customer_id = ?', 'vehicle_id = ?', 'service_type = ?', 'service_date = ?', 'service_time = ?',
-        'service_interval = ?', 'oil_type_id = ?', 'oil_quantity = ?', 'oil_filter_id = ?', 'battery_type_id = ?',
-        'subtotal = ?', 'vat_percentage = ?', 'vat_amount = ?', 'total_amount = ?', 'labour_cost = ?', 'oil_package_details = ?'
-      );
-      updateValues.push(
-        customerId, vehicleId, sanitizedService.type, sanitizedService.date, sanitizedService.time,
-        sanitizedService.interval, sanitizedService.oilTypeId, sanitizedService.oilQuantity,
-        sanitizedService.oilFilterId, sanitizedService.batteryTypeId,
-        sanitizedService.subtotal, vatPercentage, vatAmount, totalAmount, laborCost, sanitizedService.oilQuantityDetails
-      );
+      // Clean memo text
+      const cleanedMemo = sanitizedService.memo ? sanitizedService.memo.trim() : null;
+
+      // If only memo is being updated (for completed/cancelled bookings)
+      if ((currentBooking.status === 'completed' || currentBooking.status === 'cancelled') && 
+          service.memo !== undefined && Object.keys(service).length === 1) {
+        
+        console.log('Updating only memo for completed/cancelled booking');
+        updateFields.push('memo = ?');
+        updateValues.push(cleanedMemo);
+        
+      } else if (currentBooking.status === 'pending') {
+        // Full service update for pending bookings
+        console.log('Full service update for pending booking');
+        
+        // Calculate totals
+        const vatPercentage = 5.00;
+        const subtotal = parseFloat(sanitizedService.subtotal);
+        const vatAmount = (subtotal * vatPercentage) / 100;
+        const totalAmount = subtotal + vatAmount;
+
+        updateFields.push(
+          'customer_id = ?', 'vehicle_id = ?', 'service_type = ?', 'service_date = ?', 'service_time = ?',
+          'service_interval = ?', 'oil_type_id = ?', 'oil_quantity = ?', 'oil_filter_id = ?', 'battery_type_id = ?',
+          'subtotal = ?', 'vat_percentage = ?', 'vat_amount = ?', 'total_amount = ?', 'labour_cost = ?', 
+          'oil_package_details = ?', 'memo = ?'
+        );
+        updateValues.push(
+          customerId, vehicleId, sanitizedService.type, sanitizedService.date, sanitizedService.time,
+          sanitizedService.interval, sanitizedService.oilTypeId, sanitizedService.oilQuantity,
+          sanitizedService.oilFilterId, sanitizedService.batteryTypeId,
+          sanitizedService.subtotal, vatPercentage, vatAmount, totalAmount, laborCost, 
+          sanitizedService.oilQuantityDetails, cleanedMemo
+        );
+      }
     }
 
     // Update status if provided
     if (status && status !== currentBooking.status) {
       updateFields.push('status = ?');
       updateValues.push(status);
+      
+      console.log('Status update:', currentBooking.status, '->', status);
     }
 
     // Add timestamp
@@ -546,8 +613,12 @@ const updateBooking = async (req, res) => {
       });
     }
 
+    console.log('Booking updated successfully');
+
     // Update accessories only if booking is pending and accessories are provided
     if (currentBooking.status === 'pending' && accessories.length >= 0) {
+      console.log('Updating accessories for pending booking');
+      
       // Delete existing accessories
       await db.execute(
         'DELETE FROM booking_accessories WHERE booking_id = ?',
@@ -561,28 +632,54 @@ const updateBooking = async (req, res) => {
           [bookingId, accessory.id, accessory.quantity, accessory.price]
         );
       }
+      
+      console.log('Accessories updated:', accessories.length);
     }
 
     await db.commit();
+    console.log('Transaction committed');
 
-    // Get updated booking details
+    // Get updated booking details with memo
     const [updatedBooking] = await db.execute(
-      'SELECT * FROM service_bookings WHERE id = ?',
+      `SELECT 
+        sb.*,
+        c.name as customer_name,
+        c.mobile as customer_mobile,
+        cv.plate_number,
+        vb.name as brand_name,
+        vm.name as model_name
+      FROM service_bookings sb
+      JOIN customers c ON sb.customer_id = c.id
+      JOIN customer_vehicles cv ON sb.vehicle_id = cv.id
+      LEFT JOIN vehicle_brands vb ON cv.brand_id = vb.id
+      LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
+      WHERE sb.id = ?`,
       [bookingId]
     );
+
+    console.log('Updated booking memo:', updatedBooking[0].memo);
 
     res.json({
       success: true,
       message: 'Booking updated successfully',
       bookingId: bookingId,
-      booking: updatedBooking[0]
+      booking: updatedBooking[0],
+      memo: updatedBooking[0].memo, // Include memo in response
+      changes: {
+        fieldsUpdated: updateFields.filter(field => field !== 'updated_at = CURRENT_TIMESTAMP'),
+        statusChanged: status && status !== currentBooking.status,
+        memoUpdated: service?.memo !== undefined && service.memo !== currentBooking.memo
+      }
     });
 
   } catch (error) {
     await db.rollback();
     console.error('Booking update failed:', error);
     console.error('Request body:', req.body);
-    res.status(500).json({ error: 'Failed to update booking', details: error.message });
+    res.status(500).json({ 
+      error: 'Failed to update booking', 
+      details: error.message 
+    });
   }
 };
 
