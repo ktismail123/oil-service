@@ -37,7 +37,7 @@ export class ControlPanelComponent {
   private apiService = inject(ApiService);
 
   // Sidebar state
-  sidebarCollapsed = signal(false);
+  sidebarCollapsed = signal(true);
   addNewEvent = signal<boolean | null>(false);
   activeSection = signal<string>('bookings');
 
