@@ -199,6 +199,7 @@ export class OilServiceComponent implements OnInit {
   serviceIntervals = [
     { value: 5000, label: '5,000 KM' },
     { value: 10000, label: '10,000 KM' },
+    { value: 15000, label: '15,000 KM' },
     { value: 0, label: 'Custom KM' },
   ];
 

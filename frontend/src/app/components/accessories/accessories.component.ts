@@ -4,7 +4,7 @@ import { ApiService } from '../../services/api.service';
 import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs';
 import { AccessoriesModalComponent } from '../../modals/accessories-modal/accessories-modal.component';
-import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
+import { ACTION_CONFIGS, ActionConfig, ButtonActions } from '../../models/action';
 
 @Component({
   selector: 'app-accessories',
@@ -34,7 +34,7 @@ export class AccessoriesComponent {
   }
 
   actionEvents(event: {
-    event: 'add' | 'edit' | 'view' | 'delete';
+    event: ButtonActions;
     data?: any;
   }) {
     if (event.event === 'add' || event.event === 'edit') {

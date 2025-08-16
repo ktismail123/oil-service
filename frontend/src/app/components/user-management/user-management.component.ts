@@ -18,21 +18,8 @@ export class UserManagementComponent implements OnInit {
 
   users = signal<any[]>([]);
 
-  actionConfig: ActionConfig = {
-    showView: false,
-    showEdit: true,
-    showDelete: true, // Hide delete button
-    viewIcon: 'info',  // Custom icon
-    editTitle: 'Modify Record', // Custom tooltip
-    customActions: [
-      {
-        key: 'reset',
-        icon: 'settings',
-        title: 'Reser Password',
-        class: 'print-action'
-      }
-    ]
-  };
+   actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
+
 
   ngOnInit(): void {
     this.loadUsers();

@@ -1,116 +1,279 @@
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <!-- Header -->
-      <header class="bg-white shadow-lg border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between items-center h-16 sm:h-20">
-            <div class="flex items-center space-x-3 sm:space-x-4">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
-                </svg>
-              </div>
-              <div>
-                <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">AutoCare Dubai</h1>
-                <p class="text-xs sm:text-sm text-gray-500 hidden sm:block">Professional Auto Services</p>
-              </div>
+  <!-- Header -->
+  <!-- header.component.html -->
+  <header class="modern-glass-header relative overflow-hidden">
+    <!-- Dynamic Background with Gradient Mesh -->
+    <div
+      class="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-cyan-500/10 to-emerald-400/20"
+    ></div>
+    <div
+      class="absolute inset-0 backdrop-blur-2xl bg-white/10 border-b border-white/30"
+    ></div>
+
+    <!-- Animated Background Particles -->
+    <div class="absolute inset-0 opacity-30">
+      <div class="particle particle-1"></div>
+      <div class="particle particle-2"></div>
+      <div class="particle particle-3"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-18 sm:h-22">
+        <!-- Enhanced Logo and Brand Section -->
+        <div class="flex items-center space-x-5 group">
+          <!-- Logo Container with Glow Effect -->
+          <!-- <div class="logo-container relative">
+            <div
+              class="logo-glow absolute inset-0 bg-gradient-to-r from-violet-500 to-cyan-500 rounded-2xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-500"
+            ></div>
+            <div
+              class="logo-background relative bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30 group-hover:border-white/50 transition-all duration-300"
+            >
+
             </div>
-            
-            <div class="flex items-center space-x-2 sm:space-x-4">
-              <div class="text-xs sm:text-sm text-gray-600 hidden md:block">
-                {{ currentDate | date:'short' }}
-              </div>
-              <button 
-                (click)="logout()"
-                class="flex items-center space-x-2 px-3 py-2 sm:px-4 sm:py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                </svg>
-                <span class="hidden sm:inline">Logout</span>
-              </button>
-            </div>
+          </div> -->
+
+          <!-- Brand Info with Enhanced Typography -->
+          <div class="brand-info">
+            <h1 class="brand-title relative">
+              <span
+                class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-purple-600 to-cyan-500 text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight group-hover:from-cyan-400 group-hover:via-violet-500 group-hover:to-purple-600 transition-all duration-700"
+              >
+                Tech Lube
+              </span>
+              <div
+                class="absolute -inset-1 bg-gradient-to-r from-violet-600/20 to-cyan-500/20 blur-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              ></div>
+            </h1>
+            <p
+              class="brand-subtitle text-sm text-slate-700/80 hidden sm:block font-medium tracking-wide group-hover:text-slate-600 transition-colors duration-300"
+            >
+              Professional Auto Services
+            </p>
           </div>
         </div>
-      </header>
 
-      <!-- Main Content -->
-      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-        <div class="text-center mb-8 sm:mb-12">
-          <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
-            Select Your Service
-          </h2>
-          <p class="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4">
-            Choose from our professional automotive services. Quality guaranteed with competitive pricing.
-          </p>
+        <!-- Enhanced Right Section -->
+        <div class="flex items-center space-x-6 sm:space-x-8">
+          <!-- Premium Digital Clock Section -->
+          <div class="clock-section hidden md:block">
+            <div
+              class="clock-container relative bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/25 hover:bg-white/20 hover:border-white/35 transition-all duration-300 group"
+            >
+              <div class="flex flex-col items-end space-y-1">
+                <!-- Time Display -->
+                <div class="digital-clock relative">
+                  <span
+                    class="text-2xl font-bold text-slate-800 tracking-wider font-mono group-hover:text-violet-700 transition-colors duration-300"
+                  >
+                    {{ currentTime }}
+                  </span>
+                  <div
+                    class="absolute -inset-1 bg-gradient-to-r from-violet-500/10 to-cyan-500/10 blur-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  ></div>
+                </div>
+
+                <!-- Date Display -->
+                <div
+                  class="text-xs text-slate-600/80 font-medium uppercase tracking-wider group-hover:text-slate-500 transition-colors duration-300"
+                >
+                  {{ currentDate }}
+                </div>
+
+                <!-- Status Indicator -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Enhanced Mobile Clock -->
+          <div class="mobile-clock md:hidden">
+            <div
+              class="mobile-clock-container bg-white/15 backdrop-blur-md rounded-xl p-3 border border-white/25"
+            >
+              <div class="flex flex-col items-center space-y-2">
+                <div
+                  class="digital-clock text-lg font-bold text-slate-800 font-mono"
+                >
+                  {{ currentTime.substring(0, 5) }}
+                </div>
+                <div class="flex items-center space-x-2">
+                  <div
+                    class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-dot"
+                  ></div>
+                  <span class="text-xs text-slate-600/70 font-medium">ON</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Premium Logout Button -->
+          <button
+            (click)="logout()"
+            class="logout-btn group relative overflow-hidden"
+          >
+            <!-- Button Background with Gradient -->
+            <div
+              class="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            ></div>
+            <div
+              class="absolute inset-0 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl group-hover:border-red-300/50 transition-all duration-300"
+            ></div>
+
+            <!-- Button Content -->
+            <div
+              class="relative flex items-center space-x-3 px-5 py-3 sm:px-6 sm:py-4"
+            >
+              <!-- Logout Icon with Animation -->
+              <div class="icon-container relative">
+                <svg
+                  class="w-5 h-5 text-red-600 group-hover:text-white transition-all duration-300 group-hover:rotate-12 group-hover:scale-110"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              </div>
+
+              <!-- Button Text -->
+              <span
+                class="hidden sm:inline text-sm font-semibold text-red-600 group-hover:text-white transition-all duration-300 tracking-wide"
+              >
+                Logout
+              </span>
+            </div>
+
+            <!-- Hover Effect Overlay -->
+            <div
+              class="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-gradient-to-r from-white to-transparent rounded-2xl"
+            ></div>
+          </button>
         </div>
-        
-        <!-- Service Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          
-          <!-- Oil Service -->
-          <div class="service-card group bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100 
-                      border border-gray-200 hover:border-blue-300 rounded-2xl p-6 sm:p-8 text-center cursor-pointer 
-                      transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl"
-               (click)="selectService('oil_change')">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-blue-600 
-                        rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 
-                        group-hover:scale-110 transition-transform duration-300 shadow-lg">
-              <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
-              </svg>
-            </div>
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Oil Service</h3>
-            <p class="text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
-              Premium engine oil change with high-quality filter replacement
-            </p>
-            
-          </div>
+      </div>
+    </div>
+  </header>
 
-          <!-- Battery Service -->
-          <div class="service-card group bg-white hover:bg-gradient-to-br hover:from-emerald-50 hover:to-emerald-100 
-                      border border-gray-200 hover:border-emerald-300 rounded-2xl p-6 sm:p-8 text-center cursor-pointer 
-                      transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl"
-               (click)="selectService('battery_replacement')">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 
-                        rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 
-                        group-hover:scale-110 transition-transform duration-300 shadow-lg">
-              <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M13 10V3L4 14h7v7l9-11h-7z"/>
-              </svg>
-            </div>
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Battery Service</h3>
-            <p class="text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
-              Complete battery replacement and electrical system maintenance
-            </p>
-           
-          </div>
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+    <div class="text-center mb-8 sm:mb-12">
+      <h2
+        class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4"
+      >
+        Select Your Service
+      </h2>
+      <p class="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-4">
+        Choose from our professional automotive services. Quality guaranteed
+        with competitive pricing.
+      </p>
+    </div>
 
-          <!-- Control Panel -->
-          <div class="service-card group bg-white hover:bg-gradient-to-br hover:from-purple-50 hover:to-purple-100 
-                      border border-gray-200 hover:border-purple-300 rounded-2xl p-6 sm:p-8 text-center cursor-pointer 
-                      transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl"
-               (click)="selectService('control_panel')">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-purple-600 
-                        rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 
-                        group-hover:scale-110 transition-transform duration-300 shadow-lg">
-              <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
-              </svg>
-            </div>
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Control Panel</h3>
-            <p class="text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
-              Access system settings, reports, and administrative functions
-            </p>
-            <div class="space-y-2">
-              <div class="text-lg sm:text-xl font-semibold text-purple-600">Admin Access</div>
-              <div class="text-xs text-gray-500">Management Tools</div>
-            </div>
-          </div>
+    <!-- Service Grid -->
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
+    >
+      <!-- Oil Service -->
+      <div
+        class="service-card group bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100 border border-gray-200 hover:border-blue-300 rounded-2xl p-6 sm:p-8 text-center cursor-pointer transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl"
+        (click)="selectService('oil_change')"
+      >
+        <div
+          class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+        >
+          <svg
+            class="w-8 h-8 sm:w-10 sm:h-10 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">
+          Oil Service
+        </h3>
+        <p class="text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
+          Premium engine oil change with high-quality filter replacement
+        </p>
+      </div>
 
-          <!-- Coming Soon -->
-          <!-- <div class="service-card bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 text-center 
+      <!-- Battery Service -->
+      <div
+        class="service-card group bg-white hover:bg-gradient-to-br hover:from-emerald-50 hover:to-emerald-100 border border-gray-200 hover:border-emerald-300 rounded-2xl p-6 sm:p-8 text-center cursor-pointer transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl"
+        (click)="selectService('battery_replacement')"
+      >
+        <div
+          class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+        >
+          <svg
+            class="w-8 h-8 sm:w-10 sm:h-10 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">
+          Battery Service
+        </h3>
+        <p class="text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
+          Complete battery replacement and electrical system maintenance
+        </p>
+      </div>
+
+      <!-- Control Panel -->
+      <div
+        class="service-card group bg-white hover:bg-gradient-to-br hover:from-purple-50 hover:to-purple-100 border border-gray-200 hover:border-purple-300 rounded-2xl p-6 sm:p-8 text-center cursor-pointer transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl"
+        (click)="selectService('control_panel')"
+      >
+        <div
+          class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+        >
+          <svg
+            class="w-8 h-8 sm:w-10 sm:h-10 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+            />
+          </svg>
+        </div>
+        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">
+          Control Panel
+        </h3>
+        <p class="text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
+          Access system settings, reports, and administrative functions
+        </p>
+        <div class="space-y-2">
+          <div class="text-lg sm:text-xl font-semibold text-purple-600">
+            Admin Access
+          </div>
+          <div class="text-xs text-gray-500">Management Tools</div>
+        </div>
+      </div>
+
+      <!-- Coming Soon -->
+      <!-- <div class="service-card bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 text-center 
                       opacity-60 cursor-not-allowed shadow-lg">
             <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-400 to-gray-500 
                         rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
@@ -128,10 +291,6 @@
               <div class="text-xs text-gray-400">Stay tuned</div>
             </div>
           </div> -->
-
-        </div>
-
-       
-      </main>
-
     </div>
+  </main>
+</div>

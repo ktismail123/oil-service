@@ -30,7 +30,7 @@ import { DashboardComponent } from '../../components/dashboard/dashboard.compone
     AccessoriesComponent,
     UserManagementComponent,
     RouterModule,
-    DashboardComponent
+    DashboardComponent,
   ],
   templateUrl: './control-panel.component.html',
   styleUrl: './control-panel.component.scss',
@@ -117,6 +117,26 @@ export class ControlPanelComponent {
 
   ngOnInit() {
     this.updateMenuCounts();
+    let userRole: string | null = null;
+
+    try {
+      const stored = localStorage.getItem('userData');
+      if (stored) {
+        const userData = JSON.parse(stored);
+        userRole = userData?.role || null;
+      }
+    } catch (error) {
+      console.error('Error parsing userData from localStorage:', error);
+      userRole = null;
+    }
+
+    if (userRole === 'technician') {
+    this.menuItems = this.menuItems.filter(
+      item => item.id !== 'user-management' && item.id !== 'dashboard'
+    );
+  } else {
+    this.menuItems = [...this.menuItems]; // manager → show all
+  }
   }
 
   // Handle sidebar menu clicks

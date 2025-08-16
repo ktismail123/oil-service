@@ -1,127 +1,163 @@
-<div class="step-content">
-  <div class="flex flex-col sm:flex-row items-start sm:items-center mb-6 gap-4">
-    <div class="w-full flex items-center">
-      <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-        <span class="text-green-600 font-bold">2</span>
+<!-- Header Section -->
+<div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl p-6 mb-8 shadow-sm border border-white/20">
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+    <!-- Step Info -->
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-green-500/25">
+        <span class="text-white font-bold text-lg">2</span>
       </div>
-      <div class="flex-1 min-w-0">
-        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Choose Battery Brand</h2>
+      <div class="flex-1">
+        <h2 class="text-lg md:text-xl font-bold text-gray-900">Choose Battery Brand</h2>
       </div>
     </div>
     
     <!-- Search Container -->
-    <div class="search-container w-full sm:w-auto sm:min-w-[250px]">
-      <div class="custom-search-wrapper">
-        <i class="search-icon fas fa-search"></i>
-        <input type="text" 
-               class="custom-search-input w-full"
-               placeholder="Search battery brand" 
-               [(ngModel)]="searchTerm"
-               #searchInput>
-        <button class="clear-search-btn" (click)="searchTerm=''"
-                *ngIf="searchInput.value">
-          <i class="fas fa-times"></i>
+    <div class="w-full lg:w-auto lg:min-w-[320px]">
+      <div class="relative group">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <i class="fas fa-search text-gray-400 text-sm group-focus-within:text-green-500 transition-colors duration-200"></i>
+        </div>
+        <input 
+          type="text" 
+          class="w-full h-12 pl-11 pr-11 bg-white border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all duration-200 outline-none text-sm"
+          placeholder="Search battery brands..." 
+          [(ngModel)]="searchTerm"
+          #searchInput
+        >
+        <button 
+          *ngIf="searchInput.value"
+          (click)="searchTerm=''"
+          type="button"
+          class="absolute inset-y-0 right-0 pr-3 flex items-center group/clear"
+        >
+          <div class="w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-all duration-200 group-hover/clear:scale-110">
+            <i class="fas fa-times text-white text-xs"></i>
+          </div>
         </button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Selected Capacity Info -->
-  <div class="mb-6 p-4 bg-green-50 rounded-xl border border-green-200">
-    <div class="flex items-center">
-      <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-      </svg>
-      <span class="text-sm text-gray-600">Selected Capacity: </span>
-      <span class="font-semibold text-green-600 ml-1">{{ selectedCapacityLabel() }}</span>
+<!-- Selected Capacity Info -->
+<div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 mb-8 border border-green-200/50 shadow-sm">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+      <i class="fas fa-check text-white text-sm"></i>
+    </div>
+    <div class="flex items-center flex-wrap gap-2 min-w-0">
+      <span class="text-sm font-medium text-gray-600">Selected Capacity:</span>
+      <span class="font-bold text-green-700">{{ selectedCapacityLabel() }}</span>
     </div>
   </div>
+</div>
 
-  <form [formGroup]="brandForm">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 mb-6" 
-         *ngIf="availableBrands().length > 0">
-      <div *ngFor="let battery of availableBrands() | search:searchTerm:searchKeys" 
-           class="battery-card border-2 border-gray-200 rounded-xl p-3 sm:p-4 cursor-pointer transition-all hover:border-green-300 hover:bg-green-50"
-           [class.border-green-500]="brandForm.get('batteryTypeId')?.value == battery.id"
-           [class.bg-green-50]="brandForm.get('batteryTypeId')?.value == battery.id"
-           [class.ring-2]="brandForm.get('batteryTypeId')?.value == battery.id"
-           [class.ring-green-200]="brandForm.get('batteryTypeId')?.value == battery.id"
-           (click)="selectBatteryBrand(battery); onBrandSelected()">
-        
-        <div class="text-center relative">
-          <!-- Selection Indicator -->
-          <div class="flex justify-center mb-2 absolute top-0 right-0">
-            <div *ngIf="brandForm.get('batteryTypeId')?.value == battery.id" 
-                 class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-              <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
+<!-- Form Section -->
+<form [formGroup]="brandForm">
+  <!-- Battery Grid -->
+  <div 
+    *ngIf="availableBrands().length > 0"
+    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8"
+  >
+    <div 
+      *ngFor="let battery of availableBrands() | search:searchTerm:searchKeys" 
+      class="group relative bg-white border-2 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+      [class]="brandForm.get('batteryTypeId')?.value == battery.id ? 
+        'border-green-500 bg-green-50 shadow-lg shadow-green-500/20 ring-4 ring-green-500/10' : 
+        'border-gray-200 hover:border-gray-300'"
+      (click)="selectBatteryBrand(battery); onBrandSelected()"
+    >
+      <!-- Content -->
+      <div class="space-y-4">
+        <!-- Header with Selection Indicator -->
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <!-- Battery Icon -->
+            <!-- <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-battery-full text-green-600"></i>
+            </div> -->
+            <div class="min-w-0">
+              <div 
+                class="font-semibold text-base truncate transition-colors duration-200"
+                [class]="brandForm.get('batteryTypeId')?.value == battery.id ? 
+                  'text-green-700' : 
+                  'text-gray-800 group-hover:text-gray-900'"
+                [title]="battery.brand"
+              >
+                {{ battery.brand }}
+              </div>
             </div>
-            <div *ngIf="brandForm.get('batteryTypeId')?.value != battery.id" 
-                 class="w-6 h-6 border-2 border-gray-300 rounded-full"></div>
           </div>
           
-          <!-- Battery Icon -->
-         
+          <!-- Selection Indicator -->
+          <div class="flex-shrink-0">
+            <div 
+              class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200"
+              [class]="brandForm.get('batteryTypeId')?.value == battery.id ? 
+                'bg-green-500 border-green-500' : 
+                'border-gray-300 group-hover:border-gray-400'"
+            >
+              <i 
+                *ngIf="brandForm.get('batteryTypeId')?.value == battery.id"
+                class="fas fa-check text-white text-xs"
+              ></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Battery Details -->
+        <div class="flex items-center justify-between">
+          <!-- Availability -->
+          <div *ngIf="battery.quantity_available" class="flex items-center gap-1 text-green-600">
+            <i class="fas fa-check-circle text-xs"></i>
+            <span class="text-xs font-medium">{{ battery.quantity_available }} available</span>
+          </div>
           
-          <!-- Battery Details -->
-          <div class="space-y-1">
-            <!-- Brand Name -->
-            <div class="font-semibold text-gray-800 text-sm sm:text-base truncate" 
-                 [title]="battery.brand">
-              {{ battery.brand }}
-            </div>
-            
-            <!-- Capacity -->
-            <!-- <div class="text-gray-600 text-xs sm:text-sm truncate">
-              {{ battery.capacity }} Amp Capacity
-            </div> -->
-            
-            <!-- Price -->
-            <div class="text-lg font-bold text-green-600">
-              AED {{ formatPrice(battery.price) }}
-            </div>
-            
-            <!-- Availability -->
-            <div *ngIf="battery.quantity_available" class="text-xs text-green-600 font-medium flex items-center justify-center">
-              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              {{ battery.quantity_available }} available
-            </div>
+          <!-- Price -->
+          <div class="text-lg font-bold text-green-600">
+            AED {{ formatPrice(battery.price) }}
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- No Results Message -->
-    <div *ngIf="(availableBrands() | search:searchTerm:searchKeys).length === 0 && availableBrands().length > 0" 
-         class="text-center py-12">
-      <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
-        </svg>
-      </div>
-      <h3 class="text-lg font-medium text-gray-600 mb-2">No matching battery brands found</h3>
-      <p class="text-sm text-gray-500">Try adjusting your search terms or clear the search to see all brands.</p>
-      <button 
-        type="button"
-        (click)="searchTerm=''"
-        class="mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-        Clear Search
-      </button>
+  <!-- No Results State -->
+  <div 
+    *ngIf="(availableBrands() | search:searchTerm:searchKeys).length === 0 && availableBrands().length > 0" 
+    class="bg-white rounded-3xl border-2 border-dashed border-gray-200 p-12 text-center"
+  >
+    <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+      <i class="fas fa-search text-2xl text-gray-400"></i>
     </div>
+    <h3 class="text-xl font-bold text-gray-700 mb-4">No matching battery brands found</h3>
+    <p class="text-gray-500 mb-6 max-w-md mx-auto">
+      Try different keywords or clear your search to see all available brands.
+    </p>
+    <button 
+      type="button"
+      (click)="searchTerm=''"
+      class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-green-500/25 hover:-translate-y-0.5"
+    >
+      <i class="fas fa-undo text-sm"></i>
+      Clear Search
+    </button>
+  </div>
 
-    <!-- Empty State (No battery brands available) -->
-    <div *ngIf="availableBrands().length === 0" class="text-center py-16">
-      <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-        <svg class="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      </div>
-      <h3 class="text-xl sm:text-2xl font-semibold text-gray-700 mb-2">No Battery Brands Available</h3>
-      <p class="text-gray-500 mb-2">No battery brands found for selected capacity!</p>
-      <p class="text-gray-400 text-sm">Please try a different capacity or check back later.</p>
+  <!-- Empty State -->
+  <div 
+    *ngIf="availableBrands().length === 0" 
+    class="bg-white rounded-3xl border-2 border-dashed border-gray-200 p-16 text-center"
+  >
+    <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-8">
+      <i class="fas fa-battery-full text-3xl text-gray-400"></i>
     </div>
-  </form>
-</div>
+    <h3 class="text-2xl font-bold text-gray-700 mb-4">No Battery Brands Available</h3>
+    <p class="text-gray-500 mb-2 max-w-lg mx-auto">
+      No battery brands found for the selected capacity.
+    </p>
+    <p class="text-gray-400 text-sm">
+      Please try a different capacity or check back later.
+    </p>
+  </div>
+</form>
