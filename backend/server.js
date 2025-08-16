@@ -43,6 +43,7 @@ app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 // app.use('/api/settings', require('./routes/settingRoutes'));
 app.use('/api/customer', require('./routes/customerRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/print', require('./routes/printRoutes'));
 
 initDB().then(() => {

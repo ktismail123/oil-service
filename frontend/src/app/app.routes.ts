@@ -34,6 +34,11 @@ export const routes: Routes = [
           .then(m => m.BookingListComponent)
       },
       {
+        path: 'dashboard',
+        loadComponent: () => import('./components/dashboard/dashboard.component')
+          .then(m => m.DashboardComponent)
+      },
+      {
         path: 'control-panel',
         loadComponent: () => import('./pages/control-panel/control-panel.component')
           .then(m => m.ControlPanelComponent)
