@@ -1,4 +1,7 @@
 // Action Configuration Interface
+
+export type ButtonActions = 'add' | 'edit' | 'view' | 'delete' | 'custom';
+
 export interface ActionConfig {
   // View Action
   showView?: boolean;

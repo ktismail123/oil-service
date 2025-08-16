@@ -3,7 +3,7 @@ import { DataTableComponent } from '../data-table/data-table.component';
 import { ApiService } from '../../services/api.service';
 import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs';
-import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
+import { ACTION_CONFIGS, ActionConfig, ButtonActions } from '../../models/action';
 import { BatteryTypesModalComponent } from '../../modals/battery-types-modal/battery-types-modal.component';
 
 @Component({
@@ -33,7 +33,7 @@ export class BatteryTypesComponent {
   }
 
   actionEvents(event: {
-    event: 'add' | 'edit' | 'view' | 'delete';
+    event: ButtonActions;
     data?: any;
   }) {
     console.log(event);

@@ -1,14 +1,12 @@
 import { environment } from './../../../../../environments/environment.prod';
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import {
-  FormControl,
   FormGroup,
   ReactiveFormsModule,
-  Validators,
 } from '@angular/forms';
 import { Accessory, OilFilter, OilType } from '../../../../models';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
-import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -17,7 +15,6 @@ import { ActivatedRoute } from '@angular/router';
     ReactiveFormsModule,
     FormFieldComponent,
     NgIf,
-    NgFor,
     CurrencyPipe,
     DatePipe,
   ],

@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { DataTableComponent } from '../data-table/data-table.component';
-import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
+import { ACTION_CONFIGS, ActionConfig, ButtonActions } from '../../models/action';
 import { ApiService } from '../../services/api.service';
 import { take } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -18,7 +18,21 @@ export class UserManagementComponent implements OnInit {
 
   users = signal<any[]>([]);
 
-  actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
+  actionConfig: ActionConfig = {
+    showView: false,
+    showEdit: true,
+    showDelete: true, // Hide delete button
+    viewIcon: 'info',  // Custom icon
+    editTitle: 'Modify Record', // Custom tooltip
+    customActions: [
+      {
+        key: 'reset',
+        icon: 'settings',
+        title: 'Reser Password',
+        class: 'print-action'
+      }
+    ]
+  };
 
   ngOnInit(): void {
     this.loadUsers();
@@ -34,9 +48,12 @@ export class UserManagementComponent implements OnInit {
   }
 
   actionEvents(action: {
-    event: 'add' | 'edit' | 'view' | 'delete';
+    event: ButtonActions
     data?: any;
+    customAction?: string
   }) {
+    console.log(action);
+    
     if (action.event === 'add' || action.event === 'edit') {
       this.dialog
         .open(UserManagementModalComponent, {

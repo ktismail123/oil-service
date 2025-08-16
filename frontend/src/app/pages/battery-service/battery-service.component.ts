@@ -9,20 +9,16 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { distinctUntilChanged, filter, finalize, take } from 'rxjs';
+import { finalize, take } from 'rxjs';
 
 import { ApiService } from '../../services/api.service';
 import { BookingService } from '../../services/booking.service';
 
-import { ButtonComponent } from '../../shared/components/button/button.component';
 import { LoadingComponent } from '../../shared/components/loading/loading.component';
 import { StepIndicatorComponent } from '../../shared/components/step-indicator/step-indicator.component';
 
 // Import step components
-import {
-  BatteryCapacityStepComponent,
-  CapacityOption,
-} from './steps/battery-capacity-step/battery-capacity-step.component';
+import { BatteryCapacityStepComponent } from './steps/battery-capacity-step/battery-capacity-step.component';
 import { BatteryBrandStepComponent } from './steps/battery-brand-step/battery-brand-step.component';
 import { AccessoriesStepComponent } from './steps/accessories-step/accessories-step.component';
 import {
@@ -37,7 +33,6 @@ import { Accessory, BatteryType } from '../../models';
   standalone: true,
   imports: [
     CommonModule,
-    ButtonComponent,
     LoadingComponent,
     StepIndicatorComponent,
     BatteryCapacityStepComponent,
@@ -285,6 +280,18 @@ export class BatteryServiceComponent implements OnInit {
     if (!customer) return;
     this.isSubmitting.set(true);
 
+    let userData: any = null;
+
+    try {
+      const stored = localStorage.getItem('userData');
+      if (stored) {
+        userData = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Failed to parse userData from localStorage:', error);
+      userData = null; // fallback
+    }
+
     const bookingData = {
       customer: {
         name: customer.name,
@@ -305,6 +312,7 @@ export class BatteryServiceComponent implements OnInit {
         totalAmount: this.subtotal(),
         laborCost: this.laborCost(),
         memo: customer.memo,
+        createdBy: userData?.userId,
       },
       accessories: this.selectedAccessories(),
     };

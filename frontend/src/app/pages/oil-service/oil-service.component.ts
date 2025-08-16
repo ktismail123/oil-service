@@ -44,9 +44,7 @@ import { Step7CustomerSummaryComponent } from './steps/step7-customer-summary/st
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    ButtonComponent,
     LoadingComponent,
-    FormFieldComponent,
     StepIndicatorComponent,
     Step1BrandSelectionComponent,
     Step2ModelSelectionComponent,
@@ -669,6 +667,18 @@ export class OilServiceComponent implements OnInit {
       return;
     }
 
+    let userData: any = null;
+
+    try {
+      const stored = localStorage.getItem('userData');
+      if (stored) {
+        userData = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Failed to parse userData from localStorage:', error);
+      userData = null; // fallback
+    }
+
     const bookingData = {
       customer: {
         name: this.customerForm.get('name')?.value,
@@ -699,6 +709,7 @@ export class OilServiceComponent implements OnInit {
         // Include package details for backend processing
         oilPackageDetails: this.getSelectedOilPackageDetails(),
         memo: this.customerForm.get('memo')?.value,
+        createdBy: userData?.userId,
       },
       accessories: this.selectedAccessories(),
     };

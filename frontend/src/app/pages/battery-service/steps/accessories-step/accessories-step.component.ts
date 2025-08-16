@@ -2,14 +2,13 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import { Accessory } from '../../../../models';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { SearchPipe } from '../../../../pipes/search.pipe';
 import { ApiService } from '../../../../services/api.service';
 import { take } from 'rxjs';
 
 @Component({
   selector: 'app-accessories-step',
-  imports: [ReactiveFormsModule, CommonModule, ButtonComponent, FormsModule, SearchPipe, CurrencyPipe],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule, SearchPipe, CurrencyPipe],
   templateUrl: './accessories-step.component.html',
   styleUrl: './accessories-step.component.scss'
 })

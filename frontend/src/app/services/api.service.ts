@@ -264,6 +264,17 @@ checkCustomerByPlate(plate: string): Observable<any[]> {
     return this.http.post<any>(`${this.baseUrl}/user/create`, postData);
   }
 
+  updateeUser(id: number, postData: {
+    name: string;
+    email: string;
+    role: string;
+    password: string;
+  }): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/user/${id}`, postData);
+  }
+
+
+
   getUsers(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/user/all`);
   }

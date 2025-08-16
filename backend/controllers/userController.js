@@ -25,6 +25,107 @@ const createUser = async (req, res) => {
     }
 }
 
+const updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, email, password, role } = req.body;
+        const db = getDB();
+
+        // Validate user ID
+        if (!id || isNaN(id)) {
+            return res.status(400).json({ message: 'Invalid user ID' });
+        }
+
+        // Check if user exists
+        const [existingUser] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+        if (existingUser.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const currentUser = existingUser[0];
+        let updateData = {};
+
+        // Validate and prepare name update
+        if (name !== undefined) {
+            if (name.trim().length < 2 || name.trim().length > 50) {
+                return res.status(400).json({ message: 'Name must be between 2 and 50 characters' });
+            }
+            updateData.name = name.trim();
+        }
+
+        // Validate and prepare email update
+        if (email !== undefined) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({ message: 'Invalid email format' });
+            }
+            
+            // Check if email exists for another user
+            if (email !== currentUser.email) {
+                const [emailExists] = await db.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, id]);
+                if (emailExists.length > 0) {
+                    return res.status(400).json({ message: 'Email already exists for another user' });
+                }
+            }
+            updateData.email = email.trim();
+        }
+
+        // Validate and prepare password update
+        if (password !== undefined && password !== '') {
+            if (password.length < 8) {
+                return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+            }
+            updateData.password = await bcrypt.hash(password, 10);
+        }
+
+        // Validate and prepare role update
+        if (role !== undefined) {
+            if (!['manager', 'technician'].includes(role)) {
+                return res.status(400).json({ message: 'Role must be either manager or technician' });
+            }
+            updateData.role = role;
+        }
+
+        // Check if there are any changes
+        const hasChanges = Object.keys(updateData).length > 0;
+        if (!hasChanges) {
+            return res.status(400).json({ message: 'No changes provided' });
+        }
+
+        // Build dynamic update query
+        const updateFields = Object.keys(updateData).map(field => `${field} = ?`);
+        const updateValues = Object.values(updateData);
+        
+        updateFields.push('updated_at = NOW()');
+        updateValues.push(id);
+
+        const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
+        
+        const [result] = await db.query(updateQuery, updateValues);
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found or no changes made' });
+        }
+
+        // Return updated user data (excluding password)
+        const [updatedUser] = await db.query(
+            'SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = ?',
+            [id]
+        );
+
+        res.status(200).json({
+            message: 'User updated successfully',
+            user: updatedUser[0],
+            updatedFields: Object.keys(updateData)
+        });
+
+    } catch (err) {
+        console.error('Update user error:', err);
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+};
+
+
 const getAllUsers = async (req, res) => {
     try {
         const db = getDB();
@@ -134,5 +235,6 @@ const deleteUser = async (req, res) => {
 module.exports = {
     createUser,
     getAllUsers,
+    updateUser,
     deleteUser
 }

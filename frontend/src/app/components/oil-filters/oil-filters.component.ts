@@ -4,7 +4,7 @@ import { ApiService } from '../../services/api.service';
 import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs';
 import { OilFilterModalComponent } from '../../modals/oil-filter-modal/oil-filter-modal.component';
-import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
+import { ACTION_CONFIGS, ActionConfig, ButtonActions } from '../../models/action';
 
 @Component({
   selector: 'app-oil-filters',
@@ -33,7 +33,7 @@ export class OilFiltersComponent implements OnInit {
   }
 
   actionEvents(event: {
-    event: 'add' | 'edit' | 'view' | 'delete';
+    event: ButtonActions,
     data?: any;
   }) {
 

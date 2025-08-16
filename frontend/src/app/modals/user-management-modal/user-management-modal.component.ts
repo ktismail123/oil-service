@@ -1,19 +1,29 @@
 import { Component, signal, computed, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ApiService } from '../../services/api.service';
+import { finalize, take } from 'rxjs';
 
 @Component({
   selector: 'app-user-management-modal',
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './user-management-modal.component.html',
-  styleUrl: './user-management-modal.component.scss'
+  styleUrl: './user-management-modal.component.scss',
 })
 export class UserManagementModalComponent {
   private fb = inject(FormBuilder);
   private apiService = inject(ApiService);
   private dialoagRef = inject(MatDialogRef<UserManagementModalComponent>);
+  private injectedData: {
+    mode: string;
+    rowData: any;
+  } = inject(MAT_DIALOG_DATA);
 
   // Signals for state management
   private _isEditMode = signal(false);
@@ -22,18 +32,33 @@ export class UserManagementModalComponent {
   private _errorMessage = signal<string>('');
   private _isSubmitting = signal(false);
 
+  constructor() {
+    if (this.injectedData?.mode === 'edit') {
+      this._isEditMode.set(true);
+    }
+  }
+
   // Form definition
   userForm: FormGroup = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-    email: ['', [Validators.required, Validators.email]],
+    name: [
+      this.injectedData?.rowData?.name || '',
+      [Validators.required, Validators.minLength(2), Validators.maxLength(50)],
+    ],
+    email: [
+      this.injectedData?.rowData?.email || '',
+      [Validators.required, Validators.email],
+    ],
     password: ['', [Validators.required, Validators.minLength(8)]],
-    role: ['manager', [Validators.required]]
+    role: [
+      this.injectedData?.rowData?.role || 'manager',
+      [Validators.required],
+    ],
   });
 
   // Available roles
   roles = [
     { value: 'manager', label: 'Manager' },
-    { value: 'technician', label: 'Technician' }
+    { value: 'technician', label: 'Technician' },
   ];
 
   // Computed properties
@@ -44,37 +69,57 @@ export class UserManagementModalComponent {
   isSubmitting = computed(() => this._isSubmitting());
 
   // Form control getters
-  get nameControl() { return this.userForm.get('name'); }
-  get emailControl() { return this.userForm.get('email'); }
-  get passwordControl() { return this.userForm.get('password'); }
-  get roleControl() { return this.userForm.get('role'); }
+  get nameControl() {
+    return this.userForm.get('name');
+  }
+  get emailControl() {
+    return this.userForm.get('email');
+  }
+  get passwordControl() {
+    return this.userForm.get('password');
+  }
+  get roleControl() {
+    return this.userForm.get('role');
+  }
 
   // Validation computed properties
-  isNameInvalid = computed(() => 
-    this.nameControl?.invalid && (this.nameControl?.dirty || this.nameControl?.touched)
-  );
+  isNameInvalid = computed(() => {
+    const control = this.userForm.get('name');
+    return control
+      ? control.invalid && (control.dirty || control.touched)
+      : false;
+  });
 
-  isEmailInvalid = computed(() => 
-    this.emailControl?.invalid && (this.emailControl?.dirty || this.emailControl?.touched)
-  );
+  isEmailInvalid = computed(() => {
+    const control = this.userForm.get('email');
+    return control
+      ? control.invalid && (control.dirty || control.touched)
+      : false;
+  });
 
-  isPasswordInvalid = computed(() => 
-    this.passwordControl?.invalid && (this.passwordControl?.dirty || this.passwordControl?.touched)
-  );
+  isPasswordInvalid = computed(() => {
+    const control = this.userForm.get('password');
+    return control
+      ? control.invalid && (control.dirty || control.touched)
+      : false;
+  });
 
-  isRoleInvalid = computed(() => 
-    this.roleControl?.invalid && (this.roleControl?.dirty || this.roleControl?.touched)
-  );
+  isRoleInvalid = computed(() => {
+    const control = this.userForm.get('role');
+    return control
+      ? control.invalid && (control.dirty || control.touched)
+      : false;
+  });
 
   // Form state computed properties
   hasFormChanged = computed(() => {
     if (!this.isEditMode()) return false;
-    
+
     const currentValues = this.userForm.value;
     const originalData = this.userData();
-    
+
     if (!originalData) return false;
-    
+
     return (
       currentValues.name !== originalData.name ||
       currentValues.email !== originalData.email ||
@@ -83,14 +128,15 @@ export class UserManagementModalComponent {
     );
   });
 
-  isSubmitDisabled = computed(() => 
-    this.userForm.invalid || 
-    this.isSubmitting() || 
-    (this.isEditMode() && !this.hasFormChanged())
+  isSubmitDisabled = computed(
+    () =>
+      this.userForm.invalid ||
+      this.isSubmitting() ||
+      (this.isEditMode() && !this.hasFormChanged())
   );
 
-  showResetButton = computed(() => 
-    this.isEditMode() && this.hasFormChanged() && !this.isSubmitting()
+  showResetButton = computed(
+    () => this.isEditMode() && this.hasFormChanged() && !this.isSubmitting()
   );
 
   // Modal title and subtitle
@@ -99,8 +145,8 @@ export class UserManagementModalComponent {
   }
 
   getModalSubtitle(): string {
-    return this.isEditMode() 
-      ? 'Update user information and permissions' 
+    return this.isEditMode()
+      ? 'Update user information and permissions'
       : 'Create a new user account with appropriate role';
   }
 
@@ -120,8 +166,10 @@ export class UserManagementModalComponent {
   getNameErrorMessage(): string {
     const control = this.nameControl;
     if (control?.hasError('required')) return 'Name is required';
-    if (control?.hasError('minlength')) return 'Name must be at least 2 characters';
-    if (control?.hasError('maxlength')) return 'Name cannot exceed 50 characters';
+    if (control?.hasError('minlength'))
+      return 'Name must be at least 2 characters';
+    if (control?.hasError('maxlength'))
+      return 'Name cannot exceed 50 characters';
     return '';
   }
 
@@ -135,7 +183,8 @@ export class UserManagementModalComponent {
   getPasswordErrorMessage(): string {
     const control = this.passwordControl;
     if (control?.hasError('required')) return 'Password is required';
-    if (control?.hasError('minlength')) return 'Password must be at least 8 characters';
+    if (control?.hasError('minlength'))
+      return 'Password must be at least 8 characters';
     return '';
   }
 
@@ -153,7 +202,7 @@ export class UserManagementModalComponent {
       name: userData.name,
       email: userData.email,
       password: '', // Don't prefill password in edit mode
-      role: userData.role
+      role: userData.role,
     });
     this.clearMessages();
   }
@@ -167,39 +216,61 @@ export class UserManagementModalComponent {
 
   // Form actions
   onSubmit() {
+    this.userForm.markAllAsTouched();
     if (this.userForm.valid && !this.isSubmitting()) {
       this._isSubmitting.set(true);
       this.clearMessages();
 
-      // Simulate API call
-      setTimeout(() => {
-        try {
-          const formData = this.userForm.value;
-          
-          if (this.isEditMode()) {
-            // Update user logic here
-            console.log('Updating user:', formData);
-            this._successMessage.set(`User "${formData.name}" has been updated successfully!`);
-          } else {
-            // Create user logic here
-            console.log('Creating user:', formData);
-            this.apiService.createUser(formData).subscribe({
-              next:(res => {
-                this._successMessage.set(`User "${formData.name}" has been created successfully!`);
-                this.closeModal();
-              })
-            })
-          }
+      const formData = this.userForm.value;
 
-          
-
-        } catch (error) {
-          this._errorMessage.set('An error occurred while processing the request. Please try again.');
-        } finally {
-          this._isSubmitting.set(false);
-        }
-      }, 1500);
+      if (this.isEditMode()) {
+        this.updateUser();
+      } else {
+        this.createUser();
+      }
     }
+  }
+
+  createUser(): void {
+    const formData = this.userForm.value;
+    this.apiService
+      .createUser(formData)
+      .pipe(
+        take(1),
+        finalize(() => {
+          this._isSubmitting.set(false);
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          this._successMessage.set(
+            `User "${formData.name}" has been created successfully!`
+          );
+          this.closeModal();
+        },
+      });
+  }
+
+  updateUser(): void {
+    const formData = this.userForm.value;
+    this.apiService
+      .updateeUser(this.injectedData?.rowData?.id, formData)
+      .pipe(
+        take(1),
+        finalize(() => {
+          this._isSubmitting.set(false);
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            this._successMessage.set(
+              `User "${formData.name}" has been updated successfully!`
+            );
+            this.closeModal();
+          }
+        },
+      });
   }
 
   resetForm() {
@@ -208,7 +279,7 @@ export class UserManagementModalComponent {
         name: this.userData()?.name,
         email: this.userData()?.email,
         password: '',
-        role: this.userData()?.role
+        role: this.userData()?.role,
       });
     } else {
       this.userForm.reset({ role: 'technician' });
@@ -220,7 +291,7 @@ export class UserManagementModalComponent {
     this.clearMessages();
     this.userForm.reset();
     this.dialoagRef.close();
-    
+
     // Emit close event or call parent method
     console.log('Modal closed');
   }

@@ -21,7 +21,7 @@ const getAllBookings = async (req, res) => {
     console.log('Query params:', { page, limit, search, status, service_type, date_from, date_to });
 
     // Validate sort parameters to prevent SQL injection
-    const allowedSortFields = ['created_at', 'service_date', 'total_amount', 'status', 'customer_name'];
+    const allowedSortFields = ['created_at', 'service_date', 'total_amount', 'status', 'customer_name', 'created_by_name'];
     const sortField = allowedSortFields.includes(sort_by) ? sort_by : 'created_at';
     const sortDirection = sort_order === 'ASC' ? 'ASC' : 'DESC';
 
@@ -41,7 +41,7 @@ const getAllBookings = async (req, res) => {
     // Build WHERE conditions safely
     let whereConditions = [];
 
-    // Search functionality - using LIKE with escaped values
+    // Search functionality - using LIKE with escaped values (including user name search)
     if (search && search.trim()) {
       const searchTerm = escapeLike(search.trim());
       whereConditions.push(`(
@@ -52,7 +52,9 @@ const getAllBookings = async (req, res) => {
         vm.name LIKE ${searchTerm} OR
         sb.id LIKE ${searchTerm} OR
         sb.subtotal LIKE ${searchTerm} OR
-        sb.bill_number LIKE ${searchTerm}
+        sb.bill_number LIKE ${searchTerm} OR
+        u.name LIKE ${searchTerm} OR
+        u.email LIKE ${searchTerm}
       )`);
     }
 
@@ -79,8 +81,10 @@ const getAllBookings = async (req, res) => {
       ? `WHERE ${whereConditions.join(' AND ')}`
       : '';
 
-    // Build the main query
-    const sortColumn = sortField === 'customer_name' ? 'c.name' : `sb.${sortField}`;
+    // Build the main query with user information
+    const sortColumn = sortField === 'customer_name' ? 'c.name' : 
+                      sortField === 'created_by_name' ? 'u.name' : 
+                      `sb.${sortField}`;
     
     const mainQuery = `
       SELECT 
@@ -114,7 +118,10 @@ const getAllBookings = async (req, res) => {
         oil_f.code as oil_filter_code,
         oil_f.brand as oil_filter_brand,
         bt.capacity as battery_capacity,
-        bt.brand as battery_brand
+        bt.brand as battery_brand,
+        u.name as created_by_name,
+        u.email as created_by_email,
+        u.role as created_by_role
       FROM service_bookings sb
       JOIN customers c ON sb.customer_id = c.id
       JOIN customer_vehicles cv ON sb.vehicle_id = cv.id
@@ -122,6 +129,7 @@ const getAllBookings = async (req, res) => {
       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
       LEFT JOIN oil_filters oil_f ON sb.oil_filter_id = oil_f.id
       LEFT JOIN battery_types bt ON sb.battery_type_id = bt.id
+      LEFT JOIN users u ON sb.created_by = u.id
       ${whereClause}
       ORDER BY ${sortColumn} ${sortDirection}
       LIMIT ${limit} OFFSET ${offset}
@@ -170,24 +178,55 @@ const getAllBookings = async (req, res) => {
           });
         });
 
-        // Add accessories to results
+        // Add accessories to results and structure user information
         results.forEach(booking => {
           booking.accessories = accessoriesMap[booking.id] || [];
+          
+          // Structure user information in a nested object
+          booking.created_by_user = {
+            id: booking.created_by,
+            name: booking.created_by_name,
+            email: booking.created_by_email,
+            role: booking.created_by_role
+          };
+          
+          // Remove individual user fields from the main booking object to keep it clean
+          delete booking.created_by_name;
+          delete booking.created_by_email;
+          delete booking.created_by_role;
         });
       } catch (accessoriesError) {
         console.error('Error fetching accessories:', accessoriesError);
         // Continue without accessories if there's an error
         results.forEach(booking => {
           booking.accessories = [];
+          booking.created_by_user = {
+            id: booking.created_by,
+            name: booking.created_by_name,
+            email: booking.created_by_email,
+            role: booking.created_by_role
+          };
+          delete booking.created_by_name;
+          delete booking.created_by_email;
+          delete booking.created_by_role;
         });
       }
     } else {
       results.forEach(booking => {
         booking.accessories = [];
+        booking.created_by_user = {
+          id: booking.created_by,
+          name: booking.created_by_name,
+          email: booking.created_by_email,
+          role: booking.created_by_role
+        };
+        delete booking.created_by_name;
+        delete booking.created_by_email;
+        delete booking.created_by_role;
       });
     }
 
-    // Get total count for pagination
+    // Get total count for pagination (include user join in count query too)
     const countQuery = `
       SELECT COUNT(DISTINCT sb.id) as total
       FROM service_bookings sb
@@ -197,6 +236,7 @@ const getAllBookings = async (req, res) => {
       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
       LEFT JOIN oil_filters oil_f ON sb.oil_filter_id = oil_f.id
       LEFT JOIN battery_types bt ON sb.battery_type_id = bt.id
+      LEFT JOIN users u ON sb.created_by = u.id
       ${whereClause}
     `;
 
@@ -257,7 +297,8 @@ const createNewBooking = async (req, res) => {
       subtotal: service.subtotal,
       laborCost: service.laborCost || 0,
       oilQuantityDetails: service.oilQuantityDetails || null,
-      memo: service.memo || null // Added memo field
+      memo: service.memo || null, // Added memo field,
+      createdBy: service.createdBy || null // Added created_by field
     };
 
     console.log('Service data with memo:', sanitizedService);
@@ -328,7 +369,8 @@ const createNewBooking = async (req, res) => {
       totalAmount, 
       laborCost, 
       sanitizedService.oilQuantityDetails,
-      sanitizedService.memo // Added memo to parameters
+      sanitizedService.memo,
+      sanitizedService.createdBy
     ];
 
     console.log('Booking parameters:', bookingParams);
@@ -339,8 +381,8 @@ const createNewBooking = async (req, res) => {
       INSERT INTO service_bookings (
         customer_id, vehicle_id, service_type, service_date, service_time,
         service_interval, oil_type_id, oil_quantity, oil_filter_id, battery_type_id,
-        subtotal, vat_percentage, vat_amount, total_amount, labour_cost, oil_package_details, memo
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        subtotal, vat_percentage, vat_amount, total_amount, labour_cost, oil_package_details, memo, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, bookingParams);
 
     const bookingId = bookingResult.insertId;
@@ -377,7 +419,8 @@ const createNewBooking = async (req, res) => {
       billNumber: billNumber,
       totalAmount: totalAmount,
       laborCost: laborCost,
-      memo: sanitizedService.memo, // Include memo in response
+      memo: sanitizedService.memo,
+      createdBy: sanitizedService.createdBy,
       vatAmount: vatAmount,
       subtotal: subtotal,
       message: 'Booking created successfully'

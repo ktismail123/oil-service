@@ -1,4 +1,4 @@
-import { NgFor, NgIf, TitleCasePipe, NgClass, DatePipe, NgStyle } from '@angular/common';
+import { NgFor, NgIf, TitleCasePipe, NgClass, NgStyle } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -13,7 +13,7 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/p
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { ActionConfig } from '../../models/action';
+import { ActionConfig, ButtonActions } from '../../models/action';
 
 // Interface for pagination data
 export interface PaginationData {
@@ -45,7 +45,6 @@ export interface TableEvent {
     NgClass,
     MatIconModule,
     MatButtonModule,
-    DatePipe,
     NgStyle
   ],
   templateUrl: './data-table.component.html',
@@ -66,7 +65,7 @@ export class DataTableComponent implements AfterViewInit {
   loading = input<boolean>(false);
   
   // Output signals
-  addNew = output<{ event: 'add' | 'edit' | 'view' | 'delete', data?: any }>();
+  addNew = output<{ event: ButtonActions, data?: any, customAction?: string }>();
   refreshTable = output();
   
   // NEW: Output for pagination and search events
@@ -287,11 +286,11 @@ export class DataTableComponent implements AfterViewInit {
 
   // Custom action handler
   onCustomAction(actionKey: string, element: any) {
-    // this.addNew.emit({ 
-    //   event: 'custom', 
-    //   data: element, 
-    //   customAction: actionKey 
-    // });
+    this.addNew.emit({ 
+      event: 'custom', 
+      data: element, 
+      customAction: actionKey 
+    });
   }
 
   // Check if action should be disabled

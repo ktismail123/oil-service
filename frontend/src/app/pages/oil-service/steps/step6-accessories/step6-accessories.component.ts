@@ -2,12 +2,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Accessory } from '../../../../models';
 import { NgFor, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { SearchPipe } from '../../../../pipes/search.pipe';
 
 @Component({
   selector: 'app-step6-accessories',
-  imports: [NgIf, NgFor, ReactiveFormsModule, ButtonComponent, FormsModule, SearchPipe],
+  imports: [NgIf, NgFor, ReactiveFormsModule, FormsModule, SearchPipe],
   templateUrl: './step6-accessories.component.html',
   styleUrl: './step6-accessories.component.scss',
 })

@@ -58,9 +58,9 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-       if (role.toLowerCase() !== user.role.toLowerCase()) {
-             return res.status(401).json({ message: 'User does not have the specified role' });
-        }
+    //    if (role.toLowerCase() !== user.role.toLowerCase()) {
+    //          return res.status(401).json({ message: 'User does not have the specified role' });
+    //     }
 
         const token = jwt.sign(
             { userId: user.id, role: user.role }, // role added here
@@ -73,6 +73,7 @@ exports.login = async (req, res) => {
             data:{
                 token,
                 userData:{
+                    userId: user.id,
                     role: user.role,
                     email:user.email,
                     name:user.name

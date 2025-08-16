@@ -4,7 +4,7 @@ import { ApiService } from '../../services/api.service';
 import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs';
 import { VehicleModelModalComponent } from '../../modals/vehicle-model-modal/vehicle-model-modal.component';
-import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
+import { ACTION_CONFIGS, ActionConfig, ButtonActions } from '../../models/action';
 
 @Component({
   selector: 'app-model-list',
@@ -35,7 +35,7 @@ export class ModelListComponent implements OnInit {
   }
 
   actionEvents(event: {
-    event: 'add' | 'edit' | 'view' | 'delete';
+    event: ButtonActions,
     data?: any;
   }) {
 
