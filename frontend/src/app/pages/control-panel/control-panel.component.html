@@ -92,6 +92,10 @@
           <app-user-management/>
         </div>
 
+        <div *ngIf="activeSection() === 'dashboard'" class="data-section">
+          <app-dashboard/>
+        </div>
+
       </div>
     </div>
   </div>

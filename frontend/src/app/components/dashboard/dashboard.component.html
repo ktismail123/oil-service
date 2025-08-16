@@ -28,6 +28,7 @@
         <!-- Action Buttons -->
         <div class="flex items-center space-x-3">
           <button 
+          [ngClass]="(filters.month || filters.userId || filters.year) && 'border border-red-500'"
             (click)="clearFilters()" 
             class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +152,7 @@
               </div>
             </div>
             <h3 class="text-sm font-medium text-emerald-100 mb-1">Total Revenue</h3>
-            <p class="text-3xl font-bold mb-2">{{dashboardData.summary.total_revenue | currency}}</p>
+            <p class="text-3xl font-bold mb-2">{{dashboardData.summary.total_revenue | currency: 'AED '}}</p>
             <div class="flex items-center text-emerald-100 text-sm">
               <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
@@ -294,7 +295,7 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-lg font-bold text-green-600">{{u.revenue | currency}}</div>
+                  <div class="text-lg font-bold text-green-600">{{u.revenue | currency : 'AED '}}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-medium text-gray-900">{{u.bookings_count | number}}</div>

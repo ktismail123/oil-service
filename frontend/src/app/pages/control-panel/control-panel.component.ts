@@ -14,6 +14,7 @@ import { BatteryTypesComponent } from '../../components/battery-types/battery-ty
 import { AccessoriesComponent } from '../../components/accessories/accessories.component';
 import { UserManagementComponent } from '../../components/user-management/user-management.component';
 import { RouterModule } from '@angular/router';
+import { DashboardComponent } from '../../components/dashboard/dashboard.component';
 
 @Component({
   selector: 'app-control-panel',
@@ -28,7 +29,8 @@ import { RouterModule } from '@angular/router';
     BatteryTypesComponent,
     AccessoriesComponent,
     UserManagementComponent,
-    RouterModule
+    RouterModule,
+    DashboardComponent
   ],
   templateUrl: './control-panel.component.html',
   styleUrl: './control-panel.component.scss',
@@ -61,6 +63,13 @@ export class ControlPanelComponent {
       icon: 'fas fa-calendar-check',
       slug: 'bookings',
       active: true,
+    },
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: 'fas fa-home',
+      slug: 'dashboard',
+      active: false,
     },
     {
       id: 'brands',
