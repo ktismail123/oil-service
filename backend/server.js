@@ -27,24 +27,24 @@ app.use(cors());
 app.use(express.json());
 
 // Public auth routes (no token required)
-app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/auth', require('./routes/authRoutes'));
 
 // Auth middleware protects all routes below
 app.use(authMiddleware);
 
-app.use('/api/brands', require('./routes/brandRoutes'));
-app.use('/api/models', require('./routes/modelRoutes'));
-app.use('/api/oil-types', require('./routes/oilTypeRoutes'));
-app.use('/api/oil-filters', require('./routes/oilFilterRoutes'));
-app.use('/api/battery-types', require('./routes/batteryTypeRoutes'));
-app.use('/api/accessories', require('./routes/accessoryRoutes'));
-app.use('/api/user', require('./routes/userRoutes'));
-// app.use('/api/customer', require('./routes/customerRoutes'));
-app.use('/api/bookings', require('./routes/bookingRoutes'));
-// app.use('/api/settings', require('./routes/settingRoutes'));
-app.use('/api/customer', require('./routes/customerRoutes'));
-app.use('/api/dashboard', require('./routes/dashboardRoutes'));
-app.use('/api/print', require('./routes/printRoutes'));
+app.use('/brands', require('./routes/brandRoutes'));
+app.use('/models', require('./routes/modelRoutes'));
+app.use('/oil-types', require('./routes/oilTypeRoutes'));
+app.use('/oil-filters', require('./routes/oilFilterRoutes'));
+app.use('/battery-types', require('./routes/batteryTypeRoutes'));
+app.use('/accessories', require('./routes/accessoryRoutes'));
+app.use('/user', require('./routes/userRoutes'));
+// app.use('/customer', require('./routes/customerRoutes'));
+app.use('/bookings', require('./routes/bookingRoutes'));
+// app.use('/settings', require('./routes/settingRoutes'));
+app.use('/customer', require('./routes/customerRoutes'));
+app.use('/dashboard', require('./routes/dashboardRoutes'));
+app.use('/print', require('./routes/printRoutes'));
 
 initDB().then(() => {
   const PORT = process.env.PORT || 3000;
