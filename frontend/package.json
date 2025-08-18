@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "server-build": "ng build  &&  cp -r /root/oil-service/frontend/dist/frontend/browser /var/www/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

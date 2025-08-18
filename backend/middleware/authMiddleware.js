@@ -13,6 +13,11 @@ try {
 const SECRET_KEY = process.env.SECRET_KEY;
 
 module.exports = (req, res, next) => {
+
+  if(req.path == '/api/auth/login'){
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {

@@ -1,6 +1,9 @@
 # Node modules
 node_modules/
 .env
+.env.development
+.env.production
+.env.*
 package-lock.json
 
 # Logs
