@@ -3,12 +3,12 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 
 // Load .env based on ENVIRONMENT
-dotenv.config({
-  path: path.resolve(
-    process.cwd(),
-    `.env.${process.env.ENVIRONMENT || 'development'}`
-  )
-});
+try {
+  const envFile = `.env.${process.env.ENVIRONMENT || 'development'}`;
+  require('dotenv').config({ path: envFile });
+} catch (err) {
+  console.error('Failed to load env file:', err);
+}
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
