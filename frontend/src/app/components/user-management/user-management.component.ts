@@ -1,6 +1,14 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { DataTableComponent } from '../data-table/data-table.component';
-import { ACTION_CONFIGS, ActionConfig, ButtonActions } from '../../models/action';
+import {
+  DataTableComponent,
+  SearchData,
+  TableEvent,
+} from '../data-table/data-table.component';
+import {
+  ACTION_CONFIGS,
+  ActionConfig,
+  ButtonActions,
+} from '../../models/action';
 import { ApiService } from '../../services/api.service';
 import { take } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -17,9 +25,9 @@ export class UserManagementComponent implements OnInit {
   private dialog = inject(MatDialog);
 
   users = signal<any[]>([]);
+  filteredUsers = signal<any[]>(this.users());
 
-   actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
-
+  actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
 
   ngOnInit(): void {
     this.loadUsers();
@@ -30,17 +38,19 @@ export class UserManagementComponent implements OnInit {
       .getUsers()
       .pipe(take(1))
       .subscribe({
-        next: (res) => [this.users.set(res.data)],
+        next: (res) => {
+          this.users.set(res.data);
+          this.filteredUsers.set(res.data);
+        },
       });
   }
 
   actionEvents(action: {
-    event: ButtonActions
+    event: ButtonActions;
     data?: any;
-    customAction?: string
+    customAction?: string;
   }) {
-    console.log(action);
-    
+
     if (action.event === 'add' || action.event === 'edit') {
       this.dialog
         .open(UserManagementModalComponent, {
@@ -68,5 +78,32 @@ export class UserManagementComponent implements OnInit {
         },
       });
     }
+  }
+
+  onTableEvent(event: TableEvent) {
+    switch (event.type) {
+      case 'search':
+        this.handleSearchEvent(event.data as SearchData);
+        break;
+    }
+  }
+
+  private handleSearchEvent(searchData: SearchData) {
+    if (!searchData || !searchData.searchTerm?.trim()) {
+      // empty search -> reset to original data
+      this.filteredUsers.set(this.users());
+      return;
+    }
+
+    const term = searchData.searchTerm.toLowerCase();
+    this.filteredUsers.set(
+      this.users().filter(
+        (b) =>
+          b.name.toLowerCase().includes(term) || 
+          b.email.toLowerCase().includes(term) || 
+          b.role.toLowerCase().includes(term) || 
+          b.id.toString().includes(term)
+      )
+    );
   }
 }

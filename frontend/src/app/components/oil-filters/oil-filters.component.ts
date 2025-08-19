@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { DataTableComponent } from '../data-table/data-table.component';
+import { DataTableComponent, SearchData, TableEvent } from '../data-table/data-table.component';
 import { ApiService } from '../../services/api.service';
 import { MatDialog } from '@angular/material/dialog';
 import { take } from 'rxjs';
@@ -18,6 +18,7 @@ export class OilFiltersComponent implements OnInit {
   actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
 
   oilFilters = signal<any[]>([]);
+  filteredoilFilters = signal<any[]>(this.oilFilters());
 
   ngOnInit(): void {
     this.loadOilFilters();
@@ -28,7 +29,10 @@ export class OilFiltersComponent implements OnInit {
       .getOilFilters()
       .pipe(take(1))
       .subscribe({
-        next: (res) => [this.oilFilters.set(res)],
+        next: (res) => {
+          this.oilFilters.set(res);
+          this.filteredoilFilters.set(res);
+        },
       });
   }
 
@@ -65,4 +69,31 @@ export class OilFiltersComponent implements OnInit {
       })
     }
   }
+
+    onTableEvent(event: TableEvent) {
+      switch (event.type) {
+        case 'search':
+          this.handleSearchEvent(event.data as SearchData);
+          break;
+      }
+    }
+  
+    private handleSearchEvent(searchData: SearchData) {
+      if (!searchData || !searchData.searchTerm?.trim()) {
+        // empty search -> reset to original data
+        this.filteredoilFilters.set(this.oilFilters());
+        return;
+      }
+  
+      const term = searchData.searchTerm.toLowerCase();
+      this.filteredoilFilters.set(
+        this.oilFilters().filter(
+          (b) =>
+            b.brand.toLowerCase().includes(term) || 
+            b.code.toLowerCase().includes(term) ||
+            b.price.toString().includes(term) ||
+            b.id.toString().includes(term)
+        )
+      );
+    }
 }

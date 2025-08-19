@@ -13,7 +13,7 @@ import { OilFiltersComponent } from '../../components/oil-filters/oil-filters.co
 import { BatteryTypesComponent } from '../../components/battery-types/battery-types.component';
 import { AccessoriesComponent } from '../../components/accessories/accessories.component';
 import { UserManagementComponent } from '../../components/user-management/user-management.component';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DashboardComponent } from '../../components/dashboard/dashboard.component';
 
 @Component({
@@ -51,6 +51,9 @@ export class ControlPanelComponent {
   batteryTypes = signal<any[]>([]);
   accessories = signal<any[]>([]);
   bookings = signal<any[]>([]);
+
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   // Loading states
   loading = signal(false);
@@ -116,7 +119,7 @@ export class ControlPanelComponent {
   ];
 
   ngOnInit() {
-    this.updateMenuCounts();
+    this.getCurrentTab();
     let userRole: string | null = null;
 
     try {
@@ -131,18 +134,41 @@ export class ControlPanelComponent {
     }
 
     if (userRole === 'technician') {
-    this.menuItems = this.menuItems.filter(
-      item => item.id !== 'user-management' && item.id !== 'dashboard'
-    );
-  } else {
-    this.menuItems = [...this.menuItems]; // manager → show all
+      this.menuItems = this.menuItems.filter(
+        (item) => item.id !== 'user-management' && item.id !== 'dashboard'
+      );
+    } else {
+      this.menuItems = [...this.menuItems]; // manager → show all
+    }
   }
+
+  setActiveMenu(sectionId: string) {
+    this.menuItems = this.menuItems.map((item) => ({
+      ...item,
+      active: item.id === sectionId,
+    }));
+  }
+
+  getCurrentTab() {
+    this.route.queryParams.subscribe((params) => {
+      const section = params['section'];
+      if (section) {
+        this.activeSection.set(section);
+        this.setActiveMenu(section);
+      }
+    });
   }
 
   // Handle sidebar menu clicks
   onSidebarMenuClick(sectionId: string) {
     this.activeSection.set(sectionId);
     this.addNewEvent.set(null);
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { section: sectionId },
+      queryParamsHandling: 'merge', // keep other params if any
+    });
   }
 
   // Handle sidebar toggle

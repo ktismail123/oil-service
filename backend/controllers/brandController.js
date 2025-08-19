@@ -3,7 +3,7 @@ const { getDB, dbConfig } = require('../config/db');
 const getAllBrands = async (req, res) => {
   try {
     const db = getDB();
-    const [results] = await db.execute('SELECT * FROM vehicle_brands ORDER BY created_at DESC');
+    const [results] = await db.execute('SELECT * FROM vehicle_brands ORDER BY id');
     res.json(results);
   } catch (error) {
     console.error('Error fetching brands:', error);

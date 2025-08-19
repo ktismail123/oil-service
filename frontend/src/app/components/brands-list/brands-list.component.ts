@@ -11,10 +11,18 @@ import {
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AddBrandModalComponent } from '../../modals/add-brand-modal/add-brand-modal.component';
-import { DataTableComponent } from '../data-table/data-table.component';
+import {
+  DataTableComponent,
+  SearchData,
+  TableEvent,
+} from '../data-table/data-table.component';
 import { ApiService } from '../../services/api.service';
 import { take } from 'rxjs';
-import { ACTION_CONFIGS, ActionConfig, ButtonActions } from '../../models/action';
+import {
+  ACTION_CONFIGS,
+  ActionConfig,
+  ButtonActions,
+} from '../../models/action';
 
 @Component({
   selector: 'app-brands-list',
@@ -27,6 +35,8 @@ export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
 
   // Data signals
   brands = signal<any[]>([]);
+  // filtered list
+  filteredBrands = signal<any[]>(this.brands());
 
   actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
 
@@ -49,15 +59,14 @@ export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
       .getBrands()
       .pipe(take(1))
       .subscribe({
-        next: (res) => [this.brands.set(res)],
+        next: (res) => {
+          this.brands.set(res);
+          this.filteredBrands.set(res);
+        },
       });
   }
 
-  actionEvents(action: {
-    event: ButtonActions;
-    data?: any;
-  }) {
-    console.log(event);
+  actionEvents(action: { event: ButtonActions; data?: any }) {
 
     if (action.event === 'add' || action.event === 'edit') {
       this.dialog
@@ -76,13 +85,37 @@ export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
         });
     }
 
-    if(action.event === 'delete'){
-       this.apiService.deleteBrand(action.data?.id).subscribe({
-        next:(res => {
-            this.loadBrands();
-        })
-       })
+    if (action.event === 'delete') {
+      this.apiService.deleteBrand(action.data?.id).subscribe({
+        next: (res) => {
+          this.loadBrands();
+        },
+      });
     }
+  }
+
+  onTableEvent(event: TableEvent) {
+    switch (event.type) {
+      case 'search':
+        this.handleSearchEvent(event.data as SearchData);
+        break;
+    }
+  }
+
+  private handleSearchEvent(searchData: SearchData) {
+    if (!searchData || !searchData.searchTerm?.trim()) {
+      // empty search -> reset to original data
+      this.filteredBrands.set(this.brands());
+      return;
+    }
+
+    const term = searchData.searchTerm.toLowerCase();
+    this.filteredBrands.set(
+      this.brands().filter(
+        (b) =>
+          b.name.toLowerCase().includes(term) || b.id.toString().includes(term)
+      )
+    );
   }
 
   ngOnDestroy(): void {}

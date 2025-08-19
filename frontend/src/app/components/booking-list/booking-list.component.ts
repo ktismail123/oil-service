@@ -105,7 +105,6 @@ export class BookingListComponent implements OnInit {
 
   // Handle table events (pagination and search)
   onTableEvent(event: TableEvent) {
-    console.log('Table event received:', event);
     
     switch (event.type) {
       case 'pagination':

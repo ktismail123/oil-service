@@ -34,15 +34,15 @@ export class OilTypeModalComponent {
       [Validators.required],
     ],
     package_1l_available: [
-      this.formData?.package_1l_available || '1',
+      this.formData?.package_1l_available || '0',
       [Validators.required],
     ],
     package_4l_available: [
-      this.formData.package_4l_available || '1',
+      this.formData?.package_4l_available || '0',
       [Validators.required],
     ],
     bulk_available: [
-      this.formData.bulk_available || '1',
+      this.formData?.bulk_available || '0',
       [Validators.required],
     ],
     price_1l: [
