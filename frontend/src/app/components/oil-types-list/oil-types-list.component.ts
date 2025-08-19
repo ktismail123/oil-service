@@ -50,9 +50,10 @@ export class OilTypesListComponent implements OnInit {
       this.dialog
         .open(OilTypeModalComponent, {
           width: '500px',
+          disableClose: true,
           data: {
             mode: event.event,
-            rowData: event?.data,
+            rowData: event?.data
           },
         })
         .afterClosed()

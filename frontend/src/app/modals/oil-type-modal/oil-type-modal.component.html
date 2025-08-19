@@ -1,6 +1,6 @@
-<div class="modal-overlay" (click)="closeModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    
+<div class="modal-overlay" >
+  <div class="modal-container">
+
     <!-- Modal Header -->
     <div class="modal-header">
       <h2>{{ isEditMode() ? 'Edit Oil Type' : 'Add New Oil Type' }}</h2>
@@ -12,33 +12,18 @@
     <!-- Modal Body -->
     <div class="modal-body">
       <form [formGroup]="oilTypeForm" (ngSubmit)="onSubmit()">
-        
-        <!-- Name and Grade Row -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="name">Oil Name *</label>
-            <input
-              id="name"
-              type="text"
-              formControlName="name"
-              class="form-input"
-              placeholder="Enter oil name">
-            <div *ngIf="isNameInvalid()" class="error-msg">
-              {{ getNameErrorMessage() }}
-            </div>
-          </div>
 
-          <div class="form-group">
-            <label for="grade">Grade *</label>
-            <input
-              id="grade"
-              type="text"
-              formControlName="grade"
-              class="form-input"
-              placeholder="Enter grade (e.g., 5W30, 10W40)">
-            <div *ngIf="isGradeInvalid()" class="error-msg">
-              {{ getGradeErrorMessage() }}
-            </div>
+        <!-- Grade -->
+        <div class="form-group">
+          <label for="grade">Grade *</label>
+          <input
+            id="grade"
+            type="text"
+            formControlName="grade"
+            class="form-input"
+            placeholder="Enter grade (e.g., 5W30, 10W40)">
+          <div *ngIf="isInvalid('grade')" class="error-msg">
+            {{ getErrorMessage('grade') }}
           </div>
         </div>
 
@@ -52,8 +37,8 @@
               formControlName="brand"
               class="form-input"
               placeholder="Enter brand name">
-            <div *ngIf="isBrandInvalid()" class="error-msg">
-              {{ getBrandErrorMessage() }}
+            <div *ngIf="isInvalid('brand')" class="error-msg">
+              {{ getErrorMessage('brand') }}
             </div>
           </div>
 
@@ -65,8 +50,8 @@
               <option value="10000">10,000 km</option>
               <option value="15000">15,000 km</option>
             </select>
-            <div *ngIf="isServiceIntervalInvalid()" class="error-msg">
-              {{ getServiceIntervalErrorMessage() }}
+            <div *ngIf="isInvalid('service_interval')" class="error-msg">
+              {{ getErrorMessage('service_interval') }}
             </div>
           </div>
         </div>
@@ -74,9 +59,7 @@
         <!-- Package Availability Section -->
         <div class="form-section">
           <h4>Package Availability</h4>
-          
           <div class="form-row">
-            <!-- Package 1L Available -->
             <div class="form-group">
               <label for="package1l">1L Package Available</label>
               <select id="package1l" formControlName="package_1l_available" class="form-select">
@@ -85,7 +68,6 @@
               </select>
             </div>
 
-            <!-- Package 4L Available -->
             <div class="form-group">
               <label for="package4l">4L Package Available</label>
               <select id="package4l" formControlName="package_4l_available" class="form-select">
@@ -94,7 +76,6 @@
               </select>
             </div>
 
-            <!-- Bulk Available -->
             <div class="form-group">
               <label for="bulk">Bulk Available</label>
               <select id="bulk" formControlName="bulk_available" class="form-select">
@@ -108,9 +89,7 @@
         <!-- Pricing Section -->
         <div class="form-section">
           <h4>Pricing</h4>
-          
           <div class="form-row">
-            <!-- Price 1L -->
             <div class="form-group">
               <label for="price1l">Price per 1L *</label>
               <input
@@ -121,12 +100,11 @@
                 formControlName="price_1l"
                 class="form-input"
                 placeholder="Enter price for 1L">
-              <div *ngIf="isPrice1lInvalid()" class="error-msg">
-                {{ getPrice1lErrorMessage() }}
+              <div *ngIf="isInvalid('price_1l')" class="error-msg">
+                {{ getErrorMessage('price_1l') }}
               </div>
             </div>
 
-            <!-- Price 4L -->
             <div class="form-group">
               <label for="price4l">Price per 4L *</label>
               <input
@@ -137,12 +115,11 @@
                 formControlName="price_4l"
                 class="form-input"
                 placeholder="Enter price for 4L">
-              <div *ngIf="isPrice4lInvalid()" class="error-msg">
-                {{ getPrice4lErrorMessage() }}
+              <div *ngIf="isInvalid('price_4l')" class="error-msg">
+                {{ getErrorMessage('price_4l') }}
               </div>
             </div>
 
-            <!-- Price per Liter -->
             <div class="form-group">
               <label for="pricePerLiter">Price per Liter *</label>
               <input
@@ -153,28 +130,24 @@
                 formControlName="price_per_liter"
                 class="form-input"
                 placeholder="Enter price per liter">
-              <div *ngIf="isPricePerLiterInvalid()" class="error-msg">
-                {{ getPricePerLiterErrorMessage() }}
+              <div *ngIf="isInvalid('price_per_liter')" class="error-msg">
+                {{ getErrorMessage('price_per_liter') }}
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Success Message -->
+        <!-- Success & Error Messages -->
         <div *ngIf="successMessage()" class="success-msg">
           {{ successMessage() }}
         </div>
-
-        <!-- Error Message -->
         <div *ngIf="errorMessage()" class="error-msg">
           {{ errorMessage() }}
         </div>
 
         <!-- Form Actions -->
         <div class="form-actions">
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">
-            Cancel
-          </button>
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
           <button type="submit" class="btn btn-primary" [disabled]="isSubmitting()">
             <span *ngIf="isSubmitting()">{{ isEditMode() ? 'Updating...' : 'Creating...' }}</span>
             <span *ngIf="!isSubmitting()">{{ isEditMode() ? 'Update Oil Type' : 'Create Oil Type' }}</span>
