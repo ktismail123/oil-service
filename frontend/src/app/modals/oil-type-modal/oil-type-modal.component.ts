@@ -83,6 +83,8 @@ export class OilTypeModalComponent {
   }
 
   onSubmit() {
+    console.log(this.oilTypeForm.value);
+    
     // Mark all controls as touched to show validation errors
     if (this.oilTypeForm.invalid) {
       Object.values(this.oilTypeForm.controls).forEach(control => {
