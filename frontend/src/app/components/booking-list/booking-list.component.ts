@@ -118,8 +118,6 @@ export class BookingListComponent implements OnInit {
 
   // Handle pagination events
   private handlePaginationEvent(paginationData: PaginationData) {
-    console.log('Pagination event:', paginationData);
-    
     this.currentPage = paginationData.pageIndex;
     this.pageSize = paginationData.pageSize;
     
@@ -129,7 +127,6 @@ export class BookingListComponent implements OnInit {
 
   // Handle search events
   private handleSearchEvent(searchData: SearchData) {
-    console.log('Search event:', searchData);
     
     this.currentSearchTerm = searchData.searchTerm;
     this.currentPage = 0; // Reset to first page when searching
@@ -150,8 +147,6 @@ export class BookingListComponent implements OnInit {
       service_type: this.selectedServiceType
     };
 
-    console.log('Loading bookings with params:', params);
-
     this.apiService
       .getBookings(params)
       .pipe(
@@ -162,7 +157,6 @@ export class BookingListComponent implements OnInit {
       )
       .subscribe({
         next: (response: BookingResponse) => {
-          console.log('API response:', response);
           
           if (response.success) {
             this.serviceData = response.data || [];
@@ -172,20 +166,12 @@ export class BookingListComponent implements OnInit {
             this.currentPage = (response.pagination?.current_page || 1) - 1; // Convert to 0-based
             this.pageSize = response.pagination?.per_page || 10;
             
-            console.log('Updated data:', {
-              records: this.serviceData.length,
-              total: this.totalRecords,
-              currentPage: this.currentPage,
-              pageSize: this.pageSize
-            });
           } else {
-            console.error('API returned error:', response);
             this.serviceData = [];
             this.totalRecords = 0;
           }
         },
         error: (error) => {
-          console.error('Error loading bookings:', error);
           this.serviceData = [];
           this.totalRecords = 0;
           
@@ -197,7 +183,6 @@ export class BookingListComponent implements OnInit {
 
   // Handle table action events (add, edit, view, delete)
   onTableAction(event: any) {
-    console.log('Table action:', event);
     
     switch (event.event) {
       case 'add':
@@ -217,7 +202,6 @@ export class BookingListComponent implements OnInit {
 
   // Handle add new record
   private handleAdd() {
-    console.log('Add new booking');
     // Navigate to add booking page or open modal
     this.router.navigate(['/oil-service'], {
       queryParams: { mode: 'add' }
@@ -226,7 +210,6 @@ export class BookingListComponent implements OnInit {
 
   // Handle edit record
   private handleEdit(data: ServiceData) {
-    console.log('Edit booking:', data);
     
     if (data?.service_type === 'oil_change') {
       this.router.navigate(['/oil-service'], {
@@ -243,7 +226,6 @@ export class BookingListComponent implements OnInit {
 
   // Handle view record
   private handleView(data: ServiceData) {
-    console.log('View booking:', data);
     
     // You can either navigate to a view page or open a modal
     if (data?.service_type === 'oil_change') {
@@ -261,7 +243,6 @@ export class BookingListComponent implements OnInit {
 
   // Handle delete record
   private handleDelete(data: ServiceData) {
-    console.log('Delete booking:', data);
     
     // Show confirmation dialog
     const confirmed = confirm(`Are you sure you want to delete booking #${data.id} for ${data.customer_name}?`);
@@ -294,7 +275,6 @@ export class BookingListComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('Error deleting booking:', error);
           alert('Error deleting booking: ' + (error.message || 'Please try again later'));
         }
       });

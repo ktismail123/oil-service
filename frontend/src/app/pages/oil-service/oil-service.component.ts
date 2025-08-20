@@ -171,16 +171,12 @@ export class OilServiceComponent implements OnInit {
 
       // ✅ Labor cost (included in subtotal)
       const laborCost = this.laborCostSignal();
-      console.log(laborCost, '---------');
 
       total += Number(laborCost);
 
-      console.log('Final subtotal (including labor):', total);
     } catch (error) {
-      console.error('Error calculating subtotal:', error);
       return 0;
     }
-    console.log(total, '+++++++++++');
 
     return total || 0;
   }
@@ -218,13 +214,11 @@ export class OilServiceComponent implements OnInit {
     const nav = this.router.getCurrentNavigation();
     if (nav?.extras.state?.['item']) {
       this.editData = nav.extras.state['item'];
-      console.log('Edit data:', this.editData);
     }
 
     // Get query param
     this.route.queryParams.subscribe((params) => {
       this.mode = params['mode'] || null;
-      console.log('Mode:', this.mode);
     });
   }
 
@@ -293,7 +287,6 @@ export class OilServiceComponent implements OnInit {
         debounceTime(500) // Add debounce to avoid too many API calls
       )
       .subscribe((plateNumber) => {
-        console.log('Plate number changed:', plateNumber);
         this.checkUserByPlate(plateNumber);
       });
   }
@@ -376,7 +369,6 @@ export class OilServiceComponent implements OnInit {
         (accessories || []).map((acc) => ({ ...acc, quantity: 0 }))
       );
     } catch (error) {
-      console.error('Data loading failed:', error);
     } finally {
       this.isLoading.set(false);
     }
@@ -479,7 +471,6 @@ export class OilServiceComponent implements OnInit {
       const models = await this.apiService.getModels(brandId).toPromise();
       this.models.set(models || []);
     } catch (error) {
-      console.error('Model loading failed:', error);
       this.models.set([]);
     }
   }
@@ -542,21 +533,12 @@ export class OilServiceComponent implements OnInit {
 
   // Updated validation for step 4 to handle package selections
   private validateStep4() {
-    console.log(this.oilForm.value);
 
     const oilTypeId = this.oilForm.get('oilTypeId')?.value;
     const totalPrice = this.oilForm.get('totalPrice')?.value;
     const quantity = this.oilForm.get('quantity')?.value;
     const requiredQuantity = Number(
       this.oilForm.get('requiredQuantity')?.value
-    );
-    console.log(
-      !!(
-        oilTypeId &&
-        totalPrice &&
-        totalPrice > 0 &&
-        quantity >= requiredQuantity
-      )
     );
 
     // Oil is valid if we have an oil type selected with valid price and quantity
@@ -676,7 +658,6 @@ export class OilServiceComponent implements OnInit {
         userData = JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Failed to parse userData from localStorage:', error);
       userData = null; // fallback
     }
 

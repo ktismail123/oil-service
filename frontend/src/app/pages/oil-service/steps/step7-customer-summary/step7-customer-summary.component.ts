@@ -207,7 +207,6 @@ printReceipt(): void {
     // 1. Serial/USB connection
     // 2. Network printer
     // 3. Bluetooth
-    console.log('ESC/POS Commands:', escPos);
 
     // Example: Send to network thermal printer
     this.sendToThermalPrinter(escPos);
