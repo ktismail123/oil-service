@@ -80,6 +80,7 @@
         *ngIf="currentStep() === 4"
         [oilForm]="oilForm"
         [oilTypes]="oilTypes()"
+        [selectedIntervell]="intervalForm.get('interval')?.value"
         (oilTypeChange)="onOilTypeChangeAndProceed()"
         (oilQuantityChange)="onOilQuantityChange()">
       </app-step4-oil-type>

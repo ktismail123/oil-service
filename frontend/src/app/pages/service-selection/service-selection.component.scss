@@ -92,100 +92,75 @@
       }
 }
 
-.modern-glass-header {
-    position: relative;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  }
+.modern-header {
+  background-color: #000000;
+  // border-bottom: 2px solid #f97316;
+  // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
 
-  .particle {
-    position: absolute;
-    border-radius: 50%;
-    animation: float 6s ease-in-out infinite;
-    pointer-events: none;
-  }
+.logo-container {
+  display: flex;
+  align-items: center;
+}
 
-  .particle-1 {
-    width: 4px;
-    height: 4px;
-    background: linear-gradient(45deg, #8b5cf6, #06b6d4);
-    top: 20%;
-    left: 10%;
-    animation-delay: 0s;
-  }
+.logo-background {
+  // background-color: #1a1a1a;
+  // border: 2px solid #f97316;
+  // border-radius: 12px;
+  // padding: 12px;
+}
 
-  .particle-2 {
-    width: 6px;
-    height: 6px;
-    background: linear-gradient(45deg, #06b6d4, #10b981);
-    top: 60%;
-    right: 20%;
-    animation-delay: 2s;
-  }
+.brand-title {
+  margin: 0;
+}
 
-  .particle-3 {
-    width: 3px;
-    height: 3px;
-    background: linear-gradient(45deg, #8b5cf6, #ec4899);
-    top: 40%;
-    left: 70%;
-    animation-delay: 4s;
-  }
+.brand-subtitle {
+  margin: 0;
+  margin-top: 4px;
+}
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    33% { transform: translateY(-10px) rotate(120deg); }
-    66% { transform: translateY(5px) rotate(240deg); }
-  }
+.clock-section {
+  display: block;
+}
 
-  .pulse-dot {
-    animation: pulse 2s infinite;
-  }
+.clock-container {
+  // background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 16px;
+}
 
-  @keyframes pulse {
-    0%, 100% { 
-      opacity: 1; 
-      transform: scale(1);
-    }
-    50% { 
-      opacity: 0.5; 
-      transform: scale(1.2);
-    }
-  }
+.mobile-clock-container {
+  background-color: #1a1a1a;
+  border: 2px solid #f97316;
+  border-radius: 8px;
+  padding: 12px;
+}
 
-  .logo-container:hover .logo-glow {
-    animation: logoGlow 2s ease-in-out infinite alternate;
-  }
+.logout-btn {
+  background-color: #f97316;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
 
-  @keyframes logoGlow {
-    0% { transform: scale(1) rotate(0deg); opacity: 0.6; }
-    100% { transform: scale(1.1) rotate(5deg); opacity: 0.8; }
-  }
+.logout-btn:hover {
+  background-color: #ea580c;
+}
 
-  /* Responsive enhancements */
-  @media (max-width: 640px) {
-    .modern-glass-header {
-      backdrop-filter: blur(15px);
-    }
-    
-    .particle {
-      display: none;
-    }
+/* Responsive */
+@media (max-width: 640px) {
+  .clock-section {
+    display: none;
   }
+  
+  .mobile-clock {
+    display: block;
+  }
+}
 
-  /* Enhanced hover effects */
-  .group:hover .brand-title span {
-    filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.3));
+@media (min-width: 641px) {
+  .mobile-clock {
+    display: none;
   }
-
-  .logout-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(239, 68, 68, 0.2);
-  }
-
-  .clock-container:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 16px rgba(139, 92, 246, 0.1);
-  }
+}
 

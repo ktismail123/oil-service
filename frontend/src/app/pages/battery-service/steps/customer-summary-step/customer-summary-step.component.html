@@ -257,7 +257,8 @@
         </div>
         <div class="text-right">
           <p class="font-medium">
-             {{ formatPrice(summary().subtotal - laborCost() || 0) | currency : 'AED '}}
+             {{ formatPrice(summary().subtotal || 0) | currency : 'AED '}}
+             <!-- {{ formatPrice(summary().subtotal - laborCost() || 0) | currency : 'AED '}} -->
           </p>
         </div>
       </div>

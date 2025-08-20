@@ -62,24 +62,24 @@ export class Step7CustomerSummaryComponent {
     this.formattedDate = today.toISOString().split('T')[0];
   }
 
-  printReceipt(): void {
-    const receiptContent = document.getElementById('receipt-content');
+printReceipt(): void {
+  const receiptContent = document.getElementById('receipt-content');
 
-    if (receiptContent) {
-      const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
+  if (receiptContent) {
+    const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
 
-      // Remove customer details form section
-      const customerDetailsSection = clonedContent.querySelector(
-        '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
-      );
-      if (customerDetailsSection) {
-        customerDetailsSection.remove();
-      }
+    // Remove customer details form section (if present)
+    const customerDetailsSection = clonedContent.querySelector(
+      '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
+    );
+    if (customerDetailsSection) {
+      customerDetailsSection.remove();
+    }
 
-      const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
+    const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
 
-      if (printWindow) {
-        printWindow.document.write(`
+    if (printWindow) {
+      printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -94,17 +94,24 @@ export class Step7CustomerSummaryComponent {
               margin: 0 auto;
               padding: 0;
               font-family: 'Courier New', monospace;
-              font-size: 12px;
-              line-height: 1.4;
+              font-size: 13px;   /* slightly larger for thermal printer */
+              line-height: 1.5;
               background: white;
             }
 
             /* FORCE ALL TEXT AND BORDERS TO BLACK */
-            * {
+            body, body * {
               color: #000 !important;
               border-color: #000 !important;
+              background: #fff !important;
+              font-weight: normal !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
+            }
+
+            h1, h2, h3, h4, h5, h6, strong, 
+            .font-medium, .font-semibold, .font-bold {
+              font-weight: bold !important;
             }
 
             .print-wrapper {
@@ -121,31 +128,27 @@ export class Step7CustomerSummaryComponent {
             }
 
             h1 {
-              font-size: 18px;
-              font-weight: bold;
+              font-size: 18px !important;
+              font-weight: bold !important;
               text-align: center;
               margin-bottom: 4px;
             }
 
             h3 {
-              font-size: 14px;
-              font-weight: bold;
+              font-size: 14px !important;
+              font-weight: bold !important;
               text-align: center;
               margin: 12px 0 8px 0;
             }
 
-            .text-center { text-align: center; }
-            .text-xs { font-size: 10px; }
-            .text-sm { font-size: 11px; }
-            .text-lg { font-size: 14px; font-weight: bold; }
+            .text-center { text-align: center !important; }
+            .text-xs { font-size: 11px !important; }
+            .text-sm { font-size: 12px !important; }
+            .text-lg { font-size: 15px !important; font-weight: bold !important; }
 
-            .font-medium { font-weight: 500; }
-            .font-semibold { font-weight: 600; }
-            .font-bold { font-weight: bold; }
-
-            .border-b-2 { border-bottom: 2px dashed #000; }
-            .border-b { border-bottom: 1px dashed #000; }
-            .border-t-2 { border-top: 2px dashed #000; }
+            .border-b-2 { border-bottom: 2px dashed #000 !important; }
+            .border-b { border-bottom: 1px dashed #000 !important; }
+            .border-t-2 { border-top: 2px dashed #000 !important; }
 
             .mb-1 { margin-bottom: 4px; }
             .mb-2 { margin-bottom: 8px; }
@@ -160,7 +163,7 @@ export class Step7CustomerSummaryComponent {
             .justify-between { justify-content: space-between; }
             .items-center { align-items: center; }
             .flex-1 { flex: 1; }
-            .text-right { text-align: right; }
+            .text-right { text-align: right !important; }
 
             .space-y-1 > * + * { margin-top: 4px; }
             .space-y-2 > * + * { margin-top: 8px; }
@@ -183,16 +186,17 @@ export class Step7CustomerSummaryComponent {
         </html>
       `);
 
-        printWindow.document.close();
+      printWindow.document.close();
 
-        printWindow.onload = function () {
-          printWindow.focus();
-          printWindow.print();
-          printWindow.close();
-        };
-      }
+      printWindow.onload = function () {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      };
     }
   }
+}
+
 
   // Alternative function for ESC/POS thermal printers
   printThermalReceipt(): void {

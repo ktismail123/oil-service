@@ -1,162 +1,91 @@
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
   <!-- Header -->
   <!-- header.component.html -->
-  <header class="modern-glass-header relative overflow-hidden">
-    <!-- Dynamic Background with Gradient Mesh -->
-    <div
-      class="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-cyan-500/10 to-emerald-400/20"
-    ></div>
-    <div
-      class="absolute inset-0 backdrop-blur-2xl bg-white/10 border-b border-white/30"
-    ></div>
-
-    <!-- Animated Background Particles -->
-    <div class="absolute inset-0 opacity-30">
-      <div class="particle particle-1"></div>
-      <div class="particle particle-2"></div>
-      <div class="particle particle-3"></div>
-    </div>
-
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-18 sm:h-22">
-        <!-- Enhanced Logo and Brand Section -->
-        <div class="flex items-center space-x-5 group">
-          <!-- Logo Container with Glow Effect -->
-          <!-- <div class="logo-container relative">
-            <div
-              class="logo-glow absolute inset-0 bg-gradient-to-r from-violet-500 to-cyan-500 rounded-2xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-500"
-            ></div>
-            <div
-              class="logo-background relative bg-white/20 backdrop-blur-sm rounded-2xl p-3 border border-white/30 group-hover:border-white/50 transition-all duration-300"
-            >
-
-            </div>
-          </div> -->
-
-          <!-- Brand Info with Enhanced Typography -->
-          <div class="brand-info">
-            <h1 class="brand-title relative">
-              <span
-                class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-purple-600 to-cyan-500 text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight group-hover:from-cyan-400 group-hover:via-violet-500 group-hover:to-purple-600 transition-all duration-700"
-              >
-                Tech Lube
-              </span>
-              <div
-                class="absolute -inset-1 bg-gradient-to-r from-violet-600/20 to-cyan-500/20 blur-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              ></div>
-            </h1>
-            <p
-              class="brand-subtitle text-sm text-slate-700/80 hidden sm:block font-medium tracking-wide group-hover:text-slate-600 transition-colors duration-300"
-            >
-              Professional Auto Services
-            </p>
+<!-- Angular Template -->
+<header class="modern-header">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-18 sm:h-22">
+      <!-- Logo and Brand Section -->
+      <div class="flex items-center space-x-5">
+        <!-- Logo Container -->
+        <div class="logo-container">
+          <div class="logo-background">
+            <!-- Engine Icon -->
+            <!-- <svg class="w-8 h-8 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg> -->
           </div>
         </div>
 
-        <!-- Enhanced Right Section -->
-        <div class="flex items-center space-x-6 sm:space-x-8">
-          <!-- Premium Digital Clock Section -->
-          <div class="clock-section hidden md:block">
-            <div
-              class="clock-container relative bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/25 hover:bg-white/20 hover:border-white/35 transition-all duration-300 group"
-            >
-              <div class="flex flex-col items-end space-y-1">
-                <!-- Time Display -->
-                <div class="digital-clock relative">
-                  <span
-                    class="text-2xl font-bold text-slate-800 tracking-wider font-mono group-hover:text-violet-700 transition-colors duration-300"
-                  >
-                    {{ currentTime }}
-                  </span>
-                  <div
-                    class="absolute -inset-1 bg-gradient-to-r from-violet-500/10 to-cyan-500/10 blur-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  ></div>
-                </div>
-
-                <!-- Date Display -->
-                <div
-                  class="text-xs text-slate-600/80 font-medium uppercase tracking-wider group-hover:text-slate-500 transition-colors duration-300"
-                >
-                  {{ currentDate }}
-                </div>
-
-                <!-- Status Indicator -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Enhanced Mobile Clock -->
-          <div class="mobile-clock md:hidden">
-            <div
-              class="mobile-clock-container bg-white/15 backdrop-blur-md rounded-xl p-3 border border-white/25"
-            >
-              <div class="flex flex-col items-center space-y-2">
-                <div
-                  class="digital-clock text-lg font-bold text-slate-800 font-mono"
-                >
-                  {{ currentTime.substring(0, 5) }}
-                </div>
-                <div class="flex items-center space-x-2">
-                  <div
-                    class="w-1.5 h-1.5 bg-emerald-400 rounded-full pulse-dot"
-                  ></div>
-                  <span class="text-xs text-slate-600/70 font-medium">ON</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Premium Logout Button -->
-          <button
-            (click)="logout()"
-            class="logout-btn group relative overflow-hidden"
-          >
-            <!-- Button Background with Gradient -->
-            <div
-              class="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            ></div>
-            <div
-              class="absolute inset-0 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl group-hover:border-red-300/50 transition-all duration-300"
-            ></div>
-
-            <!-- Button Content -->
-            <div
-              class="relative flex items-center space-x-3 px-5 py-3 sm:px-6 sm:py-4"
-            >
-              <!-- Logout Icon with Animation -->
-              <div class="icon-container relative">
-                <svg
-                  class="w-5 h-5 text-red-600 group-hover:text-white transition-all duration-300 group-hover:rotate-12 group-hover:scale-110"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2.5"
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-              </div>
-
-              <!-- Button Text -->
-              <span
-                class="hidden sm:inline text-sm font-semibold text-red-600 group-hover:text-white transition-all duration-300 tracking-wide"
-              >
-                Logout
-              </span>
-            </div>
-
-            <!-- Hover Effect Overlay -->
-            <div
-              class="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-gradient-to-r from-white to-transparent rounded-2xl"
-            ></div>
-          </button>
+        <!-- Brand Info -->
+        <div class="brand-info">
+          <h1 class="brand-title">
+            <span class="text-orange-500 text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
+              Tech Lube
+            </span>
+          </h1>
+          <p class="brand-subtitle text-sm text-orange-400 hidden sm:block font-medium tracking-wide">
+            Professional Auto Services
+          </p>
         </div>
       </div>
+
+      <!-- Right Section -->
+      <div class="flex items-center space-x-6 sm:space-x-8">
+        <!-- Digital Clock Section -->
+        <div class="clock-section hidden md:block">
+          <div class="clock-container">
+            <div class="flex flex-col items-end space-y-1">
+              <!-- Time Display -->
+              <div class="digital-clock">
+                <span class="text-2xl font-bold text-orange-500 tracking-wider font-mono">
+                  {{ currentTime }}
+                </span>
+              </div>
+
+              <!-- Date Display -->
+              <div class="text-xs text-orange-400 font-medium uppercase tracking-wider">
+                {{ currentDate }}
+              </div>
+
+              <!-- Status Indicator -->
+           
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Clock -->
+        <div class="mobile-clock md:hidden">
+          <div class="mobile-clock-container">
+            <div class="flex flex-col items-center space-y-2">
+              <div class="digital-clock text-lg font-bold text-orange-500 font-mono">
+                {{ currentTime.substring(0, 5) }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logout Button -->
+        <button (click)="logout()" class="logout-btn">
+          <!-- Button Content -->
+          <div class="flex items-center space-x-3 px-5 py-3 sm:px-6 sm:py-4">
+            <!-- Logout Icon -->
+            <div class="icon-container">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+            </div>
+
+            <!-- Button Text -->
+            <span class="hidden sm:inline text-sm font-semibold text-white tracking-wide">
+              Logout
+            </span>
+          </div>
+        </button>
+      </div>
     </div>
-  </header>
+  </div>
+</header>
 
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
