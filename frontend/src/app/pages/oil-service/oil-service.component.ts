@@ -264,10 +264,10 @@ export class OilServiceComponent implements OnInit {
     });
 
     this.customerForm = this.fb.group({
-      name: ['', Validators.required],
-      mobile: ['', [Validators.required, Validators.pattern(/^\d{10,15}$/)]],
+      name: [''],
+      mobile: ['', [Validators.pattern(/^\d{10,15}$/)]],
       plateNumber: ['', Validators.required],
-      laborCost: [0],
+      laborCost: [0, Validators.required],
       discount: [0],
       memo: [''],
     });

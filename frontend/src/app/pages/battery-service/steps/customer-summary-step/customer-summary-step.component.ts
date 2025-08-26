@@ -77,17 +77,15 @@ export class CustomerSummaryStepComponent {
 
   private initializeForm() {
     this.customerForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
+      name: [''],
       mobile: [
         '',
         [
-          Validators.required,
           Validators.pattern(/^\d{10,15}$/),
-          Validators.minLength(10),
         ],
       ],
       plateNumber: ['', [Validators.required, Validators.minLength(1)]],
-      laborCost: [''],
+      laborCost: ['', Validators.required],
       discount: [''],
       memo: [''],
     });

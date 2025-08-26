@@ -79,18 +79,16 @@ export class OtherServiceSummaryComponent implements OnInit{
 
   private initializeForm() {
     this.customerForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
+      name: [''],
       mobile: [
         '',
         [
-          Validators.required,
           Validators.pattern(/^\d{10,15}$/),
-          Validators.minLength(10),
         ],
       ],
       plateNumber: ['', [Validators.required, Validators.minLength(1)]],
       laborCost: ['', [Validators.required, Validators.min(0)]],
-      discount: ['', [Validators.min(0), Validators.max(10000)]],
+      discount: [''],
       memo: ['', [Validators.maxLength(500)]],
     });
     this.setupPlateNumberCheck();
