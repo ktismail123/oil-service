@@ -23,6 +23,7 @@ import { SearchPipe } from '../../../../pipes/search.pipe';
 export interface OilPackageSelection {
   oilTypeId: number;
   package4L: boolean;
+  package5L: boolean; // NEW: 5L support
   package1L: boolean;
   bulkQuantity: number;
   totalQuantity: number;
@@ -32,6 +33,7 @@ export interface OilPackageSelection {
 // Extended interface for internal use with quantities
 interface ExtendedOilPackageSelection extends OilPackageSelection {
   package4L_count: number; // Internal count for 4L packages
+  package5L_count: number; // NEW: Internal count for 5L packages
   package1L_count: number; // Internal count for 1L packages
 }
 
@@ -74,6 +76,7 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
   private isInitialized = false;
 
   errorMessage = signal('');
+  selectedViscosity = ''; // Property for viscosity filter
 
   ngOnInit(): void {
     this.populateExistingData();
@@ -82,7 +85,6 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Re-populate data when oilForm or oilTypes change
     if (this.isInitialized && (changes['oilForm'] || changes['oilTypes'])) {
       this.populateExistingData();
       this.updateViscosityOptions();
@@ -103,34 +105,21 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
   private populateExistingData(): void {
     if (!this.oilForm) return;
 
-    // Get existing form values
     const existingOilTypeId = this.oilForm.get('oilTypeId')?.value;
-    const existingRequiredQuantity =
-      this.oilForm.get('requiredQuantity')?.value;
-    const existingOilQuantityDetails =
-      this.oilForm.get('oilQuantityDetails')?.value;
+    const existingRequiredQuantity = this.oilForm.get('requiredQuantity')?.value;
+    const existingOilQuantityDetails = this.oilForm.get('oilQuantityDetails')?.value;
 
-
-    // Populate required quantity
     if (existingRequiredQuantity) {
-      this.reqOilQnyForm
-        .get('requiredOilQuantity')
-        ?.setValue(existingRequiredQuantity);
+      this.reqOilQnyForm.get('requiredOilQuantity')?.setValue(existingRequiredQuantity);
       this.requiredQuantity.set(existingRequiredQuantity);
     }
 
-    // Populate selected oil type
     if (existingOilTypeId) {
       this.selectedOilId.set(existingOilTypeId);
 
-      // If we have detailed package selection data, restore it
       if (existingOilQuantityDetails) {
-        this.populatePackageSelection(
-          existingOilTypeId,
-          existingOilQuantityDetails
-        );
+        this.populatePackageSelection(existingOilTypeId, existingOilQuantityDetails);
       } else {
-        // If no detailed data, try to reverse-engineer from basic form values
         this.reconstructPackageSelection(existingOilTypeId);
       }
     }
@@ -143,18 +132,28 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     const extendedSelection: ExtendedOilPackageSelection = {
       oilTypeId: oilTypeId,
       package4L: details.package4L || false,
+      package5L: details.package5L || false, // NEW: 5L support
       package1L: details.package1L || false,
       bulkQuantity: details.bulkQuantity || 0,
       totalQuantity: details.totalQuantity || 0,
       totalPrice: details.totalPrice || 0,
       package4L_count: details.package4L_count || 0,
+      package5L_count: details.package5L_count || 0, // NEW: 5L count
       package1L_count: details.package1L_count || 0,
     };
 
-    // If we don't have the count data, try to calculate it from boolean flags and quantities
+    // Calculate missing counts if needed
+    if (!details.package5L_count && details.package5L) {
+      extendedSelection.package5L_count = this.calculatePackageCount(
+        details.totalQuantity - details.bulkQuantity,
+        oil,
+        '5L'
+      );
+    }
+
     if (!details.package4L_count && details.package4L) {
       extendedSelection.package4L_count = this.calculatePackageCount(
-        details.totalQuantity - details.bulkQuantity,
+        details.totalQuantity - details.bulkQuantity - extendedSelection.package5L_count * 5,
         oil,
         '4L'
       );
@@ -162,9 +161,7 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
 
     if (!details.package1L_count && details.package1L) {
       extendedSelection.package1L_count = this.calculatePackageCount(
-        details.totalQuantity -
-          details.bulkQuantity -
-          extendedSelection.package4L_count * 4,
+        details.totalQuantity - details.bulkQuantity - extendedSelection.package5L_count * 5 - extendedSelection.package4L_count * 4,
         oil,
         '1L'
       );
@@ -173,7 +170,6 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     const newSelections = new Map(this.packageSelections());
     newSelections.set(oilTypeId, extendedSelection);
     this.packageSelections.set(newSelections);
-
   }
 
   private reconstructPackageSelection(oilTypeId: number): void {
@@ -183,25 +179,21 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     const totalQuantity = this.oilForm.get('quantity')?.value || 0;
     const totalPrice = this.oilForm.get('totalPrice')?.value || 0;
 
-    if (totalQuantity === 0) {
-      // No existing data to reconstruct
-      return;
-    }
+    if (totalQuantity === 0) return;
 
-    // Try to reverse-engineer the package selection based on price and quantity
     const extendedSelection: ExtendedOilPackageSelection = {
       oilTypeId: oilTypeId,
       package4L: false,
+      package5L: false, // NEW: 5L support
       package1L: false,
       bulkQuantity: 0,
       totalQuantity: totalQuantity,
       totalPrice: totalPrice,
       package4L_count: 0,
+      package5L_count: 0, // NEW: 5L count
       package1L_count: 0,
     };
 
-    // Simple reconstruction logic - this could be made more sophisticated
-    // For now, assume it's all bulk if bulk is available, otherwise try packages
     if (oil.bulk_available && oil.price_per_liter > 0) {
       const bulkCost = totalQuantity * oil.price_per_liter;
       if (Math.abs(bulkCost - totalPrice) < 0.01) {
@@ -209,20 +201,13 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
 
-    // If not bulk, try to figure out package combination
     if (extendedSelection.bulkQuantity === 0) {
-      this.reconstructPackageCombination(
-        extendedSelection,
-        oil,
-        totalQuantity,
-        totalPrice
-      );
+      this.reconstructPackageCombination(extendedSelection, oil, totalQuantity, totalPrice);
     }
 
     const newSelections = new Map(this.packageSelections());
     newSelections.set(oilTypeId, extendedSelection);
     this.packageSelections.set(newSelections);
-
   }
 
   private reconstructPackageCombination(
@@ -231,36 +216,30 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     totalQuantity: number,
     totalPrice: number
   ): void {
-    // Try different combinations to match the total quantity and price
-    if (oil.package_4l_available && oil.package_1l_available) {
-      for (let pkg4L = Math.floor(totalQuantity / 4); pkg4L >= 0; pkg4L--) {
-        const remaining = totalQuantity - pkg4L * 4;
-        if (remaining >= 0 && oil.package_1l_available) {
-          const pkg1L = Math.ceil(remaining);
-          const calculatedPrice = pkg4L * oil.price_4l + pkg1L * oil.price_1l;
+    // Try different combinations including 5L packages
+    if (oil.package_5l_available || oil.package_4l_available || oil.package_1l_available) {
+      // Try combinations with 5L first (most efficient)
+      for (let pkg5L = oil.package_5l_available ? Math.floor(totalQuantity / 5) : 0; pkg5L >= 0; pkg5L--) {
+        const remaining5L = totalQuantity - pkg5L * 5;
+        
+        for (let pkg4L = oil.package_4l_available ? Math.floor(remaining5L / 4) : 0; pkg4L >= 0; pkg4L--) {
+          const remaining4L = remaining5L - pkg4L * 4;
+          
+          if (remaining4L >= 0 && oil.package_1l_available) {
+            const pkg1L = Math.ceil(remaining4L);
+            const calculatedPrice = pkg5L * (oil.price_5l || 0) + pkg4L * oil.price_4l + pkg1L * oil.price_1l;
 
-          if (Math.abs(calculatedPrice - totalPrice) < 0.01) {
-            selection.package4L_count = pkg4L;
-            selection.package1L_count = pkg1L;
-            selection.package4L = pkg4L > 0;
-            selection.package1L = pkg1L > 0;
-            break;
+            if (Math.abs(calculatedPrice - totalPrice) < 0.01) {
+              selection.package5L_count = pkg5L;
+              selection.package4L_count = pkg4L;
+              selection.package1L_count = pkg1L;
+              selection.package5L = pkg5L > 0;
+              selection.package4L = pkg4L > 0;
+              selection.package1L = pkg1L > 0;
+              return;
+            }
           }
         }
-      }
-    } else if (oil.package_4l_available) {
-      const pkg4L = Math.ceil(totalQuantity / 4);
-      const calculatedPrice = pkg4L * oil.price_4l;
-      if (Math.abs(calculatedPrice - totalPrice) < 0.01) {
-        selection.package4L_count = pkg4L;
-        selection.package4L = true;
-      }
-    } else if (oil.package_1l_available) {
-      const pkg1L = Math.ceil(totalQuantity);
-      const calculatedPrice = pkg1L * oil.price_1l;
-      if (Math.abs(calculatedPrice - totalPrice) < 0.01) {
-        selection.package1L_count = pkg1L;
-        selection.package1L = true;
       }
     }
   }
@@ -268,9 +247,11 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
   private calculatePackageCount(
     remainingQuantity: number,
     oil: OilType,
-    packageType: '4L' | '1L'
+    packageType: '5L' | '4L' | '1L'
   ): number {
-    if (packageType === '4L' && oil.package_4l_available) {
+    if (packageType === '5L' && oil.package_5l_available) {
+      return Math.floor(remainingQuantity / 5);
+    } else if (packageType === '4L' && oil.package_4l_available) {
       return Math.floor(remainingQuantity / 4);
     } else if (packageType === '1L' && oil.package_1l_available) {
       return Math.ceil(remainingQuantity);
@@ -285,11 +266,13 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     const defaultSelection: ExtendedOilPackageSelection = {
       oilTypeId: oilId,
       package4L: false,
+      package5L: false, // NEW: 5L support
       package1L: false,
       bulkQuantity: 0,
       totalQuantity: 0,
       totalPrice: 0,
       package4L_count: 0,
+      package5L_count: 0, // NEW: 5L count
       package1L_count: 0,
     };
 
@@ -310,6 +293,23 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     this.oilForm.get('oilTypeId')?.setValue(oilId);
     this.updateFormValues();
     this.oilTypeChange.emit();
+  }
+
+  // NEW: 5L Package Methods
+  increase5LPackage(oilId: number) {
+    const selection = this.getExtendedSelection(oilId);
+    selection.package5L_count += 1;
+    selection.package5L = selection.package5L_count > 0;
+    this.updatePackageSelection(oilId, selection);
+  }
+
+  decrease5LPackage(oilId: number) {
+    const selection = this.getExtendedSelection(oilId);
+    if (selection.package5L_count > 0) {
+      selection.package5L_count -= 1;
+      selection.package5L = selection.package5L_count > 0;
+      this.updatePackageSelection(oilId, selection);
+    }
   }
 
   increase4LPackage(oilId: number) {
@@ -366,6 +366,12 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     let totalQuantity = 0;
     let totalPrice = 0;
 
+    // NEW: Add 5L package calculations
+    if (selection.package5L_count > 0) {
+      totalQuantity += selection.package5L_count * 5;
+      totalPrice += selection.package5L_count * (oil.price_5l || 0);
+    }
+
     if (selection.package4L_count > 0) {
       totalQuantity += selection.package4L_count * 4;
       totalPrice += selection.package4L_count * oil.price_4l;
@@ -413,28 +419,33 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
 
     const suggestions: string[] = [];
 
-    if (oil.package_4l_available && oil.package_1l_available) {
-      const fourLPackages = Math.floor(required / 4);
-      const remainder = required % 4;
-
-      if (fourLPackages > 0) {
-        suggestions.push(
-          `${fourLPackages}x 4L package${fourLPackages > 1 ? 's' : ''}`
-        );
+    // NEW: Include 5L in smart suggestions (prioritize 5L for efficiency)
+    if (oil.package_5l_available || oil.package_4l_available || oil.package_1l_available) {
+      let remaining = required;
+      
+      // Try 5L packages first
+      if (oil.package_5l_available) {
+        const fiveLPackages = Math.floor(remaining / 5);
+        if (fiveLPackages > 0) {
+          suggestions.push(`${fiveLPackages}x 5L package${fiveLPackages > 1 ? 's' : ''}`);
+          remaining -= fiveLPackages * 5;
+        }
       }
 
-      if (remainder > 0) {
-        const oneLPackages = Math.ceil(remainder);
-        suggestions.push(
-          `${oneLPackages}x 1L package${oneLPackages > 1 ? 's' : ''}`
-        );
+      // Then 4L packages
+      if (oil.package_4l_available && remaining > 0) {
+        const fourLPackages = Math.floor(remaining / 4);
+        if (fourLPackages > 0) {
+          suggestions.push(`${fourLPackages}x 4L package${fourLPackages > 1 ? 's' : ''}`);
+          remaining -= fourLPackages * 4;
+        }
       }
-    } else if (oil.package_4l_available) {
-      const packages = Math.ceil(required / 4);
-      suggestions.push(`${packages}x 4L package${packages > 1 ? 's' : ''}`);
-    } else if (oil.package_1l_available) {
-      const packages = Math.ceil(required);
-      suggestions.push(`${packages}x 1L package${packages > 1 ? 's' : ''}`);
+
+      // Finally 1L packages for remainder
+      if (oil.package_1l_available && remaining > 0) {
+        const oneLPackages = Math.ceil(remaining);
+        suggestions.push(`${oneLPackages}x 1L package${oneLPackages > 1 ? 's' : ''}`);
+      }
     }
 
     if (oil.bulk_available && oil.price_per_liter > 0) {
@@ -454,27 +465,30 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     const selection = this.getExtendedSelection(oil.id);
 
     // Reset current selection
+    selection.package5L_count = 0; // NEW: Reset 5L count
     selection.package4L_count = 0;
     selection.package1L_count = 0;
     selection.bulkQuantity = 0;
 
-    if (oil.package_4l_available && oil.package_1l_available) {
-      const fourLPackages = Math.floor(required / 4);
-      const remainder = required % 4;
+    let remaining = required;
 
-      selection.package4L_count = fourLPackages;
-      if (remainder > 0) {
-        selection.package1L_count = Math.ceil(remainder);
-      }
-    } else if (oil.package_4l_available) {
-      selection.package4L_count = Math.ceil(required / 4);
-    } else if (oil.package_1l_available) {
-      selection.package1L_count = Math.ceil(required);
-    } else if (oil.bulk_available && oil.price_per_liter > 0) {
-      selection.bulkQuantity = required;
+    // NEW: Smart suggestion logic with 5L priority
+    if (oil.package_5l_available) {
+      selection.package5L_count = Math.floor(remaining / 5);
+      remaining -= selection.package5L_count * 5;
+    }
+
+    if (oil.package_4l_available && remaining > 0) {
+      selection.package4L_count = Math.floor(remaining / 4);
+      remaining -= selection.package4L_count * 4;
+    }
+
+    if (oil.package_1l_available && remaining > 0) {
+      selection.package1L_count = Math.ceil(remaining);
     }
 
     // Update boolean flags
+    selection.package5L = selection.package5L_count > 0; // NEW: 5L flag
     selection.package4L = selection.package4L_count > 0;
     selection.package1L = selection.package1L_count > 0;
 
@@ -500,6 +514,11 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     const selection = this.getExtendedSelection(oilId);
     const parts: string[] = [];
 
+    // NEW: Include 5L in breakdown
+    if (selection.package5L_count > 0) {
+      parts.push(`${selection.package5L_count}x 5L`);
+    }
+
     if (selection.package4L_count > 0) {
       parts.push(`${selection.package4L_count}x 4L`);
     }
@@ -520,6 +539,7 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     return {
       oilTypeId: extended.oilTypeId,
       package4L: extended.package4L,
+      package5L: extended.package5L, // NEW: Include 5L in return
       package1L: extended.package1L,
       bulkQuantity: extended.bulkQuantity,
       totalQuantity: extended.totalQuantity,
@@ -532,13 +552,11 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   proceedToNextStep5() {
-
     const quantity = this.oilForm.get('quantity')?.value;
     const requiredQuantity = this.oilForm.get('requiredQuantity')?.value;
 
     if (quantity < requiredQuantity) {
       this.errorMessage.set('Please select a valid quantity');
-
       setTimeout(() => {
         this.errorMessage.set('');
       }, 2000);
@@ -551,16 +569,11 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  // Add these properties to your component class:
-  selectedViscosity = ''; // New property for viscosity filter
-
-  // Add this method to your component class:
   getFilteredOils() {
     let filteredOils = this.oilTypes;
 
-    // Apply search filter
     if (this.searchTerm) {
-      const searchKeys = this.searchKeys || ['brand', 'grade', 'name']; // Use your existing searchKeys
+      const searchKeys = this.searchKeys || ['brand', 'grade', 'name'];
       filteredOils = filteredOils.filter((oil: any) =>
         searchKeys.some((key) =>
           oil[key]?.toLowerCase().includes(this.searchTerm.toLowerCase())
@@ -568,7 +581,6 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
       );
     }
 
-    // Apply viscosity filter
     if (this.selectedViscosity) {
       filteredOils = filteredOils.filter((oil) =>
         oil.grade?.includes(this.selectedViscosity)
@@ -578,7 +590,6 @@ export class Step4OilTypeComponent implements OnInit, OnChanges, OnDestroy {
     return filteredOils;
   }
 
-  // Add this method to clear all filters:
   clearAllFilters() {
     this.searchTerm = '';
     this.selectedViscosity = '';

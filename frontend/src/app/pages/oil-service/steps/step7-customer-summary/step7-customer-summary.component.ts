@@ -1,12 +1,9 @@
 import { environment } from './../../../../../environments/environment.prod';
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
-import {
-  FormGroup,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Accessory, OilFilter, OilType } from '../../../../models';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
-import { CurrencyPipe, DatePipe, NgIf } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -17,6 +14,7 @@ import { ActivatedRoute } from '@angular/router';
     NgIf,
     CurrencyPipe,
     DatePipe,
+    NgFor,
   ],
   templateUrl: './step7-customer-summary.component.html',
   styleUrl: './step7-customer-summary.component.scss',
@@ -62,24 +60,24 @@ export class Step7CustomerSummaryComponent {
     this.formattedDate = today.toISOString().split('T')[0];
   }
 
-printReceipt(): void {
-  const receiptContent = document.getElementById('receipt-content');
+  printReceipt(): void {
+    const receiptContent = document.getElementById('receipt-content');
 
-  if (receiptContent) {
-    const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
+    if (receiptContent) {
+      const clonedContent = receiptContent.cloneNode(true) as HTMLElement;
 
-    // Remove customer details form section (if present)
-    const customerDetailsSection = clonedContent.querySelector(
-      '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
-    );
-    if (customerDetailsSection) {
-      customerDetailsSection.remove();
-    }
+      // Remove customer details form section (if present)
+      const customerDetailsSection = clonedContent.querySelector(
+        '.border-b.border-dashed.border-gray-300.pb-4.mb-4.print\\:hidden'
+      );
+      if (customerDetailsSection) {
+        customerDetailsSection.remove();
+      }
 
-    const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
+      const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
 
-    if (printWindow) {
-      printWindow.document.write(`
+      if (printWindow) {
+        printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -186,17 +184,16 @@ printReceipt(): void {
         </html>
       `);
 
-      printWindow.document.close();
+        printWindow.document.close();
 
-      printWindow.onload = function () {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-      };
+        printWindow.onload = function () {
+          printWindow.focus();
+          printWindow.print();
+          printWindow.close();
+        };
+      }
     }
   }
-}
-
 
   // Alternative function for ESC/POS thermal printers
   printThermalReceipt(): void {
@@ -306,6 +303,17 @@ printReceipt(): void {
     // this.sendViaWebSocket(commands);
     // Option 3: Send via HTTP to printer's IP
     // this.sendViaHTTP(commands);
+  }
+
+  getTotalAccessoryAmount(): number {
+    if (!this.selectedAccessories || this.selectedAccessories.length === 0) {
+      return 0;
+    }
+
+    return this.selectedAccessories.reduce((total, item) => {
+      const qty = item.quantity ?? 1; // default 1 if not provided
+      return total + item.price * qty;
+    }, 0);
   }
 
   onSubmitBooking() {

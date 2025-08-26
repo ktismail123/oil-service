@@ -1,42 +1,44 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, output, signal, SimpleChanges } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Accessory, BatteryType } from '../../../../models';
+import { Accessory, OilFilter } from '../../../../models';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
 import { ActivatedRoute } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
 import { debounceTime, distinctUntilChanged, filter, take } from 'rxjs';
 import { ApiService } from '../../../../services/api.service';
+
 export interface CustomerData {
   name: string;
   mobile: string;
   plateNumber: string;
   laborCost: string;
   memo?: string;
-  discount: string;
+  discount?: number;
 }
 
-export interface ServiceSummary {
-  capacityLabel: string;
-  batteryType: BatteryType | null;
+export interface OtherServiceSummary {
+  oilFilter: OilFilter | null;
   accessories: Accessory[];
-  subtotal: number;
-  vatAmount: number;
-  totalAmount: number;
+  itemsSubtotal: number;  // Total inclusive price (before discount)
+  discount: number;       // Discount amount
+  netSubtotal: number;    // Net amount excluding VAT (after discount)
+  vatAmount: number;      // VAT portion of discounted total
+  totalAmount: number;    // Final total inclusive of VAT (after discount)
 }
 
 @Component({
-  selector: 'app-customer-summary-step',
+  selector: 'app-other-service-summary',
   imports: [ReactiveFormsModule, CommonModule, FormFieldComponent, CurrencyPipe],
-  templateUrl: './customer-summary-step.component.html',
-  styleUrl: './customer-summary-step.component.scss',
+  templateUrl: './other-service-summary.component.html',
+  styleUrl: './other-service-summary.component.scss',
 })
-export class CustomerSummaryStepComponent {
+export class OtherServiceSummaryComponent implements OnInit{
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private apiService = inject(ApiService);
@@ -48,7 +50,7 @@ export class CustomerSummaryStepComponent {
 
   // Inputs
   initialCustomerData = input<CustomerData | null>(null);
-  serviceSummary = input.required<ServiceSummary>();
+  serviceSummary = input.required<OtherServiceSummary>();
 
   // Outputs
   customerDataChanged = output<CustomerData>();
@@ -87,9 +89,9 @@ export class CustomerSummaryStepComponent {
         ],
       ],
       plateNumber: ['', [Validators.required, Validators.minLength(1)]],
-      laborCost: [''],
-      discount: [''],
-      memo: [''],
+      laborCost: ['', [Validators.required, Validators.min(0)]],
+      discount: ['', [Validators.min(0), Validators.max(10000)]],
+      memo: ['', [Validators.maxLength(500)]],
     });
     this.setupPlateNumberCheck();
   }
@@ -98,9 +100,9 @@ export class CustomerSummaryStepComponent {
     this.customerForm
       .get('plateNumber')
       ?.valueChanges.pipe(
-        filter((plateNumber) => plateNumber?.length >= 4), // Adjust minimum length as needed
+        filter((plateNumber) => plateNumber?.length >= 4),
         distinctUntilChanged(),
-        debounceTime(500) // Add debounce to avoid too many API calls
+        debounceTime(500)
       )
       .subscribe((plateNumber) => {
         console.log('Plate number changed:', plateNumber);
@@ -126,42 +128,41 @@ export class CustomerSummaryStepComponent {
 
   private subscribeToChanges() {
     this.customerForm.valueChanges.subscribe((value) => {
-      console.log(value);
+      console.log('Form value changed:', value);
 
-      if (value.laborCost || value.laborCost == '') {
-        this.customerDataChanged.emit({
-          name: value.name || '',
-          mobile: value.mobile || '',
-          plateNumber: value.plateNumber || '',
-          laborCost: value.laborCost || 0,
-          memo: value.memo || '',
-          discount: value?.discount || 0
-        });
-      }
+      // Always emit data when form changes
+      const customerData: CustomerData = {
+        name: value.name || '',
+        mobile: value.mobile || '',
+        plateNumber: value.plateNumber || '',
+        laborCost: value.laborCost || '0',
+        memo: value.memo || '',
+        discount: parseFloat(value.discount || '0')
+      };
 
+      this.customerDataChanged.emit(customerData);
       this.validityChanged.emit(this.customerForm.valid);
-      if (this.customerForm.valid) {
-        this.customerDataChanged.emit({
-          name: value.name,
-          mobile: value.mobile,
-          plateNumber: value.plateNumber,
-          laborCost: value.laborCost,
-          memo: value.memo,
-          discount: value.discount
-        });
-      }
     });
 
-    // Also emit validity on status changes (for validation errors)
     this.customerForm.statusChanges.subscribe(() => {
       this.validityChanged.emit(this.customerForm.valid);
     });
+
+
+    
   }
 
   private loadInitialData() {
     const initial = this.initialCustomerData();
     if (initial) {
-      this.customerForm.patchValue(initial);
+      this.customerForm.patchValue({
+        name: initial.name,
+        mobile: initial.mobile,
+        plateNumber: initial.plateNumber,
+        laborCost: initial.laborCost,
+        discount: initial.discount || 0,
+        memo: initial.memo || ''
+      });
     }
   }
 
@@ -178,7 +179,7 @@ export class CustomerSummaryStepComponent {
         plateNumber: value.plateNumber,
         laborCost: value.laborCost,
         memo: value.memo,
-        discount: value.discount
+        discount: parseFloat(value.discount || '0')
       };
     }
     return null;
@@ -198,6 +199,21 @@ export class CustomerSummaryStepComponent {
         if (control.errors['minlength']) {
           errors[key].push(`${this.getFieldDisplayName(key)} is too short`);
         }
+        if (control.errors['min']) {
+          if (key === 'discount' || key === 'laborCost') {
+            errors[key].push(`${this.getFieldDisplayName(key)} cannot be negative`);
+          }
+        }
+        if (control.errors['max']) {
+          if (key === 'discount') {
+            errors[key].push(`${this.getFieldDisplayName(key)} is too high`);
+          }
+        }
+        if (control.errors['maxlength']) {
+          if (key === 'memo') {
+            errors[key].push('Memo cannot exceed 500 characters');
+          }
+        }
         if (control.errors['pattern']) {
           if (key === 'mobile') {
             errors[key].push(
@@ -216,12 +232,17 @@ export class CustomerSummaryStepComponent {
       name: 'Customer Name',
       mobile: 'Mobile Number',
       plateNumber: 'Plate Number',
+      laborCost: 'Labour Cost',
+      discount: 'Discount',
+      memo: 'Memo'
     };
     return displayNames[fieldName] || fieldName;
   }
 
   onSubmitBooking() {
-    this.submitBooking.emit();
+    if (this.customerForm.valid) {
+      this.submitBooking.emit();
+    }
   }
 
   printReceipt(): void {
@@ -238,7 +259,7 @@ export class CustomerSummaryStepComponent {
         customerDetailsSection.remove();
       }
 
-      const printWindow = window.open('', '_blank', 'width=350,height=1000'); // 80mm ≈ 350px
+      const printWindow = window.open('', '_blank', 'width=350,height=1000');
 
       if (printWindow) {
         printWindow.document.write(`
@@ -333,6 +354,8 @@ export class CustomerSummaryStepComponent {
             .print\\:block {
               display: block !important;
             }
+            
+            .text-red-600 { color: #dc2626 !important; }
           </style>
         </head>
         <body>
@@ -356,17 +379,22 @@ export class CustomerSummaryStepComponent {
     }
   }
 
-  printThermalReceipt() {}
-
-  getTotalAccessoryAmount(): number {
-  if (!this.summary().accessories || this.summary().accessories?.length === 0) {
-    return 0;
+  printThermalReceipt() {
+    // Implementation for thermal printer if needed
   }
 
-  return this.summary().accessories.reduce((total, item) => {
-    const qty = item.quantity ?? 1; // default 1 if not provided
-    return total + (item.price * qty);
-  }, 0);
-}
+  getOilFilterPriceAndLaborCost(): number {
+    return (Number(this.summary().oilFilter?.price)  + this.laborCost())
+  }
 
+  getTotalAccessoryAmount(): number {
+    if (!this.serviceSummary().accessories || this.serviceSummary().accessories.length === 0) {
+      return 0;
+    }
+
+    return this.serviceSummary().accessories.reduce((total, item) => {
+      const qty = item.quantity ?? 1; // default 1 if not provided
+      return total + (item.price * qty);
+    }, 0);
+  }
 }

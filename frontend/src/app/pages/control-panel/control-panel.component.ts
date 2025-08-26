@@ -169,6 +169,7 @@ export class ControlPanelComponent {
       queryParams: { section: sectionId },
       queryParamsHandling: 'merge', // keep other params if any
     });
+    this.sidebarCollapsed.set(true);
   }
 
   // Handle sidebar toggle

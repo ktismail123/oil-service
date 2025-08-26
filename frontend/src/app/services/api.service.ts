@@ -228,18 +228,6 @@ checkCustomerByPlate(plate: string): Observable<any[]> {
     return this.http.get<any>(`${this.baseUrl}/bookings/${id}`);
   }
 
-  /**
-   * Update booking status
-   */
-  updateBookingStatus(
-    id: number,
-    status: 'pending' | 'completed' | 'cancelled'
-  ): Observable<any> {
-    return this.http.patch<any>(`${this.baseUrl}/bookings/${id}/status`, {
-      status,
-    });
-  }
-
   addBrand(brandData: { name: string }): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/brands`, brandData);
   }
@@ -282,4 +270,11 @@ checkCustomerByPlate(plate: string): Observable<any[]> {
   deleteUser(id: number): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/user/${id}`);
   }
+
+  updateBookingStatus(bookingId: number, status: 'pending' | 'completed' | 'cancelled', updatedBy?: number): Observable<any> {
+  return this.http.put(`${this.baseUrl}/bookings/${bookingId}/status`, {
+    status,
+    updatedBy
+  });
+}
 }

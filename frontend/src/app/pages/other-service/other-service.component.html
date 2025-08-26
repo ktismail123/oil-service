@@ -1,0 +1,101 @@
+<div class="min-h-screen bg-gray-50 py-6">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center space-x-3 mb-4">
+        <div
+          class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center"
+        >
+          <i class="fas fa-wrench text-white text-2xl sm:text-3xl"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800">Other Service</h1>
+      </div>
+      <p class="text-gray-600">
+        Complete the following steps to book your battery service
+      </p>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="relative">
+      <button
+        *ngIf="currentStep() > 1"
+        (click)="prevStep()"
+        class="absolute left-0 top-[75px] inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+      >
+        <svg
+          class="w-4 h-4 mr-1"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
+        Back
+      </button>
+      <app-step-indicator
+        [currentStep]="currentStep()"
+        [totalSteps]="totalSteps()"
+        [steps]="steps"
+        [title]="steps[currentStep() - 1]"
+      ></app-step-indicator>
+      <button
+        (click)="backToHome()"
+        class="absolute right-0 top-[75px] inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+      >
+        <svg
+          class="w-4 h-4 mr-1"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          ></path>
+        </svg>
+        Home
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <app-loading
+      *ngIf="isLoading()"
+      text="Loading battery service data..."
+    ></app-loading>
+
+    <!-- Step Content -->
+    <div
+      *ngIf="!isLoading()"
+      class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-6 step-content"
+    >
+      @if(currentStep() == 1){
+      <app-other-service-oil-filter [selectedOilFilter]="selectedOilFilter()" (filterChange)="filterChange($event)" />
+      } @if(currentStep() == 2){
+      <app-accessories-step
+        [initialSelectedAccessories]="selectedAccessories()"
+        (accessoriesChanged)="onAccessoriesChanged($event)"
+        (onSkipAccessoriesEmit)="onSkipAccessoriesEmit()"
+        (gotToNextStep)="gotToNextStep()"
+      />
+
+      }
+      <app-other-service-summary
+        *ngIf="currentStep() === 3"
+        [serviceSummary]="serviceSummary()"
+        [laborCost]="laborCost()"
+        [initialCustomerData]="customerData()"
+        [billNumber]="billNumber()"
+        (customerDataChanged)="onCustomerDataChanged($event)"
+        (validityChanged)="onValidityChanged($event)"
+        (submitBooking)="onSubmitBooking()"
+      />
+    </div>
+  </div>
+</div>

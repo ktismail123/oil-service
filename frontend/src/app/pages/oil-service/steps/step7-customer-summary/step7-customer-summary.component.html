@@ -88,17 +88,32 @@
       </div>
 
       <!-- Labour Cost -->
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Labour Cost *</label>
-        <app-form-field
-          [type]="'number'"
-          [control]="customerForm.get('laborCost')!"
-          placeholder="Labour Cost"
-          fieldId="laborCost"
-          [required]="true"
-          class="w-full text-sm">
-        </app-form-field>
-      </div>
+        <div class="w-full flex justify-between gap-3">
+          <div class="w-full">
+            <label class="block text-xs text-gray-500 mb-1">Labour Cost *</label>
+            <app-form-field
+              [type]="'number'"
+              [control]="customerForm.get('laborCost')!"
+              placeholder="Labour Cost"
+              fieldId="laborCost"
+              [required]="true"
+              class="w-full text-sm"
+            >
+            </app-form-field>
+          </div>
+          <div class="w-full">
+            <label class="block text-xs text-gray-500 mb-1">Discount (AED)</label>
+            <app-form-field
+              [type]="'number'"
+              [control]="customerForm.get('discount')!"
+              placeholder="0.00"
+              fieldId="discount"
+              [required]="false"
+              class="w-full text-sm"
+            >
+            </app-form-field>
+          </div>
+        </div>
 
       <!-- Memo - Full Width -->
       <div class="md:col-span-2">
@@ -157,6 +172,13 @@
       <span class="">Service Interval:</span>
       <span class="font-medium">{{ serviceInterval }} KM</span>
     </div>
+
+    @if(customerForm.controls['plateNumber']?.value){
+    <div class="flex justify-between text-xs mb-3">
+      <span class="">Vehicle No:</span>
+      <span class="font-medium">{{ customerForm.controls['plateNumber']?.value }} </span>
+    </div>
+   }
   </div>
 
   <!-- Items List -->
@@ -165,7 +187,7 @@
       ITEMS & SERVICES
     </h3>
 
-    <div class="flex justify-between text-xs">
+    <!-- <div class="flex justify-between text-xs">
         <div class="flex-1">
           <p class="font-medium">
             Oil Service
@@ -173,11 +195,26 @@
         </div>
         <div class="text-right">
           <p class="font-medium">{{ (subtotal) | currency : 'AED ' }}</p>
-          <!-- <p class="font-medium">{{ (subtotal - laborCost) | currency : 'AED ' }}</p> -->
+          <p class="font-medium">{{ (subtotal - laborCost) | currency : 'AED ' }}</p>
         </div>
-      </div>
+      </div> -->
 
     <!-- Engine Oil -->
+    <div *ngIf="selectedOilType || selectedFilter" class="mb-3">
+      <div class="flex justify-between text-xs">
+        <div class="flex-1">
+          <p class="font-medium">
+              Oil Service
+          </p>
+          <p class="">{{selectedOilType?.grade + ' - ' + selectedOilType?.brand}}</p>
+        </div>
+        <div class="text-right">
+          <!-- <p class="font-medium">{{ ((selectedFilter?.price || 0) + laborCost) | currency : 'AED ' }}</p> -->
+          <p class="font-medium">{{ ((subtotal || 0 + laborCost) - getTotalAccessoryAmount()) | currency : 'AED ' }}</p>
+        </div>
+      </div>
+    </div>
+
     <!-- <div *ngIf="selectedOilType" class="mb-3">
       <div class="flex justify-between text-xs">
         <div class="flex-1">
@@ -206,7 +243,7 @@
     </div> -->
 
     <!-- Accessories -->
-    <!-- <div *ngFor="let accessory of selectedAccessories" class="mb-3">
+    <div *ngFor="let accessory of selectedAccessories" class="mb-3">
       <div class="flex justify-between text-xs">
         <div class="flex-1">
           <p class="font-medium">{{ accessory.name }}</p>
@@ -224,7 +261,7 @@
           </p>
         </div>
       </div>
-    </div> -->
+    </div>
   </div>
 
   <!-- Totals -->
@@ -232,7 +269,7 @@
     <div class="flex justify-between text-sm">
       <span class="text-gray-600">Subtotal:</span>
       <span class="font-medium"
-        >AED {{ (subtotal || 0).toFixed(2) }}</span
+        >AED {{ (subtotal - vatAmount || 0).toFixed(2) }}</span
       >
     </div>
 

@@ -3,7 +3,7 @@
     <div
       class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4"
     >
-      <span class="text-green-600 font-bold">4</span>
+      <span class="text-green-600 font-bold">3</span>
     </div>
     <h2 class="text-2xl font-semibold text-gray-800">
       Customer Details & Summary
@@ -12,7 +12,6 @@
 
   <!-- Action Buttons (visible on screen, hidden when printing) -->
   <div class="text-center mb-6 print:hidden space-y-3">
-    <!-- Confirm Booking Button -->
     <!-- Button Container -->
     <div class="w-full max-w-2xl mx-auto space-y-4">
       <!-- Buttons Row - Responsive Grid Layout -->
@@ -62,22 +61,6 @@
           </span>
         </button>
       </div>
-
-      <!-- Optional: Thermal Print Button (Uncomment if needed) -->
-      <!-- <div class="flex justify-center">
-    <button 
-      (click)="printThermalReceipt()" 
-      [disabled]="customerForm.invalid"
-      class="w-full md:w-auto md:min-w-[200px] bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-purple-300">
-      <span class="flex items-center justify-center">
-        <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
-        </svg>
-        <span class="hidden sm:inline">Thermal Print</span>
-        <span class="sm:hidden">Thermal</span>
-      </span>
-    </button>
-  </div> -->
     </div>
 
     <!-- Form Validation Message -->
@@ -98,11 +81,18 @@
         </svg>
         Please fill in all required fields before proceeding
       </p>
+
+      <!-- Show specific form errors -->
+      <div *ngFor="let error of getFormErrors() | keyvalue" class="mt-2">
+        <div *ngFor="let errorMsg of error.value" class="text-xs text-red-500">
+          {{ errorMsg }}
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Customer Information Form -->
-  <div class="border-b border-dashed border-gray-300 pb-4 mb-4">
+  <div class="border-b border-dashed border-gray-300 pb-4 mb-4 print:hidden">
     <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center">
       CUSTOMER DETAILS
     </h3>
@@ -193,7 +183,9 @@
             rows="3"
             maxlength="500"
             placeholder="Service notes, special instructions, or observations..."
-            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-y"
+            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 resize-y"
+            [class.border-red-300]="customerForm.get('memo')?.invalid && customerForm.get('memo')?.touched"
+            [class.focus:ring-red-500]="customerForm.get('memo')?.invalid && customerForm.get('memo')?.touched"
           >
           </textarea>
           <div class="flex justify-between items-center mt-1 text-xs">
@@ -225,8 +217,28 @@
     <div class="text-center mb-4">
       <p class="text-xs text-gray-500">RECEIPT #{{ billNumber() || "---" }}</p>
       <p class="text-xs text-gray-500">{{ formattedDate }}</p>
-      <!-- <p class="text-xs text-gray-500">RECEIPT #TL-{{ generateReceiptNumber() }}</p>
-      <p class="text-xs text-gray-500">{{ getCurrentDate() }}</p> -->
+    </div>
+
+    <!-- Customer Info -->
+    <div class="border-b border-dashed border-gray-300 pb-4 mb-4" *ngIf="customerForm.get('name')?.value">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center">
+        CUSTOMER DETAILS
+      </h3>
+      
+      <div class="flex justify-between text-xs mb-1">
+        <span class="text-gray-600">Name:</span>
+        <span class="font-medium">{{ customerForm.get('name')?.value }}</span>
+      </div>
+      
+      <div class="flex justify-between text-xs mb-1">
+        <span class="text-gray-600">Mobile:</span>
+        <span class="font-medium">{{ customerForm.get('mobile')?.value }}</span>
+      </div>
+      
+      <div class="flex justify-between text-xs mb-2">
+        <span class="text-gray-600">Vehicle:</span>
+        <span class="font-medium">{{ customerForm.get('plateNumber')?.value }}</span>
+      </div>
     </div>
 
     <!-- Service Details -->
@@ -238,22 +250,7 @@
       <!-- Service Type -->
       <div class="flex justify-between text-xs mb-2">
         <span class="text-gray-600">Service Type:</span>
-        <span class="font-medium">Battery Replacement</span>
-      </div>
-
-      <!-- Battery Capacity -->
-      <div class="flex justify-between text-xs mb-2">
-        <span class="text-gray-600">Battery Capacity:</span>
-        <span class="font-medium">{{ summary().capacityLabel }}</span>
-      </div>
-
-      <!-- Battery Brand -->
-      <div
-        *ngIf="summary().batteryType"
-        class="flex justify-between text-xs mb-3"
-      >
-        <span class="text-gray-600">Battery Brand:</span>
-        <span class="font-medium">{{ summary().batteryType?.brand }}</span>
+        <span class="font-medium">Other Service</span>
       </div>
     </div>
 
@@ -263,52 +260,34 @@
         ITEMS & SERVICES
       </h3>
 
-      <div class="flex justify-between text-xs">
-        <div class="flex-1">
-          <p class="font-medium">
-             Battery Service
-          </p>
-        </div>
-        <div class="text-right">
-          <p class="font-medium">
-             {{ (summary().subtotal - getTotalAccessoryAmount() || 0 )| currency : 'AED '}}
-             <!-- {{ formatPrice(summary().subtotal - laborCost() || 0) | currency : 'AED '}} -->
-          </p>
-        </div>
-      </div>
-
-      <!-- Battery -->
-      <!-- <div *ngIf="summary().batteryType" class="mb-3">
+      <!-- Oil Filter Service -->
+      <div *ngIf="summary().oilFilter" class="mb-3">
         <div class="flex justify-between text-xs">
           <div class="flex-1">
-            <p class="font-medium">
-              {{ summary().batteryType?.brand }} Battery
-            </p>
-            <p class="text-gray-500">{{ summary().capacityLabel }}</p>
+            <p class="font-medium">Oil Filter Service</p>
+            <p class="text-gray-500">{{ summary().oilFilter?.code }} - {{ summary().oilFilter?.brand }}</p>
           </div>
           <div class="text-right">
             <p class="font-medium">
-              AED {{ formatPrice(summary().batteryType?.price || 0) }}
+              {{ getOilFilterPriceAndLaborCost() | currency : 'AED ' }}
             </p>
           </div>
         </div>
-      </div> -->
+      </div>
 
       <!-- Accessories -->
-      <div *ngFor="let accessory of summary().accessories" class="my-2">
+      <div *ngFor="let accessory of summary().accessories" class="mb-3">
         <div class="flex justify-between text-xs">
           <div class="flex-1">
             <p class="font-medium">{{ accessory.name }}</p>
             <p class="text-gray-500">
-              Qty: {{ accessory.quantity || 1 }} x AED
-              {{ accessory.price || 0 }}
+              Qty: {{ accessory.quantity || 1 }} x {{ accessory.price | currency : 'AED ' }}
             </p>
           </div>
           <div class="text-right">
             <p class="font-medium">
-              AED
               {{
-                ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2)
+                ((accessory.price || 0) * (accessory.quantity || 1)) | currency : 'AED '
               }}
             </p>
           </div>
@@ -316,14 +295,14 @@
       </div>
 
       <!-- Labour Cost -->
-      <!-- <div class="mb-3">
+      <!-- <div class="mb-3" *ngIf="customerForm.get('laborCost')?.value && customerForm.get('laborCost')?.value > 0">
         <div class="flex justify-between text-xs">
           <div class="flex-1">
             <p class="font-medium">Labour Cost</p>
             <p class="text-gray-500">Service charges</p>
           </div>
           <div class="text-right">
-            <p class="font-medium">AED {{ formatPrice(customerForm.get('laborCost')?.value || 0) }}</p>
+            <p class="font-medium">{{ customerForm.get('laborCost')?.value | currency : 'AED ' }}</p>
           </div>
         </div>
       </div> -->
@@ -331,26 +310,49 @@
 
     <!-- Totals -->
     <div class="space-y-2 mb-4">
+      <!-- Items Total (inclusive of VAT) -->
       <div class="flex justify-between text-sm">
-        <span class="text-gray-600">Subtotal:</span>
+        <span class="text-gray-600">Items Total (inc. VAT):</span>
         <span class="font-medium">
-          {{ summary().subtotal - summary().vatAmount  | currency : "AED " }}</span
-        >
+          {{ summary().itemsSubtotal | currency : "AED " }}
+        </span>
       </div>
 
-      <div class="flex justify-between text-sm">
-        <span class="text-gray-600">VAT (5%):</span>
-        <span class="font-medium">
-          {{ summary().vatAmount | currency : "AED " }}</span
-        >
+      <!-- Discount (if any) -->
+      <div class="flex justify-between text-sm" *ngIf="summary().discount > 0">
+        <span class="text-gray-600">Discount:</span>
+        <span class="font-medium text-red-600">
+          -{{ summary().discount | currency : "AED " }}
+        </span>
       </div>
 
-      <div class="border-t-2 border-dashed border-gray-400 pt-2">
-        <div class="flex justify-between text-lg font-bold">
-          <span>TOTAL:</span>
-          <span>{{ summary().subtotal | currency : "AED " }}</span>
+      <!-- Subtotal after discount (showing breakdown) -->
+      <div class="border-t border-dashed border-gray-300 pt-2" *ngIf="summary().discount > 0">
+        <div class="flex justify-between text-sm text-gray-600">
+          <span>Net Amount (excl. VAT):</span>
+          <span>{{ summary().netSubtotal | currency : "AED " }}</span>
+        </div>
+        <div class="flex justify-between text-sm text-gray-600">
+          <span>VAT (5%):</span>
+          <span>{{ summary().vatAmount | currency : "AED " }}</span>
         </div>
       </div>
+
+      <!-- Final Total -->
+      <div class="border-t-2 border-dashed border-gray-400 pt-2">
+        <div class="flex justify-between text-lg font-bold">
+          <span>TOTAL (inc. VAT):</span>
+          <span>{{ summary().totalAmount | currency : "AED " }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memo Display (if provided) -->
+    <div class="border-b border-dashed border-gray-300 pb-4 mb-4" *ngIf="customerForm.get('memo')?.value && customerForm.get('memo')?.value.trim()">
+      <h3 class="text-sm font-semibold text-gray-700 mb-2 text-center">
+        SERVICE NOTES
+      </h3>
+      <p class="text-xs text-gray-600 text-center whitespace-pre-wrap">{{ customerForm.get('memo')?.value }}</p>
     </div>
 
     <!-- Footer -->

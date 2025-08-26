@@ -1,0 +1,332 @@
+<div class="bg-white rounded-xl max-w-2xl max-h-[90vh] overflow-y-auto relative">
+  <!-- Sticky Header with Full Width -->
+  <div class="sticky top-0 z-10 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4 rounded-t-xl">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold">Booking Details</h2>
+        <p class="text-blue-100 text-sm">{{ injectedData.bill_number }}</p>
+      </div>
+      <div class="text-right">
+        <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" 
+             [ngClass]="{
+               'bg-yellow-100 text-yellow-800': injectedData.status === 'pending',
+               'bg-green-100 text-green-800': injectedData.status === 'completed',
+               'bg-red-100 text-red-800': injectedData.status === 'cancelled'
+             }">
+          {{ getStatusDisplayName(injectedData.status) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="p-6 space-y-6">
+    
+    <!-- Status Management Section -->
+    <div *ngIf="injectedData.status !== 'cancelled'" class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-4 border border-indigo-200">
+      <h3 class="font-semibold text-indigo-800 mb-3 flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"/>
+        </svg>
+        Payment Status
+      </h3>
+      
+      <div class="flex flex-wrap gap-3">
+        <!-- Mark as Paid button (for pending status) -->
+        <button *ngIf="injectedData.status === 'pending'" 
+                (click)="updateBookingStatus('completed')"
+                [disabled]="statusUpdating"
+                class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors duration-200 disabled:cursor-not-allowed">
+          <svg *ngIf="!statusUpdating" class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <svg *ngIf="statusUpdating" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ statusUpdating ? 'Updating...' : 'Mark as Paid' }}
+        </button>
+
+        <!-- Pay Later button (for completed status) -->
+        <button *ngIf="injectedData.status === 'completed'" 
+                (click)="updateBookingStatus('pending')"
+                [disabled]="statusUpdating"
+                class="inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors duration-200 disabled:cursor-not-allowed">
+          <svg *ngIf="!statusUpdating" class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+          </svg>
+          <svg *ngIf="statusUpdating" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ statusUpdating ? 'Updating...' : 'Pay Later' }}
+        </button>
+
+        <!-- Cancel button (for both completed and pending) -->
+        <button *ngIf="injectedData.status !== 'cancelled'" 
+        (click)="cancelStatus()"
+                [disabled]="statusUpdating"
+                class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors duration-200 disabled:cursor-not-allowed">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Cancel Booking
+        </button>
+      </div>
+
+      <!-- Status update feedback -->
+      <div *ngIf="statusUpdateMessage" 
+           class="mt-3 p-3 rounded-md"
+           [ngClass]="{
+             'bg-green-50 text-green-800 border border-green-200': statusUpdateSuccess,
+             'bg-red-50 text-red-800 border border-red-200': !statusUpdateSuccess
+           }">
+        <div class="flex items-center">
+          <svg *ngIf="statusUpdateSuccess" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <svg *ngIf="!statusUpdateSuccess" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          <span class="text-sm font-medium">{{ statusUpdateMessage }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cancelled Status Notice -->
+    <div *ngIf="injectedData.status === 'cancelled'" class="bg-red-50 rounded-lg p-4 border border-red-200">
+      <div class="flex items-center text-red-800">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span class="font-semibold">This booking has been cancelled and cannot be modified.</span>
+      </div>
+    </div>
+
+    <!-- Customer Information -->
+    <div class="bg-gray-50 rounded-lg p-4">
+      <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+        </svg>
+        Customer Information
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div>
+          <span class="text-gray-600">Name:</span>
+          <span class="ml-2 font-medium">{{ injectedData.customer_name }}</span>
+        </div>
+        <div>
+          <span class="text-gray-600">Mobile:</span>
+          <span class="ml-2 font-medium">{{ injectedData.customer_mobile }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle Information (Handle different vehicle structures) -->
+    <div class="bg-gray-50 rounded-lg p-4">
+      <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+          <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z"/>
+        </svg>
+        Vehicle Information
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <!-- Handle structured vehicle object -->
+        <div *ngIf="injectedData.vehicle?.plate_number">
+          <span class="text-gray-600">Plate Number:</span>
+          <span class="ml-2 font-medium">{{ injectedData.vehicle.plate_number }}</span>
+        </div>
+        <div *ngIf="injectedData.vehicle?.brand_name && injectedData.vehicle?.model_name">
+          <span class="text-gray-600">Vehicle:</span>
+          <span class="ml-2 font-medium">{{ injectedData.vehicle.brand_name }} {{ injectedData.vehicle.model_name }}</span>
+        </div>
+
+        <!-- Handle reference-only vehicle (other_service) -->
+        <div *ngIf="injectedData.vehicle?.is_reference_only" class="md:col-span-2">
+          <div class="flex items-center text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            <span class="text-sm">Plate Number Reference: <strong>{{ injectedData.vehicle.plate_number }}</strong> (Other service)</span>
+          </div>
+        </div>
+
+        <!-- Handle no vehicle -->
+        <div *ngIf="!injectedData.vehicle" class="md:col-span-2 text-center text-gray-500 italic">
+          No vehicle information available
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Information -->
+    <div class="bg-gray-50 rounded-lg p-4">
+      <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+        </svg>
+        Service Details
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div>
+          <span class="text-gray-600">Service Type:</span>
+          <span class="ml-2 font-medium capitalize">{{ getServiceTypeDisplayName(injectedData.service_type) }}</span>
+        </div>
+        <div>
+          <span class="text-gray-600">Service Date:</span>
+          <span class="ml-2 font-medium">{{ injectedData.service_date | date:'mediumDate' }}</span>
+        </div>
+        <div>
+          <span class="text-gray-600">Service Time:</span>
+          <span class="ml-2 font-medium">{{ injectedData.service_time }}</span>
+        </div>
+        <div *ngIf="injectedData.labour_cost && injectedData.labour_cost !== '0.00'">
+          <span class="text-gray-600">Labour Cost:</span>
+          <span class="ml-2 font-medium">{{ injectedData.labour_cost | currency:'AED ' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Items -->
+    <div class="bg-gray-50 rounded-lg p-4">
+      <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+        </svg>
+        Service Items
+      </h3>
+      
+      <!-- Battery (if exists) -->
+      <div *ngIf="injectedData.battery_capacity" class="mb-3 p-3 bg-white rounded border">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="font-medium text-gray-800">{{ injectedData.battery_brand }}</p>
+            <p class="text-sm text-gray-600">{{ injectedData.battery_capacity }}Ah Battery</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Oil Filter (if exists) -->
+      <div *ngIf="injectedData.oil_filter_code" class="mb-3 p-3 bg-white rounded border">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="font-medium text-gray-800">{{ injectedData.oil_filter_brand }}</p>
+            <p class="text-sm text-gray-600">Filter Code: {{ injectedData.oil_filter_code }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accessories -->
+      <div *ngIf="injectedData.accessories && injectedData.accessories.length > 0" class="space-y-2">
+        <h4 class="font-medium text-gray-700 text-sm">Accessories</h4>
+        <div *ngFor="let accessory of injectedData.accessories" 
+             class="p-3 bg-white rounded border flex justify-between items-center">
+          <div>
+            <p class="font-medium text-gray-800">{{ accessory.name }}</p>
+            <p class="text-sm text-gray-600">Qty: {{ accessory.quantity }} • Category: {{ accessory.category }}</p>
+          </div>
+          <p class="font-medium text-gray-800">{{ accessory.price | currency:'AED ' }}</p>
+        </div>
+      </div>
+
+      <!-- No items message -->
+      <div *ngIf="!injectedData.battery_capacity && !injectedData.oil_filter_code && (!injectedData.accessories || injectedData.accessories.length === 0)" 
+           class="text-center text-gray-500 italic py-4">
+        No service items recorded
+      </div>
+    </div>
+
+    <!-- Memo (if exists) -->
+    <div *ngIf="injectedData.memo" class="bg-amber-50 rounded-lg p-4 border border-amber-200">
+      <h3 class="font-semibold text-amber-800 mb-2 flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+        Service Notes
+      </h3>
+      <p class="text-amber-800 text-sm whitespace-pre-wrap">{{ injectedData.memo }}</p>
+    </div>
+
+    <!-- Billing Summary -->
+    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+      <h3 class="font-semibold text-blue-800 mb-3 flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
+        </svg>
+        Billing Summary
+      </h3>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span class="text-blue-700">Subtotal:</span>
+          <span class="font-medium text-blue-900">{{ injectedData.subtotal | currency:'AED ' }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-blue-700">VAT ({{ injectedData.vat_percentage }}%):</span>
+          <span class="font-medium text-blue-900">{{ injectedData.vat_amount | currency:'AED ' }}</span>
+        </div>
+        <div *ngIf="injectedData.discount && injectedData.discount !== '0.00'" class="flex justify-between text-red-600">
+          <span>Discount:</span>
+          <span class="font-medium">-{{ injectedData.discount | currency:'AED ' }}</span>
+        </div>
+        <div class="border-t border-blue-200 pt-2 flex justify-between font-bold text-lg">
+          <span class="text-blue-800">Total:</span>
+          <span class="text-blue-900">{{ injectedData.subtotal | currency:'AED ' }}</span>
+          <!-- <span class="text-blue-900">{{ injectedData.total_amount | currency:'AED ' }}</span> -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Created By & Timestamps -->
+    <div class="bg-gray-50 rounded-lg p-4">
+      <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+        </svg>
+        Additional Information
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div>
+          <span class="text-gray-600">Created:</span>
+          <span class="ml-2 font-medium">{{ injectedData.created_at | date:'medium' }}</span>
+        </div>
+        <div *ngIf="injectedData.updated_at !== injectedData.created_at">
+          <span class="text-gray-600">Updated:</span>
+          <span class="ml-2 font-medium">{{ injectedData.updated_at | date:'medium' }}</span>
+        </div>
+        <div *ngIf="injectedData.created_by_user" class="md:col-span-2">
+          <span class="text-gray-600">Created by:</span>
+          <span class="ml-2 font-medium">{{ injectedData.created_by_user.name }} ({{ injectedData.created_by_user.role }})</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div *ngIf="showCancelConfirmation" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+    <div class="flex items-center mb-4">
+      <svg class="w-6 h-6 text-red-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+      </svg>
+      <h3 class="text-lg font-semibold text-gray-900">Cancel Booking</h3>
+    </div>
+    <p class="text-gray-600 mb-6">
+      Are you sure you want to cancel booking <strong>{{ injectedData.bill_number }}</strong>?
+      This action cannot be undone.
+    </p>
+    <div class="flex justify-end space-x-3">
+      <button (click)="showCancelConfirmation = false" 
+              class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+        No, Keep It
+      </button>
+      <button (click)="updateBookingStatus('cancelled')" 
+              [disabled]="statusUpdating"
+              class="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed">
+        {{ statusUpdating ? 'Cancelling...' : 'Yes, Cancel' }}
+      </button>
+    </div>
+  </div>
+</div>

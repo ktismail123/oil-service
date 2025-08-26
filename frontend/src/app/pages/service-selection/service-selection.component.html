@@ -1,91 +1,112 @@
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
   <!-- Header -->
   <!-- header.component.html -->
-<!-- Angular Template -->
-<header class="modern-header">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center h-18 sm:h-22">
-      <!-- Logo and Brand Section -->
-      <div class="flex items-center space-x-5">
-        <!-- Logo Container -->
-        <div class="logo-container">
-          <div class="logo-background">
-            <!-- Engine Icon -->
-            <!-- <svg class="w-8 h-8 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+  <!-- Angular Template -->
+  <header class="modern-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-18 sm:h-22">
+        <!-- Logo and Brand Section -->
+        <div class="flex items-center space-x-5">
+          <!-- Logo Container -->
+          <div class="logo-container">
+            <div class="logo-background">
+              <!-- Engine Icon -->
+              <!-- <svg class="w-8 h-8 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
             </svg> -->
-          </div>
-        </div>
-
-        <!-- Brand Info -->
-        <div class="brand-info">
-          <h1 class="brand-title">
-            <span class="text-orange-500 text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
-              Tech Lube
-            </span>
-          </h1>
-          <p class="brand-subtitle text-sm text-orange-400 hidden sm:block font-medium tracking-wide">
-            Professional Auto Services
-          </p>
-        </div>
-      </div>
-
-      <!-- Right Section -->
-      <div class="flex items-center space-x-6 sm:space-x-8">
-        <!-- Digital Clock Section -->
-        <div class="clock-section hidden md:block">
-          <div class="clock-container">
-            <div class="flex flex-col items-end space-y-1">
-              <!-- Time Display -->
-              <div class="digital-clock">
-                <span class="text-2xl font-bold text-orange-500 tracking-wider font-mono">
-                  {{ currentTime }}
-                </span>
-              </div>
-
-              <!-- Date Display -->
-              <div class="text-xs text-orange-400 font-medium uppercase tracking-wider">
-                {{ currentDate }}
-              </div>
-
-              <!-- Status Indicator -->
-           
             </div>
           </div>
+
+          <!-- Brand Info -->
+          <div class="brand-info">
+            <h1 class="brand-title">
+              <span
+                class="text-orange-500 text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight"
+              >
+                Tech Lube
+              </span>
+            </h1>
+            <p
+              class="brand-subtitle text-sm text-orange-400 hidden sm:block font-medium tracking-wide"
+            >
+              Professional Auto Services
+            </p>
+          </div>
         </div>
 
-        <!-- Mobile Clock -->
-        <div class="mobile-clock md:hidden">
-          <div class="mobile-clock-container">
-            <div class="flex flex-col items-center space-y-2">
-              <div class="digital-clock text-lg font-bold text-orange-500 font-mono">
-                {{ currentTime.substring(0, 5) }}
+        <!-- Right Section -->
+        <div class="flex items-center space-x-6 sm:space-x-8">
+          <!-- Digital Clock Section -->
+          <div class="clock-section hidden md:block">
+            <div class="clock-container">
+              <div class="flex flex-col items-end space-y-1">
+                <!-- Time Display -->
+                <div class="digital-clock">
+                  <span
+                    class="text-2xl font-bold text-orange-500 tracking-wider font-mono"
+                  >
+                    {{ currentTime }}
+                  </span>
+                </div>
+
+                <!-- Date Display -->
+                <div
+                  class="text-xs text-orange-400 font-medium uppercase tracking-wider"
+                >
+                  {{ currentDate }}
+                </div>
+
+                <!-- Status Indicator -->
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Logout Button -->
-        <button (click)="logout()" class="logout-btn">
-          <!-- Button Content -->
-          <div class="flex items-center space-x-3 px-5 py-3 sm:px-6 sm:py-4">
-            <!-- Logout Icon -->
-            <div class="icon-container">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-              </svg>
+          <!-- Mobile Clock -->
+          <div class="mobile-clock md:hidden">
+            <div class="mobile-clock-container">
+              <div class="flex flex-col items-center space-y-2">
+                <div
+                  class="digital-clock text-lg font-bold text-orange-500 font-mono"
+                >
+                  {{ currentTime.substring(0, 5) }}
+                </div>
+              </div>
             </div>
-
-            <!-- Button Text -->
-            <span class="hidden sm:inline text-sm font-semibold text-white tracking-wide">
-              Logout
-            </span>
           </div>
-        </button>
+
+          <!-- Logout Button -->
+          <button (click)="logout()" class="logout-btn">
+            <!-- Button Content -->
+            <div class="flex items-center space-x-3 px-5 py-3 sm:px-6 sm:py-4">
+              <!-- Logout Icon -->
+              <div class="icon-container">
+                <svg
+                  class="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2.5"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              </div>
+
+              <!-- Button Text -->
+              <span
+                class="hidden sm:inline text-sm font-semibold text-white tracking-wide"
+              >
+                Logout
+              </span>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-</header>
+  </header>
 
   <!-- Main Content -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
@@ -165,6 +186,25 @@
         </p>
       </div>
 
+      <div
+        class="service-card group bg-white hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 border border-gray-200 hover:border-orange-300 rounded-2xl p-6 sm:p-8 text-center cursor-pointer transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl"
+        (click)="selectService('other_service')"
+      >
+        <div
+          class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+        >
+          <i class="fas fa-wrench text-white text-2xl sm:text-3xl"></i>
+        </div>
+        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">
+          Other Service
+        </h3>
+        <p class="text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
+          Puncture repair, tire services, and general maintenance
+        </p>
+      </div>
+
+      <!-- Sercice -->
+
       <!-- Control Panel -->
       <div
         class="service-card group bg-white hover:bg-gradient-to-br hover:from-purple-50 hover:to-purple-100 border border-gray-200 hover:border-purple-300 rounded-2xl p-6 sm:p-8 text-center cursor-pointer transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-2xl"
@@ -193,33 +233,13 @@
         <p class="text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
           Access system settings, reports, and administrative functions
         </p>
-        <div class="space-y-2">
+        <!-- <div class="space-y-2">
           <div class="text-lg sm:text-xl font-semibold text-purple-600">
             Admin Access
           </div>
           <div class="text-xs text-gray-500">Management Tools</div>
-        </div>
+        </div> -->
       </div>
-
-      <!-- Coming Soon -->
-      <!-- <div class="service-card bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 text-center 
-                      opacity-60 cursor-not-allowed shadow-lg">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-400 to-gray-500 
-                        rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
-              <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">More Services</h3>
-            <p class="text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
-              Additional automotive services will be available soon
-            </p>
-            <div class="space-y-2">
-              <div class="text-lg sm:text-xl font-semibold text-gray-500">Coming Soon</div>
-              <div class="text-xs text-gray-400">Stay tuned</div>
-            </div>
-          </div> -->
     </div>
   </main>
 </div>

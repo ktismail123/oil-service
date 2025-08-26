@@ -66,8 +66,8 @@ const createOilType = async (req, res) => {
     const db = getDB();
     const {
       name, grade, brand, service_interval,
-      package_1l_available, package_4l_available, bulk_available,
-      price_1l, price_4l, price_per_liter, status, quantity_available
+      package_1l_available, package_4l_available, package_5l_available, bulk_available,
+      price_1l, price_4l, price_5l, price_per_liter, status, quantity_available
     } = req.body;
     
     console.log('Creating oil type with data:', req.body);
@@ -88,7 +88,7 @@ const createOilType = async (req, res) => {
       });
     }
     
-    // Sanitize and validate data
+    // Sanitize and validate data (including 5L package)
     const sanitizedData = {
       name: name.trim(),
       grade: grade.trim(),
@@ -96,13 +96,25 @@ const createOilType = async (req, res) => {
       service_interval: serviceInt, // Store as string
       package_1l_available: Number(package_1l_available) === 1 ? 1 : 0,
       package_4l_available: Number(package_4l_available) === 1 ? 1 : 0,
+      package_5l_available: Number(package_5l_available) === 1 ? 1 : 0, // NEW: 5L support
       bulk_available: Number(bulk_available) === 1 ? 1 : 0,
       price_1l: Math.max(0, parseFloat(price_1l) || 0),
       price_4l: Math.max(0, parseFloat(price_4l) || 0),
+      price_5l: Math.max(0, parseFloat(price_5l) || 0), // NEW: 5L price
       price_per_liter: Math.max(0, parseFloat(price_per_liter) || 0),
       status: status || 'active',
       quantity_available: Math.max(0, parseInt(quantity_available) || 0)
     };
+    
+    // Validation: At least one package type must be available
+    if (!sanitizedData.package_1l_available && 
+        !sanitizedData.package_4l_available && 
+        !sanitizedData.package_5l_available && 
+        !sanitizedData.bulk_available) {
+      return res.status(400).json({ 
+        error: 'At least one package type (1L, 4L, 5L, or bulk) must be available' 
+      });
+    }
     
     // Check for duplicate
     const [existingOilType] = await db.execute(
@@ -116,29 +128,31 @@ const createOilType = async (req, res) => {
       });
     }
     
-    // Insert new oil type
+    // Insert new oil type (including 5L fields)
     const [result] = await db.execute(`
       INSERT INTO oil_types (
         name, grade, brand, service_interval,
-        package_1l_available, package_4l_available, bulk_available,
-        price_1l, price_4l, price_per_liter, status, quantity_available
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        package_1l_available, package_4l_available, package_5l_available, bulk_available,
+        price_1l, price_4l, price_5l, price_per_liter, status, quantity_available
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       sanitizedData.name,
       sanitizedData.grade,
       sanitizedData.brand,
-      sanitizedData.service_interval, // Now string
+      sanitizedData.service_interval,
       sanitizedData.package_1l_available,
       sanitizedData.package_4l_available,
+      sanitizedData.package_5l_available, // NEW: 5L availability
       sanitizedData.bulk_available,
       sanitizedData.price_1l,
       sanitizedData.price_4l,
+      sanitizedData.price_5l, // NEW: 5L price
       sanitizedData.price_per_liter,
       sanitizedData.status,
       sanitizedData.quantity_available
     ]);
     
-    console.log('Oil type created successfully:', result.insertId);
+    console.log('Oil type created successfully with 5L support:', result.insertId);
     
     res.status(201).json({
       success: true,
@@ -166,8 +180,8 @@ const updateOilType = async (req, res) => {
     const { id } = req.params;
     const {
       name, grade, brand, service_interval,
-      package_1l_available, package_4l_available, bulk_available,
-      price_1l, price_4l, price_per_liter, status, quantity_available
+      package_1l_available, package_4l_available, package_5l_available, bulk_available,
+      price_1l, price_4l, price_5l, price_per_liter, status, quantity_available
     } = req.body;
     
     const oilTypeId = parseInt(id);
@@ -209,7 +223,7 @@ const updateOilType = async (req, res) => {
       });
     }
     
-    // Sanitize and validate data
+    // Sanitize and validate data (including 5L package)
     const sanitizedData = {
       name: name.trim(),
       grade: grade.trim(),
@@ -217,13 +231,25 @@ const updateOilType = async (req, res) => {
       service_interval: serviceInt,
       package_1l_available: Number(package_1l_available) === 1 ? 1 : 0,
       package_4l_available: Number(package_4l_available) === 1 ? 1 : 0,
-      bulk_available: Number(bulk_available) === 1 ? 1 : 0,   // ✅ fixed
+      package_5l_available: Number(package_5l_available) === 1 ? 1 : 0, // NEW: 5L support
+      bulk_available: Number(bulk_available) === 1 ? 1 : 0,
       price_1l: Math.max(0, parseFloat(price_1l) || 0),
       price_4l: Math.max(0, parseFloat(price_4l) || 0),
+      price_5l: Math.max(0, parseFloat(price_5l) || 0), // NEW: 5L price
       price_per_liter: Math.max(0, parseFloat(price_per_liter) || 0),
       status: status || 'active',
       quantity_available: Math.max(0, parseInt(quantity_available) || 0)
     };
+    
+    // Validation: At least one package type must be available
+    if (!sanitizedData.package_1l_available && 
+        !sanitizedData.package_4l_available && 
+        !sanitizedData.package_5l_available && 
+        !sanitizedData.bulk_available) {
+      return res.status(400).json({ 
+        error: 'At least one package type (1L, 4L, 5L, or bulk) must be available' 
+      });
+    }
     
     // Check for duplicate (excluding current oil type)
     const [duplicateOilType] = await db.execute(
@@ -237,12 +263,12 @@ const updateOilType = async (req, res) => {
       });
     }
     
-    // Update oil type
+    // Update oil type (including 5L fields)
     const [result] = await db.execute(`
       UPDATE oil_types SET 
         name = ?, grade = ?, brand = ?, service_interval = ?,
-        package_1l_available = ?, package_4l_available = ?, bulk_available = ?,
-        price_1l = ?, price_4l = ?, price_per_liter = ?, status = ?, 
+        package_1l_available = ?, package_4l_available = ?, package_5l_available = ?, bulk_available = ?,
+        price_1l = ?, price_4l = ?, price_5l = ?, price_per_liter = ?, status = ?, 
         quantity_available = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [
@@ -252,9 +278,11 @@ const updateOilType = async (req, res) => {
       sanitizedData.service_interval,
       sanitizedData.package_1l_available,
       sanitizedData.package_4l_available,
+      sanitizedData.package_5l_available, // NEW: 5L availability
       sanitizedData.bulk_available,
       sanitizedData.price_1l,
       sanitizedData.price_4l,
+      sanitizedData.price_5l, // NEW: 5L price
       sanitizedData.price_per_liter,
       sanitizedData.status,
       sanitizedData.quantity_available,
@@ -267,7 +295,7 @@ const updateOilType = async (req, res) => {
       });
     }
     
-    console.log('Oil type updated successfully:', oilTypeId);
+    console.log('Oil type updated successfully with 5L support:', oilTypeId);
     
     res.json({
       success: true,

@@ -21,9 +21,11 @@ export interface OilType {
   service_interval: number;
   package_1l_available: boolean;
   package_4l_available: boolean;
+  package_5l_available: boolean;
   bulk_available: boolean;
   price_1l: number;
   price_4l: number;
+  price_5l: number;
   price_per_liter: number;
   status: 'active' | 'inactive';
   quantity_available: number;

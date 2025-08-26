@@ -6,11 +6,17 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
 import { FormFieldComponent } from '../../shared/components/form-field/form-field.component';
 import { ApiService } from '../../services/api.service';
 import { finalize, take } from 'rxjs';
-import { DataTableComponent, TableEvent, PaginationData, SearchData } from '../data-table/data-table.component';
+import {
+  DataTableComponent,
+  TableEvent,
+  PaginationData,
+  SearchData,
+} from '../data-table/data-table.component';
 import { ACTION_CONFIGS, ActionConfig } from '../../models/action';
 import { MatDialog } from '@angular/material/dialog';
 import { EditOilServiceBookingComponent } from '../../modals/edit-oil-service-booking/edit-oil-service-booking.component';
 import { Router } from '@angular/router';
+import { BookingDetailsModalComponent } from '../../modals/booking-details-modal/booking-details-modal.component';
 
 interface ServiceData {
   id: number;
@@ -59,7 +65,7 @@ interface BookingResponse {
     FormFieldComponent,
     CurrencyPipe,
     DataTableComponent,
-    FormsModule
+    FormsModule,
   ],
   templateUrl: './booking-list.component.html',
   styleUrls: ['./booking-list.component.css'],
@@ -67,20 +73,20 @@ interface BookingResponse {
 export class BookingListComponent implements OnInit {
   // Data properties
   serviceData: ServiceData[] = [];
-  
+
   // Pagination properties
   totalRecords = 0;
   currentPage = 0;
   pageSize = 10;
-  
+
   // Search and filter properties
   currentSearchTerm = '';
   selectedStatus = '';
   selectedServiceType = '';
-  
+
   // UI state
   loading = false;
-  
+
   // Injected services
   private apiService = inject(ApiService);
   private dialog = inject(MatDialog);
@@ -89,6 +95,7 @@ export class BookingListComponent implements OnInit {
   // Table configuration
   displayedColumns = [
     'bill_number',
+    'status',
     'customer',
     'vehicle',
     'service_type',
@@ -97,7 +104,7 @@ export class BookingListComponent implements OnInit {
     'subtotal',
   ];
 
-  actionConfig: ActionConfig = ACTION_CONFIGS.EDIT_DELETE;
+  actionConfig: ActionConfig = ACTION_CONFIGS.VIEW_EDIT;
 
   ngOnInit() {
     this.loadBookings();
@@ -105,7 +112,6 @@ export class BookingListComponent implements OnInit {
 
   // Handle table events (pagination and search)
   onTableEvent(event: TableEvent) {
-    
     switch (event.type) {
       case 'pagination':
         this.handlePaginationEvent(event.data as PaginationData);
@@ -120,17 +126,16 @@ export class BookingListComponent implements OnInit {
   private handlePaginationEvent(paginationData: PaginationData) {
     this.currentPage = paginationData.pageIndex;
     this.pageSize = paginationData.pageSize;
-    
+
     // Reload data with new pagination
     this.loadBookings();
   }
 
   // Handle search events
   private handleSearchEvent(searchData: SearchData) {
-    
     this.currentSearchTerm = searchData.searchTerm;
     this.currentPage = 0; // Reset to first page when searching
-    
+
     // Reload data with search term
     this.loadBookings();
   }
@@ -138,13 +143,13 @@ export class BookingListComponent implements OnInit {
   // Load bookings from API with current filters and pagination
   loadBookings() {
     this.loading = true;
-    
+
     const params = {
       page: this.currentPage + 1, // Convert to 1-based for API
       limit: this.pageSize,
       search: this.currentSearchTerm,
       status: this.selectedStatus,
-      service_type: this.selectedServiceType
+      service_type: this.selectedServiceType,
     };
 
     this.apiService
@@ -157,15 +162,13 @@ export class BookingListComponent implements OnInit {
       )
       .subscribe({
         next: (response: BookingResponse) => {
-          
           if (response.success) {
             this.serviceData = response.data || [];
             this.totalRecords = response.pagination?.total_records || 0;
-            
+
             // Update pagination info from API response
             this.currentPage = (response.pagination?.current_page || 1) - 1; // Convert to 0-based
             this.pageSize = response.pagination?.per_page || 10;
-            
           } else {
             this.serviceData = [];
             this.totalRecords = 0;
@@ -174,16 +177,18 @@ export class BookingListComponent implements OnInit {
         error: (error) => {
           this.serviceData = [];
           this.totalRecords = 0;
-          
+
           // Show user-friendly error message
-          alert('Error loading bookings: ' + (error.message || 'Please try again later'));
-        }
+          alert(
+            'Error loading bookings: ' +
+              (error.message || 'Please try again later')
+          );
+        },
       });
   }
 
   // Handle table action events (add, edit, view, delete)
   onTableAction(event: any) {
-    
     switch (event.event) {
       case 'add':
         this.handleAdd();
@@ -203,21 +208,25 @@ export class BookingListComponent implements OnInit {
   // Handle add new record
   private handleAdd() {
     // Navigate to add booking page or open modal
-    this.router.navigate(['/oil-service'], {
-      queryParams: { mode: 'add' }
+    this.router.navigate(['/select-service'], {
+      queryParams: { mode: 'add' },
     });
   }
 
   // Handle edit record
   private handleEdit(data: ServiceData) {
-    
     if (data?.service_type === 'oil_change') {
       this.router.navigate(['/oil-service'], {
         queryParams: { mode: 'edit' },
         state: { item: data },
       });
-    } else {
+    } else if (data?.service_type === 'battery_replacement') {
       this.router.navigate(['/battery-service'], {
+        queryParams: { mode: 'edit' },
+        state: { item: data },
+      });
+    } else {
+      this.router.navigate(['/other-service'], {
         queryParams: { mode: 'edit' },
         state: { item: data },
       });
@@ -226,27 +235,24 @@ export class BookingListComponent implements OnInit {
 
   // Handle view record
   private handleView(data: ServiceData) {
-    
-    // You can either navigate to a view page or open a modal
-    if (data?.service_type === 'oil_change') {
-      this.router.navigate(['/oil-service'], {
-        queryParams: { mode: 'view' },
-        state: { item: data },
-      });
-    } else {
-      this.router.navigate(['/battery-service'], {
-        queryParams: { mode: 'view' },
-        state: { item: data },
-      });
-    }
+    this.dialog.open(BookingDetailsModalComponent, {
+      width: '700px',
+      disableClose: false,
+      data
+    }).afterClosed().subscribe((res) => {
+      if(res){
+        this.loadBookings();
+      }
+    })
   }
 
   // Handle delete record
   private handleDelete(data: ServiceData) {
-    
     // Show confirmation dialog
-    const confirmed = confirm(`Are you sure you want to delete booking #${data.id} for ${data.customer_name}?`);
-    
+    const confirmed = confirm(
+      `Are you sure you want to delete booking #${data.id} for ${data.customer_name}?`
+    );
+
     if (confirmed) {
       this.deleteBooking(data.id);
     }
@@ -255,7 +261,7 @@ export class BookingListComponent implements OnInit {
   // Delete booking API call
   deleteBooking(id: number) {
     this.loading = true;
-    
+
     this.apiService
       .deleteBooking(id)
       .pipe(
@@ -271,29 +277,37 @@ export class BookingListComponent implements OnInit {
             // Reload current page data
             this.loadBookings();
           } else {
-            alert('Failed to delete booking: ' + (res.message || 'Unknown error'));
+            alert(
+              'Failed to delete booking: ' + (res.message || 'Unknown error')
+            );
           }
         },
         error: (error) => {
-          alert('Error deleting booking: ' + (error.message || 'Please try again later'));
-        }
+          alert(
+            'Error deleting booking: ' +
+              (error.message || 'Please try again later')
+          );
+        },
       });
   }
 
   // Alternative method using modal for editing
   editBookingModal(data: ServiceData): void {
-    this.dialog.open(EditOilServiceBookingComponent, {
-      width: '500px',
-      data: {
-        mode: 'edit',
-        rowData: data,
-      },
-    }).afterClosed().subscribe(result => {
-      if (result) {
-        // Reload data if modal returned success
-        this.loadBookings();
-      }
-    });
+    this.dialog
+      .open(EditOilServiceBookingComponent, {
+        width: '500px',
+        data: {
+          mode: 'edit',
+          rowData: data,
+        },
+      })
+      .afterClosed()
+      .subscribe((result) => {
+        if (result) {
+          // Reload data if modal returned success
+          this.loadBookings();
+        }
+      });
   }
 
   // Utility methods for formatting (if needed in template)

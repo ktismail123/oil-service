@@ -4,7 +4,7 @@
     class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl p-6 mb-8 shadow-sm border border-white/20"
   >
     <div
-      class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+      class="flex lg:flex-row lg:items-center lg:justify-between gap-6"
     >
       <!-- Step Info -->
       <div class="flex items-center gap-4">
@@ -242,98 +242,29 @@
         </div>
 
         <!-- Package Options -->
-        <div class="p-4 lg:p-1">
+        <div class="p-4 lg:p-6">
           <div
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-4"
           >
-            <!-- 4L Package -->
-            <div
-              *ngIf="getSelectedOilDetails()?.package_4l_available"
-              class="rounded-xl p-3 hover:border-gray-300 transition-colors duration-200"
-            >
-              <div class="text-center mb-3">
-                <div
-                  class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2"
-                >
-                  <i class="fas fa-oil-can text-blue-600"></i>
-                </div>
-                <div class="font-bold text-sm text-gray-900">4L Package</div>
-                <div class="text-xs text-blue-600">
-                  AED {{ getSelectedOilDetails()?.price_4l }}
-                </div>
-              </div>
-
-              <div
-                class="flex items-center justify-center gap-2 bg-gray-50 rounded-lg p-1 mb-3"
-              >
-                <button
-                  type="button"
-                  (click)="decrease4LPackage(selectedOilId()!)"
-                  [disabled]="
-                    getExtendedSelection(selectedOilId()!).package4L_count <= 0
-                  "
-                  class="w-7 h-7 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200"
-                >
-                  <i class="fas fa-minus text-gray-600 text-xs"></i>
-                </button>
-
-                <span
-                  class="min-w-[1.5rem] text-center font-bold text-gray-900"
-                >
-                  {{ getExtendedSelection(selectedOilId()!).package4L_count }}
-                </span>
-
-                <button
-                  type="button"
-                  (click)="increase4LPackage(selectedOilId()!)"
-                  class="w-7 h-7 bg-white border border-blue-300 rounded-md hover:bg-blue-50 flex items-center justify-center transition-all duration-200"
-                >
-                  <i class="fas fa-plus text-blue-600 text-xs"></i>
-                </button>
-              </div>
-
-              <div
-                *ngIf="
-                  getExtendedSelection(selectedOilId()!).package4L_count > 0
-                "
-                class="text-center p-2 bg-green-50 rounded-lg border border-green-200"
-              >
-                <div class="text-xs font-bold text-green-700">
-                  AED
-                  {{
-                    (
-                      getExtendedSelection(selectedOilId()!).package4L_count *
-                      +(getSelectedOilDetails()?.price_4l || "0")
-                    ).toFixed(2)
-                  }}
-                </div>
-                <div class="text-xs text-green-600">
-                  ({{
-                    getExtendedSelection(selectedOilId()!).package4L_count * 4
-                  }}L)
-                </div>
-              </div>
-            </div>
-
             <!-- 1L Package -->
             <div
               *ngIf="getSelectedOilDetails()?.package_1l_available"
-              class="rounded-xl p-3 hover:border-gray-300 transition-colors duration-200"
+              class="rounded-xl p-4 border-2 border-gray-200 hover:border-green-300 transition-colors duration-200"
             >
               <div class="text-center mb-3">
                 <div
-                  class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2"
+                  class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2"
                 >
-                  <i class="fas fa-oil-can text-green-600"></i>
+                  <i class="fas fa-oil-can text-green-600 text-lg"></i>
                 </div>
                 <div class="font-bold text-sm text-gray-900">1L Package</div>
-                <div class="text-xs text-green-600">
+                <div class="text-xs text-green-600 font-medium">
                   AED {{ getSelectedOilDetails()?.price_1l }}
                 </div>
               </div>
 
               <div
-                class="flex items-center justify-center gap-2 bg-gray-50 rounded-lg p-1 mb-3"
+                class="flex items-center justify-center gap-3 bg-gray-50 rounded-lg p-2 mb-3"
               >
                 <button
                   type="button"
@@ -341,13 +272,13 @@
                   [disabled]="
                     getExtendedSelection(selectedOilId()!).package1L_count <= 0
                   "
-                  class="w-7 h-7 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200"
+                  class="w-8 h-8 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200"
                 >
                   <i class="fas fa-minus text-gray-600 text-xs"></i>
                 </button>
 
                 <span
-                  class="min-w-[1.5rem] text-center font-bold text-gray-900"
+                  class="min-w-[2rem] text-center font-bold text-gray-900 text-sm"
                 >
                   {{ getExtendedSelection(selectedOilId()!).package1L_count }}
                 </span>
@@ -355,7 +286,7 @@
                 <button
                   type="button"
                   (click)="increase1LPackage(selectedOilId()!)"
-                  class="w-7 h-7 bg-white border border-green-300 rounded-md hover:bg-green-50 flex items-center justify-center transition-all duration-200"
+                  class="w-8 h-8 bg-white border border-green-300 rounded-md hover:bg-green-50 flex items-center justify-center transition-all duration-200"
                 >
                   <i class="fas fa-plus text-green-600 text-xs"></i>
                 </button>
@@ -384,22 +315,160 @@
               </div>
             </div>
 
+            <!-- 4L Package -->
+            <div
+              *ngIf="getSelectedOilDetails()?.package_4l_available"
+              class="rounded-xl p-4 border-2 border-gray-200 hover:border-blue-300 transition-colors duration-200"
+            >
+              <div class="text-center mb-3">
+                <div
+                  class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2"
+                >
+                  <i class="fas fa-oil-can text-blue-600 text-lg"></i>
+                </div>
+                <div class="font-bold text-sm text-gray-900">4L Package</div>
+                <div class="text-xs text-blue-600 font-medium">
+                  AED {{ getSelectedOilDetails()?.price_4l }}
+                </div>
+              </div>
+
+              <div
+                class="flex items-center justify-center gap-3 bg-gray-50 rounded-lg p-2 mb-3"
+              >
+                <button
+                  type="button"
+                  (click)="decrease4LPackage(selectedOilId()!)"
+                  [disabled]="
+                    getExtendedSelection(selectedOilId()!).package4L_count <= 0
+                  "
+                  class="w-8 h-8 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200"
+                >
+                  <i class="fas fa-minus text-gray-600 text-xs"></i>
+                </button>
+
+                <span
+                  class="min-w-[2rem] text-center font-bold text-gray-900 text-sm"
+                >
+                  {{ getExtendedSelection(selectedOilId()!).package4L_count }}
+                </span>
+
+                <button
+                  type="button"
+                  (click)="increase4LPackage(selectedOilId()!)"
+                  class="w-8 h-8 bg-white border border-blue-300 rounded-md hover:bg-blue-50 flex items-center justify-center transition-all duration-200"
+                >
+                  <i class="fas fa-plus text-blue-600 text-xs"></i>
+                </button>
+              </div>
+
+              <div
+                *ngIf="
+                  getExtendedSelection(selectedOilId()!).package4L_count > 0
+                "
+                class="text-center p-2 bg-green-50 rounded-lg border border-green-200"
+              >
+                <div class="text-xs font-bold text-green-700">
+                  AED
+                  {{
+                    (
+                      getExtendedSelection(selectedOilId()!).package4L_count *
+                      +(getSelectedOilDetails()?.price_4l || "0")
+                    ).toFixed(2)
+                  }}
+                </div>
+                <div class="text-xs text-green-600">
+                  ({{
+                    getExtendedSelection(selectedOilId()!).package4L_count * 4
+                  }}L)
+                </div>
+              </div>
+            </div>
+
+            <!-- 5L Package (NEW - First position for prominence) -->
+            <div
+              *ngIf="getSelectedOilDetails()?.package_5l_available"
+              class="rounded-xl p-4 border-2 border-gray-200 hover:border-orange-300 transition-colors duration-200"
+            >
+              <div class="text-center mb-3">
+                <div
+                  class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-2"
+                >
+                  <i class="fas fa-oil-can text-orange-600 text-lg"></i>
+                </div>
+                <div class="font-bold text-sm text-gray-900">5L Package</div>
+                <div class="text-xs text-orange-600 font-medium">
+                  AED {{ getSelectedOilDetails()?.price_5l }}
+                </div>
+              </div>
+
+              <div
+                class="flex items-center justify-center gap-3 bg-gray-50 rounded-lg p-2 mb-3"
+              >
+                <button
+                  type="button"
+                  (click)="decrease5LPackage(selectedOilId()!)"
+                  [disabled]="
+                    getExtendedSelection(selectedOilId()!).package5L_count <= 0
+                  "
+                  class="w-8 h-8 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200"
+                >
+                  <i class="fas fa-minus text-gray-600 text-xs"></i>
+                </button>
+
+                <span
+                  class="min-w-[2rem] text-center font-bold text-gray-900 text-sm"
+                >
+                  {{ getExtendedSelection(selectedOilId()!).package5L_count }}
+                </span>
+
+                <button
+                  type="button"
+                  (click)="increase5LPackage(selectedOilId()!)"
+                  class="w-8 h-8 bg-white border border-orange-300 rounded-md hover:bg-orange-50 flex items-center justify-center transition-all duration-200"
+                >
+                  <i class="fas fa-plus text-orange-600 text-xs"></i>
+                </button>
+              </div>
+
+              <div
+                *ngIf="
+                  getExtendedSelection(selectedOilId()!).package5L_count > 0
+                "
+                class="text-center p-2 bg-green-50 rounded-lg border border-green-200"
+              >
+                <div class="text-xs font-bold text-green-700">
+                  AED
+                  {{
+                    (
+                      getExtendedSelection(selectedOilId()!).package5L_count *
+                      +(getSelectedOilDetails()?.price_5l || "0")
+                    ).toFixed(2)
+                  }}
+                </div>
+                <div class="text-xs text-green-600">
+                  ({{
+                    getExtendedSelection(selectedOilId()!).package5L_count * 5
+                  }}L)
+                </div>
+              </div>
+            </div>
+
             <!-- Bulk Option -->
             <div
               *ngIf="
                 getSelectedOilDetails()?.bulk_available &&
                 getSelectedOilDetails()?.price_per_liter !== 0.0
               "
-              class="b rounded-xl p-3 hover:border-gray-300 transition-colors duration-200 sm:col-span-2 lg:col-span-1"
+              class="rounded-xl p-4 border-2 border-gray-200 hover:border-purple-300 transition-colors duration-200"
             >
               <div class="text-center mb-3">
                 <div
-                  class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2"
+                  class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2"
                 >
-                  <i class="fas fa-drum text-purple-600"></i>
+                  <i class="fas fa-drum text-purple-600 text-lg"></i>
                 </div>
                 <div class="font-bold text-sm text-gray-900">Bulk Option</div>
-                <div class="text-xs text-purple-600">
+                <div class="text-xs text-purple-600 font-medium">
                   AED {{ getSelectedOilDetails()?.price_per_liter }}/L
                 </div>
               </div>
@@ -411,7 +480,7 @@
                 placeholder="0"
                 step="0.5"
                 min="0"
-                class="w-full px-2 py-1 border-2 border-gray-300 rounded-md focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none text-center font-medium text-sm mb-3"
+                class="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none text-center font-medium text-sm mb-3"
               />
 
               <div
@@ -468,7 +537,7 @@
       <!-- Oil Types Selection Grid -->
       <div *ngIf="!selectedOilId()">
         <div
-          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4"
         >
           <div
             *ngFor="let oil of getFilteredOils()"
@@ -515,32 +584,35 @@
                 </div>
               </div>
 
-              <!-- <div class="text-sm text-gray-700 line-clamp-2">
-                {{ oil.name }}
-              </div> -->
               <div class="text-sm font-semibold text-blue-600">
                 {{ oil.service_interval }} KM
               </div>
 
-              <!-- Package Availability -->
-              <div class="flex flex-wrap gap-2">
-                <span
-                  *ngIf="oil.package_4l_available"
-                  class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-800"
-                >
-                  4L: AED {{ oil.price_4l }}
-                </span>
+              <!-- Package Availability with 5L -->
+              <div class="flex flex-wrap gap-1">
                 <span
                   *ngIf="oil.package_1l_available"
                   class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-green-100 text-green-800"
                 >
-                  1L: AED {{ oil.price_1l }}
+                  1L: {{ oil.price_1l }}
+                </span>
+                <span
+                  *ngIf="oil.package_4l_available"
+                  class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-800"
+                >
+                  4L: {{ oil.price_4l }}
+                </span>
+                <span
+                  *ngIf="oil.package_5l_available"
+                  class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-orange-100 text-orange-800"
+                >
+                  5L: {{ oil.price_5l }}
                 </span>
                 <span
                   *ngIf="oil.bulk_available && oil.price_per_liter !== 0.0"
                   class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-800"
                 >
-                  Bulk: AED {{ oil.price_per_liter }}/L
+                  Bulk: {{ oil.price_per_liter }}/L
                 </span>
               </div>
             </div>

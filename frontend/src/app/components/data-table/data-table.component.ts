@@ -209,12 +209,29 @@ export class DataTableComponent implements AfterViewInit {
       }
     });
   }
-
-  // Utility methods for formatting
-  formatServiceType(service: string): string {
-    const serviceType = service === 'battery_replacement' ? 'battery' : 'Oil'
-    return serviceType.replace(/_/g, ' ').toUpperCase();
+formatServiceType(service: string): string {
+  switch (service) {
+    case 'battery_replacement':
+      return 'BATTERY';
+    case 'other_service':
+      return 'OTHER';
+    default:
+      return 'OIL';
   }
+}
+
+getServiceTypeClass(service: string): string {
+  switch (service) {
+    case 'battery_replacement':
+      return 'bg-green-500';  // ✅ green badge
+    case 'other_service':
+      return 'bg-orange-500'; // ✅ orange badge
+    default:
+      return 'bg-blue-500';   // ✅ blue badge for oil
+  }
+}
+
+
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);

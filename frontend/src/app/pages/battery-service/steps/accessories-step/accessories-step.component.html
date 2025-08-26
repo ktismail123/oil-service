@@ -56,14 +56,14 @@
     <div 
       class="group relative bg-white border-2 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
       [class]="selectedAccessories.length === 0 ? 
-        'border-green-500 bg-green-50 shadow-lg shadow-green-500/20 ring-4 ring-green-500/10' : 
+        ' bg-green-50 ring-4 ring-green-500/10' : 
         'border-gray-200 hover:border-gray-300'"
       (click)="onSkipAccessories()"
     >
       <!-- Content -->
       <div class="flex items-center gap-4">
         <!-- Selection Indicator -->
-        <div class="flex-shrink-0">
+        <!-- <div class="flex-shrink-0">
           <div 
             class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200"
             [class]="selectedAccessories.length === 0 ? 
@@ -75,7 +75,7 @@
               class="fas fa-check text-white text-xs"
             ></i>
           </div>
-        </div>
+        </div> -->
         
         <!-- Info -->
         <div class="flex-1 min-w-0">

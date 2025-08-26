@@ -171,8 +171,10 @@ export class OilServiceComponent implements OnInit {
 
       // ✅ Labor cost (included in subtotal)
       const laborCost = this.laborCostSignal();
+      const discount = this.discount();
 
       total += Number(laborCost);
+      total -= Number(discount);
 
     } catch (error) {
       return 0;
@@ -182,6 +184,7 @@ export class OilServiceComponent implements OnInit {
   }
 
   private laborCostSignal = signal(0);
+  private discount = signal(0);
 
   brandForm!: FormGroup;
   modelForm!: FormGroup;
@@ -265,6 +268,7 @@ export class OilServiceComponent implements OnInit {
       mobile: ['', [Validators.required, Validators.pattern(/^\d{10,15}$/)]],
       plateNumber: ['', Validators.required],
       laborCost: [0],
+      discount: [0],
       memo: [''],
     });
 
@@ -274,6 +278,9 @@ export class OilServiceComponent implements OnInit {
     });
     this.customerForm.get('laborCost')?.valueChanges.subscribe((value) => {
       this.laborCostSignal.set(value || 0);
+    });
+    this.customerForm.get('discount')?.valueChanges.subscribe((value) => {
+      this.discount.set(value || 0);
     });
     this.setupPlateNumberCheck();
   }
@@ -311,13 +318,13 @@ export class OilServiceComponent implements OnInit {
     this.billNumber.set(this.editData?.bill_number);
 
     this.brandForm.patchValue({
-      brandId: this.editData?.brand_id,
+      brandId: this.editData?.vehicle?.brand_id,
     });
 
-    this.loadModels(this.editData?.brand_id);
+    this.loadModels(this.editData?.vehicle?.brand_id);
 
     this.modelForm.patchValue({
-      modelId: this.editData?.model_id,
+      modelId: this.editData?.vehicle?.model_id,
     });
 
     this.intervalForm.patchValue({
@@ -342,9 +349,10 @@ export class OilServiceComponent implements OnInit {
     this.customerForm.patchValue({
       name: this.editData?.customer_name,
       mobile: this.editData?.customer_mobile,
-      plateNumber: this.editData?.plate_number,
+      plateNumber: this.editData?.vehicle?.plate_number,
       laborCost: this.editData?.labour_cost,
       memo: this.editData?.memo,
+      discount: this.editData?.discount,
     });
 
     this.currentStep.set(7);
@@ -688,6 +696,7 @@ export class OilServiceComponent implements OnInit {
         vatAmount: this.vatAmount(),
         totalAmount: this.totalAmount(),
         laborCost: this.customerForm.get('laborCost')?.value,
+        discount: this.discount(),
         // Include package details for backend processing
         oilPackageDetails: this.getSelectedOilPackageDetails(),
         memo: this.customerForm.get('memo')?.value,
@@ -756,6 +765,7 @@ export class OilServiceComponent implements OnInit {
         oilPackageDetails: this.getSelectedOilPackageDetails(),
         laborCost: this.customerForm.get('laborCost')?.value,
         memo: this.customerForm.get('memo')?.value,
+        discount: this.discount(),
       },
       accessories: this.selectedAccessories(),
     };

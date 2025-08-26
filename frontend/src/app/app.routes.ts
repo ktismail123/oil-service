@@ -42,6 +42,11 @@ export const routes: Routes = [
         path: 'control-panel',
         loadComponent: () => import('./pages/control-panel/control-panel.component')
           .then(m => m.ControlPanelComponent)
+      },
+      {
+        path: 'other-service',
+        loadComponent: () => import('./pages/other-service/other-service.component')
+          .then(m => m.OtherServiceComponent)
       }
     ]
   },

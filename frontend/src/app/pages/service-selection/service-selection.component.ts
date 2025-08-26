@@ -31,7 +31,7 @@ export class ServiceSelectionComponent implements OnInit, OnDestroy {
 
     // Format time (HH:MM:SS)
     this.currentTime = now.toLocaleTimeString('en-AE', {
-       timeZone: 'Asia/Dubai',
+      timeZone: 'Asia/Dubai',
       hour12: true,
       hour: '2-digit',
       minute: '2-digit',
@@ -48,7 +48,11 @@ export class ServiceSelectionComponent implements OnInit, OnDestroy {
   }
 
   selectService(
-    serviceType: 'oil_change' | 'battery_replacement' | 'control_panel'
+    serviceType:
+      | 'oil_change'
+      | 'battery_replacement'
+      | 'control_panel'
+      | 'other_service'
   ) {
     this.bookingService.clearBooking();
 
@@ -58,6 +62,8 @@ export class ServiceSelectionComponent implements OnInit, OnDestroy {
       this.router.navigate(['/battery-service']);
     } else if (serviceType === 'control_panel') {
       this.router.navigate(['/control-panel']);
+    } else if (serviceType === 'other_service') {
+      this.router.navigate(['/other-service']);
     }
   }
 

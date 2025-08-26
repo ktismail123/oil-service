@@ -39,10 +39,14 @@ export class OilTypeModalComponent {
       service_interval: [data?.service_interval || '', [Validators.required]],
       package_1l_available: [data?.package_1l_available ?? '0', [Validators.required]],
       package_4l_available: [data?.package_4l_available ?? '0', [Validators.required]],
+      package_5l_available: [data?.package_5l_available ?? '0', [Validators.required]], // NEW: 5L support
       bulk_available: [data?.bulk_available ?? '0', [Validators.required]],
       price_1l: [data?.price_1l ?? '', [Validators.required, Validators.min(0)]],
       price_4l: [data?.price_4l ?? '', [Validators.required, Validators.min(0)]],
+      price_5l: [data?.price_5l ?? '', [Validators.required, Validators.min(0)]], // NEW: 5L price
       price_per_liter: [data?.price_per_liter ?? '', [Validators.required, Validators.min(0)]],
+      status: [data?.status || 'active'],
+      quantity_available: [data?.quantity_available ?? 0]
     });
   }
 
@@ -74,9 +78,11 @@ export class OilTypeModalComponent {
       service_interval: 'Service interval',
       package_1l_available: '1L Package availability',
       package_4l_available: '4L Package availability',
+      package_5l_available: '5L Package availability', // NEW: 5L label
       bulk_available: 'Bulk availability',
       price_1l: 'Price for 1L',
       price_4l: 'Price for 4L',
+      price_5l: 'Price for 5L', // NEW: 5L price label
       price_per_liter: 'Price per liter',
     };
     return labels[controlName] || controlName;

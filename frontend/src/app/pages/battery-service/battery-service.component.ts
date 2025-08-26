@@ -97,6 +97,7 @@ export class BatteryServiceComponent implements OnInit {
 
   capacityOptions = signal<any[]>([]);
   laborCost = signal(0);
+  discount = signal(0);
 
   subtotal = computed(() => {
     let total = 0;
@@ -114,6 +115,7 @@ export class BatteryServiceComponent implements OnInit {
       }
     });
     total += this.laborCost();
+    total -= this.discount();
     return total;
   });
 
@@ -168,11 +170,13 @@ export class BatteryServiceComponent implements OnInit {
     this.customerData.set({
       name: this.editData?.customer_name,
       mobile: this.editData?.customer_mobile,
-      plateNumber: this.editData?.plate_number,
+      plateNumber: this.editData?.vehicle?.plate_number,
       laborCost: this.editData?.labour_cost,
       memo: this.editData?.memo,
+      discount: this.editData?.discount
     });
     this.laborCost.set(this.editData?.laborCost);
+    this.discount.set(this.editData?.discount);
     this.currentStep.set(4);
     this.billNumber.set(this.editData?.bill_number);
   }
@@ -243,6 +247,7 @@ export class BatteryServiceComponent implements OnInit {
   onCustomerDataChanged(data: CustomerData) {
     this.customerData.set(data);
     this.laborCost.set(Number(data?.laborCost));
+    this.discount.set(Number(data?.discount));
   }
 
   onStep4ValidityChanged(isValid: boolean) {
@@ -268,7 +273,7 @@ export class BatteryServiceComponent implements OnInit {
       accessories: this.selectedAccessories(),
       subtotal: this.subtotal(),
       vatAmount: this.vatAmount(),
-      totalAmount: this.subtotal(),
+      totalAmount: this.totalAmount(),
       // totalAmount: this.totalAmount()
     };
   }
@@ -313,6 +318,7 @@ export class BatteryServiceComponent implements OnInit {
         laborCost: this.laborCost(),
         memo: customer.memo,
         createdBy: userData?.userId,
+        discount: this.discount()
       },
       accessories: this.selectedAccessories(),
     };
