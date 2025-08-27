@@ -69,6 +69,16 @@ export class BookingDetailsModalComponent {
     this.showCancelConfirmation = true;
   }
 
+  private getCurrentUserId(): number | null {
+    try {
+      const userDetails = JSON.parse(localStorage.getItem('userData') || '{}');
+      return userDetails?.userId || null;
+    } catch (error) {
+      console.error('Error getting user ID:', error);
+      return null;
+    }
+  }
+
   updateBookingStatus(newStatus: 'pending' | 'completed' | 'cancelled') {
     if (confirm(`Are you sure you want to change status to ${newStatus}`)) {
       this.statusUpdating = true;
@@ -78,14 +88,14 @@ export class BookingDetailsModalComponent {
       const updateData = {
         bookingId: this.injectedData?.id,
         status: newStatus,
-        updatedBy: 3,
+        updatedBy: this.getCurrentUserId(),
       };
 
       this.apiService
         .updateBookingStatus(
           updateData.bookingId,
           updateData.status,
-          updateData.updatedBy
+          updateData.updatedBy as number
         )
         .pipe(
           take(1),

@@ -1,3 +1,4 @@
+<!-- Angular Template -->
 <div class="login-container">
   <!-- Background Elements -->
   <div class="background-elements">
@@ -9,7 +10,7 @@
 
   <!-- Main Content -->
   <div class="main-content">
-    <!-- Left Side - Branding -->
+    <!-- Left Side - Branding (Hidden on mobile) -->
     <div class="branding-section">
       <div class="logo-container">
         <div class="logo-circle">
@@ -37,10 +38,22 @@
     <!-- Right Side - Login Form -->
     <div class="login-section">
       <div class="login-card">
-        <!-- Header -->
-        <div class="login-header">
-          <!-- <h2>Welcome Back</h2> -->
-          <!-- <p>Please sign in to your account</p> -->
+        <!-- Mobile Logo -->
+        <div class="mobile-logo">
+          <div class="logo-circle">
+            <span class="logo-text">TL</span>
+          </div>
+          <h2 class="brand-name">Tech Lube</h2>
+        </div>
+
+        <!-- Error Message Display -->
+        <div class="error-alert" *ngIf="loginError">
+          <div class="error-icon">⚠</div>
+          <div class="error-content">
+            <h4>Login Failed</h4>
+            <p>{{ loginError }}</p>
+          </div>
+          <button class="close-error" (click)="clearError()">×</button>
         </div>
 
         <!-- Login Form -->
@@ -53,6 +66,7 @@
             class="form-group"
             [class.focused]="focusedField === 'email'"
             [class.filled]="loginForm.get('email')?.value"
+            [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
           >
             <label for="email">Email Address</label>
             <div class="input-container">
@@ -95,6 +109,7 @@
             class="form-group"
             [class.focused]="focusedField === 'password'"
             [class.filled]="loginForm.get('password')?.value"
+            [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
           >
             <label for="password">Password</label>
             <div class="input-container">
@@ -165,40 +180,6 @@
             </div>
           </div>
 
-          <!-- <div class="form-group">
-            <label for="role">Role</label>
-            <div class="role-selector">
-              <div
-                class="role-option"
-                [class.selected]="loginForm.get('role')?.value === 'manager'"
-                (click)="selectRole('manager')"
-              >
-             
-                <div class="role-text">
-                  <h4>Manager</h4>
-                </div>
-              </div>
-              <div
-                class="role-option"
-                [class.selected]="loginForm.get('role')?.value === 'technician'"
-                (click)="selectRole('technician')"
-              >
-                <div class="role-text">
-                  <h4>Technician</h4>
-                </div>
-              </div>
-            </div>
-          </div> -->
-
-          <!-- <div class="form-options">
-            <label class="checkbox-container">
-              <input type="checkbox" formControlName="rememberMe" />
-              <span class="checkmark"></span>
-              Remember me
-            </label>
-            <a href="#" class="forgot-link">Forgot password?</a>
-          </div> -->
-
           <button
             type="submit"
             class="login-button"
@@ -211,11 +192,6 @@
             </div>
           </button>
         </form>
-
-        <!-- Sign Up Link -->
-        <!-- <div class="signup-link">
-          Don't have an account? <a href="#" (click)="goToSignup()">Sign up</a>
-        </div> -->
       </div>
     </div>
   </div>

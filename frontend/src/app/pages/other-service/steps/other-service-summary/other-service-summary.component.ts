@@ -47,6 +47,7 @@ export class OtherServiceSummaryComponent implements OnInit{
   buttonText = this.editMode === 'edit' ? 'Update' : 'Confirm Booking';
 
   laborCost = input(0);
+  status = input('');
 
   // Inputs
   initialCustomerData = input<CustomerData | null>(null);

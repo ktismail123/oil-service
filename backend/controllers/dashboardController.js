@@ -3,203 +3,191 @@ const { getDB, dbConfig } = require('../config/db');
 const getDashboardData = async (req, res) => {
   try {
     const db = await getDB();
-    const { month, year, userId } = req.query;
+    const { month, year, day, status = 'completed' } = req.query;
 
-    // Build basic filter conditions
+    console.log("Dashboard filters received:", { month, year, day, status });
+
+    // Build filter conditions
     let bookingFilters = [];
     let filterValues = [];
 
-    if (month && year) {
-      bookingFilters.push("MONTH(service_date) = ? AND YEAR(service_date) = ?");
-      filterValues.push(parseInt(month), parseInt(year));
-    } else if (year) {
+    // Date filters
+    if (year) {
       bookingFilters.push("YEAR(service_date) = ?");
       filterValues.push(parseInt(year));
     }
+    
+    if (month) {
+      bookingFilters.push("MONTH(service_date) = ?");
+      filterValues.push(parseInt(month));
+    }
+    
+    if (day) {
+      bookingFilters.push("DAY(service_date) = ?");
+      filterValues.push(parseInt(day));
+    }
 
-    if (userId) {
-      bookingFilters.push("created_by = ?");
-      filterValues.push(parseInt(userId));
+    // Status filter - only add if not empty (empty means all statuses)
+    if (status && status.trim() !== '') {
+      bookingFilters.push("status = ?");
+      filterValues.push(status);
     }
 
     const whereClause = bookingFilters.length ? `WHERE ${bookingFilters.join(" AND ")}` : "";
-
-    console.log("Filters applied:", { month, year, userId });
     console.log("WHERE clause:", whereClause);
+    console.log("Filter values:", filterValues);
 
-    // 1. Get filtered booking stats (direct approach)
+    // 1. Summary with status breakdown
     const [summaryResult] = await db.execute(
       `SELECT 
         COUNT(*) as total_bookings,
-        COALESCE(SUM(subtotal), 0) as total_revenue
+        COALESCE(SUM(total_amount), 0) as total_revenue,
+        COALESCE(SUM(subtotal), 0) as total_subtotal,
+        COALESCE(SUM(vat_amount), 0) as total_vat,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_bookings,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_bookings,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_bookings
        FROM service_bookings 
        ${whereClause}`,
       filterValues
     );
 
-    // 2. Get all users count (unfiltered)
-    const [allUsers] = await db.execute(
-      `SELECT COUNT(*) as total_users FROM users`
-    );
-
-    // 3. FIXED: Direct user performance query
-    let userPerformanceQuery;
-    let userPerformanceValues;
-
-    if (userId) {
-      // If filtering by specific user, get only that user's data
-      userPerformanceQuery = `
-        SELECT 
-          u.id,
-          u.name,
-          u.role,
-          COALESCE(SUM(sb.subtotal), 0) as revenue,
-          COUNT(sb.id) as bookings_count
-        FROM users u
-        LEFT JOIN service_bookings sb ON u.id = sb.created_by 
-          ${whereClause.replace('WHERE', 'AND')}
-        WHERE u.id = ?
-        GROUP BY u.id, u.name, u.role`;
-      userPerformanceValues = [...filterValues, parseInt(userId)];
-    } else {
-      // If no user filter, show all users with their filtered booking data
-      userPerformanceQuery = `
-        SELECT 
-          u.id,
-          u.name,
-          u.role,
-          COALESCE(SUM(sb.subtotal), 0) as revenue,
-          COUNT(sb.id) as bookings_count
-        FROM users u
-        LEFT JOIN service_bookings sb ON u.id = sb.created_by 
-          ${bookingFilters.length ? `AND ${bookingFilters.join(" AND ")}` : ""}
-        GROUP BY u.id, u.name, u.role
-        ORDER BY revenue DESC`;
-      userPerformanceValues = filterValues;
-    }
-
-    console.log("User performance query:", userPerformanceQuery);
-    const [userStats] = await db.execute(userPerformanceQuery, userPerformanceValues);
-
-    // 4. Service type stats (direct from filtered bookings)
+    // 2. Service type distribution
     const [serviceTypes] = await db.execute(
       `SELECT 
         service_type,
         COUNT(*) as count,
-        COALESCE(SUM(subtotal), 0) as revenue
+        COALESCE(SUM(total_amount), 0) as revenue,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count
        FROM service_bookings 
        ${whereClause}
-       GROUP BY service_type`,
+       GROUP BY service_type
+       ORDER BY revenue DESC`,
       filterValues
     );
 
-    // 5. Oil type stats (direct approach)
-    let oilTypeQuery;
-    let oilTypeValues;
-
-    if (bookingFilters.length) {
-      oilTypeQuery = `
-        SELECT 
-          ot.id,
-          ot.name as oil_type_name,
-          COUNT(sb.id) as usage_count,
-          COALESCE(SUM(sb.subtotal), 0) as total_revenue
-        FROM oil_types ot
-        LEFT JOIN service_bookings sb ON ot.id = sb.oil_type_id 
-          AND sb.service_type = 'oil_change'
-          AND ${bookingFilters.join(" AND ")}
-        GROUP BY ot.id, ot.name
-        ORDER BY usage_count DESC`;
-      oilTypeValues = filterValues;
-    } else {
-      oilTypeQuery = `
-        SELECT 
-          ot.id,
-          ot.name as oil_type_name,
-          COUNT(sb.id) as usage_count,
-          COALESCE(SUM(sb.subtotal), 0) as total_revenue
-        FROM oil_types ot
-        LEFT JOIN service_bookings sb ON ot.id = sb.oil_type_id 
-          AND sb.service_type = 'oil_change'
-        GROUP BY ot.id, ot.name
-        ORDER BY usage_count DESC`;
-      oilTypeValues = [];
-    }
-
-    const [oilTypes] = await db.execute(oilTypeQuery, oilTypeValues);
-
-    // 6. Recent bookings (direct from filtered bookings)
+    // 3. Recent bookings with details
     const [recentBookings] = await db.execute(
       `SELECT 
         sb.id,
         sb.service_type,
         sb.service_date,
+        sb.service_time,
+        sb.total_amount,
         sb.subtotal,
+        sb.status,
+        sb.bill_number,
         c.name as customer_name,
-        u.name as created_by_name
+        c.mobile as customer_mobile,
+        cv.plate_number,
+        CONCAT(COALESCE(vb.name, ''), ' ', COALESCE(vm.name, '')) as vehicle_info
        FROM service_bookings sb
        LEFT JOIN customers c ON sb.customer_id = c.id
-       LEFT JOIN users u ON sb.created_by = u.id
+       LEFT JOIN customer_vehicles cv ON sb.vehicle_id = cv.id
+       LEFT JOIN vehicle_brands vb ON cv.brand_id = vb.id
+       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
        ${whereClause}
        ORDER BY sb.created_at DESC
        LIMIT 10`,
       filterValues
     );
 
-    // Calculate metrics
-    const activeUsers = userStats.filter(user => user.bookings_count > 0).length;
-    const totalRevenue = parseFloat(summaryResult[0].total_revenue);
-    const averageRevenuePerActiveUser = activeUsers > 0 ? totalRevenue / activeUsers : 0;
+    // 4. Monthly revenue trend (last 12 months)
+    const [monthlyTrend] = await db.execute(
+      `SELECT 
+        YEAR(service_date) as year,
+        MONTH(service_date) as month,
+        COUNT(*) as bookings_count,
+        COALESCE(SUM(total_amount), 0) as revenue
+       FROM service_bookings 
+       WHERE service_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+         AND status = 'completed'
+       GROUP BY YEAR(service_date), MONTH(service_date)
+       ORDER BY year DESC, month DESC
+       LIMIT 12`
+    );
 
-    // Response with clear metrics
+    // 5. Daily bookings for current month (if month/year filter applied)
+    let dailyBookings = [];
+    if (month && year) {
+      const [dailyResult] = await db.execute(
+        `SELECT 
+          DAY(service_date) as day,
+          COUNT(*) as bookings_count,
+          COALESCE(SUM(total_amount), 0) as revenue,
+          COALESCE(SUM(subtotal), 0) as subtotal
+         FROM service_bookings 
+         WHERE YEAR(service_date) = ? AND MONTH(service_date) = ?
+           ${status ? 'AND status = ?' : ''}
+         GROUP BY DAY(service_date)
+         ORDER BY day ASC`,
+        status ? [parseInt(year), parseInt(month), status] : [parseInt(year), parseInt(month)]
+      );
+      dailyBookings = dailyResult;
+    }
+console.log(dailyBookings);
+
+    // Response
     res.json({
       success: true,
       data: {
         summary: {
-          total_revenue: totalRevenue,
-          total_bookings: parseInt(summaryResult[0].total_bookings),
-          total_users_in_system: parseInt(allUsers[0].total_users),
-          users_shown: userStats.length, // How many users are shown in the table
-          active_users_in_period: activeUsers, // Users with bookings in filtered period
-          average_revenue_per_active_user: parseFloat(averageRevenuePerActiveUser.toFixed(2))
+          total_revenue: parseFloat(summaryResult[0].total_revenue || 0),
+          total_subtotal: parseFloat(summaryResult[0].total_subtotal || 0),
+          total_vat: parseFloat(summaryResult[0].total_vat || 0),
+          total_bookings: parseInt(summaryResult[0].total_bookings || 0),
+          completed_bookings: parseInt(summaryResult[0].completed_bookings || 0),
+          pending_bookings: parseInt(summaryResult[0].pending_bookings || 0),
+          cancelled_bookings: parseInt(summaryResult[0].cancelled_bookings || 0)
         },
-        user_performance: userStats.map(user => ({
-          id: user.id,
-          name: user.name,
-          role: user.role,
-          revenue: parseFloat(user.revenue),
-          bookings_count: parseInt(user.bookings_count)
-        })),
         service_type_distribution: serviceTypes.map(service => ({
           service_type: service.service_type,
           count: parseInt(service.count),
-          revenue: parseFloat(service.revenue)
-        })),
-        oil_type_stats: oilTypes.map(oil => ({
-          id: oil.id,
-          oil_type_name: oil.oil_type_name,
-          usage_count: parseInt(oil.usage_count),
-          total_revenue: parseFloat(oil.total_revenue)
+          revenue: parseFloat(service.revenue),
+          completed_count: parseInt(service.completed_count || 0),
+          pending_count: parseInt(service.pending_count || 0),
+          cancelled_count: parseInt(service.cancelled_count || 0)
         })),
         recent_bookings: recentBookings.map(booking => ({
           id: booking.id,
           service_type: booking.service_type,
           service_date: booking.service_date,
+          service_time: booking.service_time,
+          total_amount: parseFloat(booking.total_amount),
           subtotal: parseFloat(booking.subtotal),
+          status: booking.status,
+          bill_number: booking.bill_number,
           customer_name: booking.customer_name || 'N/A',
-          created_by_name: booking.created_by_name || 'N/A'
+          customer_mobile: booking.customer_mobile,
+          plate_number: booking.plate_number,
+          vehicle_info: booking.vehicle_info ? booking.vehicle_info.trim() : 'N/A'
+        })),
+        monthly_trend: monthlyTrend.map(trend => ({
+          year: trend.year,
+          month: trend.month,
+          bookings_count: parseInt(trend.bookings_count),
+          revenue: parseFloat(trend.revenue)
+        })),
+        daily_bookings: dailyBookings.map(day => ({
+          day: day.day,
+          bookings_count: parseInt(day.bookings_count),
+          revenue: parseFloat(day.revenue),
+          subtotal: parseFloat(day.subtotal)
         }))
       },
-      filters: { month, year, userId },
-      explanation: {
-        total_bookings: "Total bookings matching the applied filters",
-        total_revenue: "Total revenue from bookings matching the applied filters",
-        user_performance: userId ? "Performance data for the selected user only" : "Performance data for all users with filtered booking data"
+      filters: { 
+        month: month || null, 
+        year: year || null, 
+        day: day || null,
+        status: status || 'all'
       }
     });
 
   } catch (error) {
     console.error("Dashboard error:", error);
+    console.error("Stack trace:", error.stack);
     res.status(500).json({
       success: false,
       message: "Failed to fetch dashboard data",
@@ -208,4 +196,94 @@ const getDashboardData = async (req, res) => {
   }
 };
 
-module.exports = { getDashboardData };
+// Export function for VAT reports
+const exportDashboardData = async (req, res) => {
+  try {
+    const db = await getDB();
+    const { month, year, status = 'completed', format = 'excel' } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({
+        error: 'Month and year are required for export'
+      });
+    }
+
+    console.log("Export request:", { month, year, status, format });
+
+    // Get detailed data for export
+    const [exportData] = await db.execute(
+      `SELECT 
+        sb.id,
+        sb.bill_number,
+        sb.service_type,
+        sb.service_date,
+        sb.service_time,
+        sb.subtotal,
+        sb.vat_amount,
+        sb.total_amount,
+        sb.status,
+        c.name as customer_name,
+        c.mobile as customer_mobile,
+        cv.plate_number,
+        CONCAT(COALESCE(vb.name, ''), ' ', COALESCE(vm.name, '')) as vehicle_info,
+        sb.created_at
+       FROM service_bookings sb
+       LEFT JOIN customers c ON sb.customer_id = c.id
+       LEFT JOIN customer_vehicles cv ON sb.vehicle_id = cv.id
+       LEFT JOIN vehicle_brands vb ON cv.brand_id = vb.id
+       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
+       WHERE MONTH(sb.service_date) = ? AND YEAR(sb.service_date) = ? 
+         ${status ? 'AND sb.status = ?' : ''}
+       ORDER BY sb.service_date ASC, sb.created_at ASC`,
+      status ? [parseInt(month), parseInt(year), status] : [parseInt(month), parseInt(year)]
+    );
+
+    if (format === 'vat_report') {
+      // VAT-specific calculations
+      const vatSummary = {
+        period: `${year}-${month.padStart(2, '0')}`,
+        total_sales: exportData.reduce((sum, record) => sum + parseFloat(record.total_amount || 0), 0),
+        total_vat: exportData.reduce((sum, record) => sum + parseFloat(record.vat_amount || 0), 0),
+        total_before_vat: exportData.reduce((sum, record) => sum + parseFloat(record.subtotal || 0), 0),
+        record_count: exportData.length
+      };
+
+      return res.json({
+        success: true,
+        vat_report: {
+          summary: vatSummary,
+          records: exportData,
+          export_date: new Date().toISOString(),
+          filters: { month, year, status }
+        }
+      });
+    }
+
+    // Regular export
+    res.json({
+      success: true,
+      export_data: {
+        records: exportData,
+        summary: {
+          total_records: exportData.length,
+          total_revenue: exportData.reduce((sum, record) => sum + parseFloat(record.total_amount || 0), 0),
+          period: `${year}-${month}`
+        },
+        export_date: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error("Export error:", error);
+    res.status(500).json({
+      success: false,
+      error: 'Export failed',
+      details: error.message
+    });
+  }
+};
+
+module.exports = { 
+  getDashboardData,
+  exportDashboardData 
+};

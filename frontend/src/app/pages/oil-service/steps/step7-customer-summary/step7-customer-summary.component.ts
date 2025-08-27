@@ -3,7 +3,7 @@ import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Accessory, OilFilter, OilType } from '../../../../models';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
-import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -15,7 +15,8 @@ import { ActivatedRoute } from '@angular/router';
     CurrencyPipe,
     DatePipe,
     NgFor,
-  ],
+    NgClass
+],
   templateUrl: './step7-customer-summary.component.html',
   styleUrl: './step7-customer-summary.component.scss',
 })
@@ -39,6 +40,7 @@ export class Step7CustomerSummaryComponent {
   @Input() vatAmount: number = 0;
   @Input() totalAmount: number = 0;
   @Input() billNumber = '';
+  @Input() status = '';
   @Input() oilQuantity: number = 0;
 
   @Output() submitBooking = new EventEmitter();

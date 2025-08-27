@@ -259,7 +259,7 @@
       <div class="space-y-2 text-sm">
         <div class="flex justify-between">
           <span class="text-blue-700">Subtotal:</span>
-          <span class="font-medium text-blue-900">{{ injectedData.subtotal | currency:'AED ' }}</span>
+          <span class="font-medium text-blue-900">{{ injectedData.subtotal - injectedData.vat_amount | currency:'AED ' }}</span>
         </div>
         <div class="flex justify-between">
           <span class="text-blue-700">VAT ({{ injectedData.vat_percentage }}%):</span>

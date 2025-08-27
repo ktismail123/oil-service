@@ -756,7 +756,9 @@ const getAllBookings = async (req, res) => {
 // };
 
 const createNewBooking = async (req, res) => {
-  const db = getDB();
+  const pool = getDB();
+  const connection = await pool.getConnection();
+  
   try {
     const {
       customer, vehicle, service, accessories = []
@@ -798,7 +800,7 @@ const createNewBooking = async (req, res) => {
 
     // Validate created_by user exists if provided
     if (sanitizedService.createdBy !== null) {
-      const [userExists] = await db.execute(
+      const [userExists] = await connection.execute(
         'SELECT id FROM users WHERE id = ?',
         [sanitizedService.createdBy]
       );
@@ -813,11 +815,11 @@ const createNewBooking = async (req, res) => {
     }
 
     // Start transaction
-    await db.beginTransaction();
+    await connection.beginTransaction();
 
     // Insert or get customer
     let customerId;
-    const [existingCustomer] = await db.execute(
+    const [existingCustomer] = await connection.execute(
       'SELECT id FROM customers WHERE mobile = ?',
       [customer.mobile]
     );
@@ -826,7 +828,7 @@ const createNewBooking = async (req, res) => {
       customerId = existingCustomer[0].id;
       console.log('Found existing customer:', customerId);
     } else {
-      const [customerResult] = await db.execute(
+      const [customerResult] = await connection.execute(
         'INSERT INTO customers (name, mobile) VALUES (?, ?)',
         [customer.name, customer.mobile]
       );
@@ -841,7 +843,7 @@ const createNewBooking = async (req, res) => {
     // Process vehicle if it exists (regardless of service type)
     if (vehicle && vehicle.plateNumber && vehicle.brandId && vehicle.modelId) {
       // Full vehicle data provided - process normally
-      const [existingVehicle] = await db.execute(
+      const [existingVehicle] = await connection.execute(
         'SELECT id, customer_id, brand_id, model_id FROM customer_vehicles WHERE plate_number = ?',
         [vehicle.plateNumber]
       );
@@ -859,7 +861,7 @@ const createNewBooking = async (req, res) => {
 
         if (needsUpdate) {
           // Update the existing vehicle's information
-          await db.execute(
+          await connection.execute(
             'UPDATE customer_vehicles SET customer_id = ?, brand_id = ?, model_id = ? WHERE id = ?',
             [customerId, vehicle.brandId, vehicle.modelId, existingVehicleId]
           );
@@ -876,7 +878,7 @@ const createNewBooking = async (req, res) => {
 
       } else {
         // Create new vehicle
-        const [vehicleResult] = await db.execute(
+        const [vehicleResult] = await connection.execute(
           'INSERT INTO customer_vehicles (customer_id, brand_id, model_id, plate_number) VALUES (?, ?, ?, ?)',
           [customerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
         );
@@ -895,7 +897,7 @@ const createNewBooking = async (req, res) => {
       console.log('Other service with plate number only:', vehicle.plateNumber);
       
       // Check if this plate number exists in the system
-      const [existingVehicle] = await db.execute(
+      const [existingVehicle] = await connection.execute(
         'SELECT id, customer_id, brand_id, model_id FROM customer_vehicles WHERE plate_number = ?',
         [vehicle.plateNumber]
       );
@@ -951,7 +953,7 @@ const createNewBooking = async (req, res) => {
     console.log('Booking parameters:', bookingParams);
 
     // Insert service booking
-    const [bookingResult] = await db.execute(`
+    const [bookingResult] = await connection.execute(`
       INSERT INTO service_bookings (
         customer_id, vehicle_id, service_type, service_date, service_time,
         service_interval, oil_type_id, oil_quantity, oil_filter_id, battery_type_id,
@@ -966,7 +968,7 @@ const createNewBooking = async (req, res) => {
     const billNumber = `TKN-${bookingId}`;
 
     // Update bill_number for this booking
-    await db.execute(
+    await connection.execute(
       'UPDATE service_bookings SET bill_number = ? WHERE id = ?',
       [billNumber, bookingId]
     );
@@ -975,7 +977,7 @@ const createNewBooking = async (req, res) => {
 
     // Insert accessories
     for (const accessory of accessories) {
-      await db.execute(
+      await connection.execute(
         'INSERT INTO booking_accessories (booking_id, accessory_id, quantity, price) VALUES (?, ?, ?, ?)',
         [bookingId, accessory.id, accessory.quantity, accessory.price]
       );
@@ -983,7 +985,7 @@ const createNewBooking = async (req, res) => {
 
     console.log('Inserted accessories:', accessories.length);
 
-    await db.commit();
+    await connection.commit();
     console.log('Transaction committed successfully');
 
     // Enhanced response
@@ -1005,18 +1007,23 @@ const createNewBooking = async (req, res) => {
     });
 
   } catch (error) {
-    await db.rollback();
+    await connection.rollback();
     console.error('Booking creation failed:', error);
     console.error('Request body:', req.body);
     res.status(500).json({
       error: 'Failed to create booking',
       details: error.message
     });
+  } finally {
+    // Always release the connection back to the pool
+    connection.release();
   }
 };
 
 const updateBooking = async (req, res) => {
-  const db = getDB();
+  const pool = getDB();
+  const connection = await pool.getConnection();
+  
   try {
     const { id } = req.params;
     const {
@@ -1029,6 +1036,7 @@ const updateBooking = async (req, res) => {
     console.log('Booking ID:', bookingId);
     console.log('Service data:', service);
     console.log('Vehicle data:', vehicle);
+    console.log('Customer data:', customer);
     console.log('Memo in request:', service?.memo);
 
     // Validate booking ID
@@ -1039,7 +1047,7 @@ const updateBooking = async (req, res) => {
     }
 
     // Check if booking exists
-    const [existingBooking] = await db.execute(
+    const [existingBooking] = await connection.execute(
       'SELECT * FROM service_bookings WHERE id = ?',
       [bookingId]
     );
@@ -1051,16 +1059,11 @@ const updateBooking = async (req, res) => {
     }
 
     const currentBooking = existingBooking[0];
-    console.log('Current booking:', {
-      service_type: currentBooking.service_type,
-      vehicle_id: currentBooking.vehicle_id,
-      reference_plate_number: currentBooking.reference_plate_number,
-      memo: currentBooking.memo
-    });
+    console.log('Current booking status:', currentBooking.status);
 
     // Validate created_by user exists if provided in service
     if (service?.createdBy && service.createdBy !== '') {
-      const [userExists] = await db.execute(
+      const [userExists] = await connection.execute(
         'SELECT id FROM users WHERE id = ?',
         [service.createdBy]
       );
@@ -1081,106 +1084,101 @@ const updateBooking = async (req, res) => {
       });
     }
 
-    // Check if booking can be updated based on current status
-    if (currentBooking.status === 'completed' || currentBooking.status === 'cancelled') {
-      if (!status && !(service && service.memo !== undefined)) {
-        return res.status(400).json({
-          error: `Cannot update ${currentBooking.status} booking details. Only status changes and memo updates are allowed.`
-        });
-      }
-    }
-
     // Start transaction
-    await db.beginTransaction();
+    await connection.beginTransaction();
 
     let customerId = currentBooking.customer_id;
     let vehicleId = currentBooking.vehicle_id;
     let referencePlateNumber = currentBooking.reference_plate_number;
 
-    // Only update customer and vehicle if booking is still pending
-    if (currentBooking.status === 'pending' && customer) {
-      // Handle customer update/creation
-      if (customer.mobile) {
-        const [existingCustomer] = await db.execute(
-          'SELECT id FROM customers WHERE mobile = ?',
-          [customer.mobile]
-        );
+    // Handle customer update/creation - Allow for all statuses except 'cancelled'
+    if (currentBooking.status !== 'cancelled' && customer && customer.mobile) {
+      console.log('Updating customer data');
+      
+      const [existingCustomer] = await connection.execute(
+        'SELECT id FROM customers WHERE mobile = ?',
+        [customer.mobile]
+      );
 
-        if (existingCustomer.length > 0) {
-          customerId = existingCustomer[0].id;
-          // Update customer name if different
-          await db.execute(
+      if (existingCustomer.length > 0) {
+        customerId = existingCustomer[0].id;
+        // Update customer name if different
+        if (customer.name) {
+          await connection.execute(
             'UPDATE customers SET name = ? WHERE id = ?',
             [customer.name, customerId]
           );
-        } else {
-          const [customerResult] = await db.execute(
-            'INSERT INTO customers (name, mobile) VALUES (?, ?)',
-            [customer.name, customer.mobile]
-          );
-          customerId = customerResult.insertId;
         }
+      } else {
+        const [customerResult] = await connection.execute(
+          'INSERT INTO customers (name, mobile) VALUES (?, ?)',
+          [customer.name || '', customer.mobile]
+        );
+        customerId = customerResult.insertId;
       }
+      console.log('Customer updated/created with ID:', customerId);
+    }
 
-      // Handle vehicle update/creation based on service type
-      if (vehicle) {
-        if (currentBooking.service_type === 'other_service') {
-          // For other_service: handle plate number reference
-          if (vehicle.plateNumber) {
-            referencePlateNumber = vehicle.plateNumber;
-            
-            // Check if full vehicle data is provided
-            if (vehicle.brandId && vehicle.modelId) {
-              // Full vehicle data provided - save to vehicles table but don't associate
-              const [existingVehicle] = await db.execute(
-                'SELECT id FROM customer_vehicles WHERE plate_number = ?',
-                [vehicle.plateNumber]
-              );
-
-              if (existingVehicle.length > 0) {
-                const existingVehicleId = existingVehicle[0].id;
-                await db.execute(
-                  'UPDATE customer_vehicles SET customer_id = ?, brand_id = ?, model_id = ? WHERE id = ?',
-                  [customerId, vehicle.brandId, vehicle.modelId, existingVehicleId]
-                );
-                console.log('Updated existing vehicle for other_service (not associated)');
-              } else {
-                const [vehicleResult] = await db.execute(
-                  'INSERT INTO customer_vehicles (customer_id, brand_id, model_id, plate_number) VALUES (?, ?, ?, ?)',
-                  [customerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
-                );
-                console.log('Created new vehicle for other_service (not associated):', vehicleResult.insertId);
-              }
-            }
-            // vehicleId remains null for other_service
-            console.log('Updated reference plate number for other_service:', referencePlateNumber);
-          } else {
-            referencePlateNumber = null;
-          }
-        } else {
-          // For oil_change and battery_replacement: handle normal vehicle association
-          if (vehicle.plateNumber && vehicle.brandId && vehicle.modelId) {
-            const [existingVehicle] = await db.execute(
+    // Handle vehicle update/creation - Allow for all statuses except 'cancelled'
+    if (currentBooking.status !== 'cancelled' && vehicle) {
+      console.log('Updating vehicle data');
+      
+      if (currentBooking.service_type === 'other_service') {
+        // For other_service: handle plate number reference
+        if (vehicle.plateNumber) {
+          referencePlateNumber = vehicle.plateNumber;
+          
+          // Check if full vehicle data is provided
+          if (vehicle.brandId && vehicle.modelId) {
+            // Full vehicle data provided - save to vehicles table but don't associate
+            const [existingVehicle] = await connection.execute(
               'SELECT id FROM customer_vehicles WHERE plate_number = ?',
               [vehicle.plateNumber]
             );
 
             if (existingVehicle.length > 0) {
-              vehicleId = existingVehicle[0].id;
-              await db.execute(
+              const existingVehicleId = existingVehicle[0].id;
+              await connection.execute(
                 'UPDATE customer_vehicles SET customer_id = ?, brand_id = ?, model_id = ? WHERE id = ?',
-                [customerId, vehicle.brandId, vehicle.modelId, vehicleId]
+                [customerId, vehicle.brandId, vehicle.modelId, existingVehicleId]
               );
+              console.log('Updated existing vehicle for other_service (not associated)');
             } else {
-              const [vehicleResult] = await db.execute(
+              const [vehicleResult] = await connection.execute(
                 'INSERT INTO customer_vehicles (customer_id, brand_id, model_id, plate_number) VALUES (?, ?, ?, ?)',
                 [customerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
               );
-              vehicleId = vehicleResult.insertId;
+              console.log('Created new vehicle for other_service (not associated):', vehicleResult.insertId);
             }
-            // Clear reference plate for regular services
-            referencePlateNumber = null;
           }
+          // vehicleId remains null for other_service
+          console.log('Updated reference plate number for other_service:', referencePlateNumber);
+        } else {
+          referencePlateNumber = null;
+        }
+      } else {
+        // For oil_change and battery_replacement: handle normal vehicle association
+        if (vehicle.plateNumber && vehicle.brandId && vehicle.modelId) {
+          const [existingVehicle] = await connection.execute(
+            'SELECT id FROM customer_vehicles WHERE plate_number = ?',
+            [vehicle.plateNumber]
+          );
+
+          if (existingVehicle.length > 0) {
+            vehicleId = existingVehicle[0].id;
+            await connection.execute(
+              'UPDATE customer_vehicles SET customer_id = ?, brand_id = ?, model_id = ? WHERE id = ?',
+              [customerId, vehicle.brandId, vehicle.modelId, vehicleId]
+            );
+          } else {
+            const [vehicleResult] = await connection.execute(
+              'INSERT INTO customer_vehicles (customer_id, brand_id, model_id, plate_number) VALUES (?, ?, ?, ?)',
+              [customerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
+            );
+            vehicleId = vehicleResult.insertId;
+          }
+          // Clear reference plate for regular services
+          referencePlateNumber = null;
         }
       }
     }
@@ -1189,8 +1187,8 @@ const updateBooking = async (req, res) => {
     let updateFields = [];
     let updateValues = [];
 
-    // Update service details only if booking is pending OR memo is being updated
-    if ((currentBooking.status === 'pending' && service) || (service && service.memo !== undefined)) {
+    // Update service details based on booking status
+    if (service) {
       const sanitizedService = {
         type: service.type || currentBooking.service_type,
         date: service.date || currentBooking.service_date,
@@ -1207,8 +1205,7 @@ const updateBooking = async (req, res) => {
         createdBy: service.createdBy !== undefined ? 
           (service.createdBy && service.createdBy !== '' ? service.createdBy : null) : 
           currentBooking.created_by,
-          discount: service.discount !== undefined ? parseFloat(service.discount) || 0 : currentBooking.discount,
-
+        discount: service.discount !== undefined ? parseFloat(service.discount) || 0 : currentBooking.discount,
       };
 
       console.log('Sanitized service:', sanitizedService);
@@ -1216,7 +1213,7 @@ const updateBooking = async (req, res) => {
       // Validate labor cost
       const laborCost = parseFloat(sanitizedService.laborCost) || 0;
       if (laborCost < 0) {
-        await db.rollback();
+        await connection.rollback();
         return res.status(400).json({
           error: 'Labor cost cannot be negative'
         });
@@ -1224,7 +1221,7 @@ const updateBooking = async (req, res) => {
 
       // Validate memo length
       if (sanitizedService.memo && sanitizedService.memo.length > 500) {
-        await db.rollback();
+        await connection.rollback();
         return res.status(400).json({
           error: 'Memo cannot exceed 500 characters'
         });
@@ -1233,22 +1230,7 @@ const updateBooking = async (req, res) => {
       // Clean memo text
       const cleanedMemo = sanitizedService.memo ? sanitizedService.memo.trim() : null;
 
-      // If only memo is being updated (for completed/cancelled bookings)
-      if ((currentBooking.status === 'completed' || currentBooking.status === 'cancelled') &&
-        service.memo !== undefined && Object.keys(service).filter(key => key !== 'createdBy').length === 1) {
-
-        console.log('Updating only memo for completed/cancelled booking');
-        updateFields.push('memo = ?');
-        updateValues.push(cleanedMemo);
-        
-
-        // Also update created_by if provided
-        if (service.createdBy !== undefined) {
-          updateFields.push('created_by = ?');
-          updateValues.push(sanitizedService.createdBy);
-        }
-
-      } else if (currentBooking.status === 'pending') {
+      if (currentBooking.status === 'pending') {
         // Full service update for pending bookings
         console.log('Full service update for pending booking');
 
@@ -1269,8 +1251,64 @@ const updateBooking = async (req, res) => {
           sanitizedService.interval, sanitizedService.oilTypeId, sanitizedService.oilQuantity,
           sanitizedService.oilFilterId, sanitizedService.batteryTypeId,
           sanitizedService.subtotal, vatPercentage, vatAmount, totalAmount, laborCost,
-          sanitizedService.oilQuantityDetails, cleanedMemo, sanitizedService.createdBy, referencePlateNumber,  sanitizedService.discount
+          sanitizedService.oilQuantityDetails, cleanedMemo, sanitizedService.createdBy, referencePlateNumber, sanitizedService.discount
         );
+
+      } else if (currentBooking.status === 'in_progress') {
+        // For in_progress bookings, allow memo and created_by updates only
+        console.log('Limited service update for in_progress booking (memo and created_by only)');
+        
+        if (service.memo !== undefined) {
+          updateFields.push('memo = ?');
+          updateValues.push(cleanedMemo);
+        }
+        
+        if (service.createdBy !== undefined) {
+          updateFields.push('created_by = ?');
+          updateValues.push(sanitizedService.createdBy);
+        }
+
+      } else if (currentBooking.status === 'completed' || currentBooking.status === 'cancelled') {
+        // For completed/cancelled bookings, allow memo and created_by updates only
+        console.log('Limited service update for completed/cancelled booking (memo and created_by only)');
+        
+        if (service.memo !== undefined) {
+          updateFields.push('memo = ?');
+          updateValues.push(cleanedMemo);
+        }
+        
+        if (service.createdBy !== undefined) {
+          updateFields.push('created_by = ?');
+          updateValues.push(sanitizedService.createdBy);
+        }
+      }
+    }
+
+    // Update customer_id and vehicle_id if they were changed (even for non-pending bookings)
+    if (customerId !== currentBooking.customer_id) {
+      console.log('Customer ID changed:', currentBooking.customer_id, '->', customerId);
+      // Only add if not already in updateFields
+      if (!updateFields.includes('customer_id = ?')) {
+        updateFields.push('customer_id = ?');
+        updateValues.push(customerId);
+      }
+    }
+
+    if (vehicleId !== currentBooking.vehicle_id) {
+      console.log('Vehicle ID changed:', currentBooking.vehicle_id, '->', vehicleId);
+      // Only add if not already in updateFields
+      if (!updateFields.includes('vehicle_id = ?')) {
+        updateFields.push('vehicle_id = ?');
+        updateValues.push(vehicleId);
+      }
+    }
+
+    if (referencePlateNumber !== currentBooking.reference_plate_number) {
+      console.log('Reference plate changed:', currentBooking.reference_plate_number, '->', referencePlateNumber);
+      // Only add if not already in updateFields
+      if (!updateFields.includes('reference_plate_number = ?')) {
+        updateFields.push('reference_plate_number = ?');
+        updateValues.push(referencePlateNumber);
       }
     }
 
@@ -1278,7 +1316,6 @@ const updateBooking = async (req, res) => {
     if (status && status !== currentBooking.status) {
       updateFields.push('status = ?');
       updateValues.push(status);
-
       console.log('Status update:', currentBooking.status, '->', status);
     }
 
@@ -1286,9 +1323,16 @@ const updateBooking = async (req, res) => {
     updateFields.push('updated_at = CURRENT_TIMESTAMP');
 
     if (updateFields.length === 1) { // Only timestamp update
-      await db.rollback();
+      await connection.rollback();
       return res.status(400).json({
-        error: 'No valid fields to update'
+        error: 'No valid fields to update',
+        debug: {
+          currentStatus: currentBooking.status,
+          providedCustomer: !!customer,
+          providedVehicle: !!vehicle,
+          providedService: !!service,
+          providedStatus: !!status
+        }
       });
     }
 
@@ -1299,10 +1343,10 @@ const updateBooking = async (req, res) => {
     console.log('Update query:', updateQuery);
     console.log('Update values:', updateValues);
 
-    const [bookingResult] = await db.execute(updateQuery, updateValues);
+    const [bookingResult] = await connection.execute(updateQuery, updateValues);
 
     if (bookingResult.affectedRows === 0) {
-      await db.rollback();
+      await connection.rollback();
       return res.status(404).json({
         error: 'Booking not found or no changes made'
       });
@@ -1315,14 +1359,14 @@ const updateBooking = async (req, res) => {
       console.log('Updating accessories for pending booking');
 
       // Delete existing accessories
-      await db.execute(
+      await connection.execute(
         'DELETE FROM booking_accessories WHERE booking_id = ?',
         [bookingId]
       );
 
       // Insert updated accessories
       for (const accessory of accessories) {
-        await db.execute(
+        await connection.execute(
           'INSERT INTO booking_accessories (booking_id, accessory_id, quantity, price) VALUES (?, ?, ?, ?)',
           [bookingId, accessory.id, accessory.quantity, accessory.price]
         );
@@ -1331,11 +1375,11 @@ const updateBooking = async (req, res) => {
       console.log('Accessories updated:', accessories.length);
     }
 
-    await db.commit();
+    await connection.commit();
     console.log('Transaction committed');
 
     // Get updated booking details with proper JOINs for different service types
-    const [updatedBooking] = await db.execute(
+    const [updatedBooking] = await pool.execute(
       `SELECT 
         sb.*,
         c.name as customer_name,
@@ -1369,26 +1413,34 @@ const updateBooking = async (req, res) => {
         fieldsUpdated: updateFields.filter(field => field !== 'updated_at = CURRENT_TIMESTAMP'),
         statusChanged: status && status !== currentBooking.status,
         memoUpdated: service?.memo !== undefined && service.memo !== currentBooking.memo,
-        referencePlateUpdated: referencePlateNumber !== currentBooking.reference_plate_number
+        referencePlateUpdated: referencePlateNumber !== currentBooking.reference_plate_number,
+        customerUpdated: customerId !== currentBooking.customer_id,
+        vehicleUpdated: vehicleId !== currentBooking.vehicle_id
       }
     });
 
   } catch (error) {
-    await db.rollback();
+    await connection.rollback();
     console.error('Booking update failed:', error);
     console.error('Request body:', req.body);
     res.status(500).json({
       error: 'Failed to update booking',
       details: error.message
     });
+  } finally {
+    // Always release the connection back to the pool
+    connection.release();
   }
 };
 
 const deleteBooking = async (req, res) => {
-  const db = getDB();
+  const pool = getDB();
+  const connection = await pool.getConnection();
+  
   try {
     const { id } = req.params; // or req.body depending on your route setup
     const bookingId = parseInt(id);
+    
     // Validate booking ID
     if (!bookingId) {
       return res.status(400).json({
@@ -1398,16 +1450,16 @@ const deleteBooking = async (req, res) => {
     }
 
     // Start transaction
-    await db.beginTransaction();
+    await connection.beginTransaction();
 
     // Check if booking exists
-    const [existingBooking] = await db.execute(
+    const [existingBooking] = await connection.execute(
       'SELECT id, customer_id, vehicle_id FROM service_bookings WHERE id = ?',
       [bookingId]
     );
 
     if (existingBooking.length === 0) {
-      await db.rollback();
+      await connection.rollback();
       return res.status(404).json({
         success: false,
         error: 'Booking not found'
@@ -1415,27 +1467,27 @@ const deleteBooking = async (req, res) => {
     }
 
     // Delete related accessories first (foreign key constraint)
-    await db.execute(
+    await connection.execute(
       'DELETE FROM booking_accessories WHERE booking_id = ?',
       [bookingId]
     );
 
     // Delete the main booking
-    const [deleteResult] = await db.execute(
+    const [deleteResult] = await connection.execute(
       'DELETE FROM service_bookings WHERE id = ?',
       [bookingId]
     );
 
     // Check if deletion was successful
     if (deleteResult.affectedRows === 0) {
-      await db.rollback();
+      await connection.rollback();
       return res.status(500).json({
         success: false,
         error: 'Failed to delete booking'
       });
     }
 
-    await db.commit();
+    await connection.commit();
 
     res.json({
       success: true,
@@ -1444,19 +1496,24 @@ const deleteBooking = async (req, res) => {
     });
 
   } catch (error) {
-    await db.rollback();
+    await connection.rollback();
     console.error('Booking deletion failed:', error);
-    console.error('Booking ID:', req.params.bookingId || req.body.bookingId);
+    console.error('Booking ID:', req.params.id || req.body.id);
     res.status(500).json({
       success: false,
       error: 'Failed to delete booking',
       details: error.message
     });
+  } finally {
+    // Always release the connection back to the pool
+    connection.release();
   }
 };
 
 const updateBookingStatus = async (req, res) => {
-  const db = getDB();
+  const pool = getDB();
+  const connection = await pool.getConnection();
+  
   try {
     const { id } = req.params;
     const { status, updatedBy } = req.body;
@@ -1476,7 +1533,7 @@ const updateBookingStatus = async (req, res) => {
     }
 
     // Validate status
-    const validStatuses = ['pending', 'completed', 'cancelled'];
+    const validStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         error: 'Invalid status',
@@ -1486,7 +1543,7 @@ const updateBookingStatus = async (req, res) => {
 
     // Validate updatedBy user exists if provided
     if (updatedBy) {
-      const [userExists] = await db.execute(
+      const [userExists] = await connection.execute(
         'SELECT id FROM users WHERE id = ?',
         [updatedBy]
       );
@@ -1500,7 +1557,7 @@ const updateBookingStatus = async (req, res) => {
     }
 
     // Check if booking exists and get current details
-    const [existingBooking] = await db.execute(
+    const [existingBooking] = await connection.execute(
       `SELECT 
         sb.id, sb.status, sb.bill_number, sb.customer_id, sb.service_type,
         c.name as customer_name, c.mobile as customer_mobile
@@ -1529,7 +1586,8 @@ const updateBookingStatus = async (req, res) => {
 
     // Validate status transitions (business rules)
     const validTransitions = {
-      'pending': ['completed', 'cancelled'],
+      'pending': ['in_progress', 'completed', 'cancelled'],
+      'in_progress': ['completed', 'cancelled'],
       'completed': ['pending', 'cancelled'], 
       'cancelled': [] // Cannot change from cancelled
     };
@@ -1542,7 +1600,7 @@ const updateBookingStatus = async (req, res) => {
     }
 
     // Start transaction
-    await db.beginTransaction();
+    await connection.beginTransaction();
 
     // Update the booking status
     const updateQuery = `
@@ -1551,10 +1609,10 @@ const updateBookingStatus = async (req, res) => {
       WHERE id = ?
     `;
     
-    const [updateResult] = await db.execute(updateQuery, [status, bookingId]);
+    const [updateResult] = await connection.execute(updateQuery, [status, bookingId]);
 
     if (updateResult.affectedRows === 0) {
-      await db.rollback();
+      await connection.rollback();
       return res.status(404).json({
         error: 'Failed to update booking status'
       });
@@ -1563,7 +1621,7 @@ const updateBookingStatus = async (req, res) => {
     // Optional: Log status change for audit trail
     // You would need to create this table first
     try {
-      await db.execute(`
+      await connection.execute(`
         INSERT INTO booking_status_history (booking_id, old_status, new_status, changed_by, changed_at)
         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
       `, [bookingId, currentBooking.status, status, updatedBy || null]);
@@ -1572,7 +1630,7 @@ const updateBookingStatus = async (req, res) => {
       console.warn('Status change logging skipped:', logError.message);
     }
 
-    await db.commit();
+    await connection.commit();
     console.log('Status updated successfully');
 
     // Return response with booking details
@@ -1599,12 +1657,15 @@ const updateBookingStatus = async (req, res) => {
     });
 
   } catch (error) {
-    await db.rollback();
+    await connection.rollback();
     console.error('Status update failed:', error);
     res.status(500).json({
       error: 'Failed to update booking status',
       details: error.message
     });
+  } finally {
+    // Always release the connection back to the pool
+    connection.release();
   }
 };
 

@@ -72,8 +72,8 @@ export class OtherServiceComponent implements OnInit {
     // Apply discount to inclusive total
     const discountedTotal = Math.max(0, totalInclusive - discount);
 
-    // Extract VAT from discounted total (VAT = 5/105 of inclusive price)
-    const vatAmount = (discountedTotal * 5) / 105;
+    // Extract VAT from discounted total (VAT = 5/100 of inclusive price)
+    const vatAmount = (discountedTotal * 5) / 100;
     const netSubtotal = discountedTotal - vatAmount;
 
     return {

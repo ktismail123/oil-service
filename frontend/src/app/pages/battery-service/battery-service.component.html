@@ -81,6 +81,7 @@
             *ngIf="currentStep() === 4"
             [billNumber]="billNumber()"
             [laborCost]="laborCost()"
+            [status]="editData?.status"
             [initialCustomerData]="customerData()"
             [serviceSummary]="getServiceSummary()"
             (customerDataChanged)="onCustomerDataChanged($event)"

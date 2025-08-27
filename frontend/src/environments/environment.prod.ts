@@ -3,5 +3,6 @@ export const environment = {
   apiUrl: 'https://app.techlubeuae.com/api',
   appName: 'Tech Lube',
   contact_number: '+971 55 860 7006',
-  email: 'info@techlube.ae',
+  email: 'info@techlubeuae.com',
+  website: 'www.techlubeuae.com'
 };

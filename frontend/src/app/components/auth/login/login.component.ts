@@ -1,7 +1,12 @@
 import { ApiService } from './../../../services/api.service';
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, take } from 'rxjs';
 
@@ -12,7 +17,6 @@ import { finalize, take } from 'rxjs';
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
-
   private apiService = inject(ApiService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -49,12 +53,18 @@ export class LoginComponent {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       role: ['manager', [Validators.required]], // Default to manager
-      rememberMe: [false]
+      rememberMe: [false],
     });
   }
 
   ngOnInit() {
     // Component initialization
+  }
+
+  loginError: string = ''; // For displaying login errors
+
+  clearError() {
+    this.loginError = '';
   }
 
   onFieldFocus(field: string) {
@@ -74,24 +84,39 @@ export class LoginComponent {
       this.isLoading = true;
 
       // Simulate authentication
-     this.apiService.login(this.loginForm.value)
-     .pipe(
-      take(1),
-      finalize(() => {
-        this.isLoading = false;
-      })
-     )
-     .subscribe({
-      next:(res => {
-        if(res.success){
-          localStorage.setItem('token', res.data.token);
-          localStorage.setItem('userData', JSON.stringify(res.data?.userData));
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || 'select-service';
-          this.router.navigateByUrl(returnUrl);
-        }
-      }),
-      
-     })
+      this.apiService
+        .login(this.loginForm.value)
+        .pipe(
+          take(1),
+          finalize(() => {
+            this.isLoading = false;
+          })
+        )
+        .subscribe({
+          next: (res) => {
+            if (res.success) {
+              localStorage.setItem('token', res.data.token);
+              localStorage.setItem(
+                'userData',
+                JSON.stringify(res.data?.userData)
+              );
+              const returnUrl =
+                this.route.snapshot.queryParams['returnUrl'] ||
+                'select-service';
+              this.router.navigateByUrl(returnUrl);
+            }
+          },
+          error:(err => {
+            if(err){
+              this.loginError = err?.error?.message;
+              setTimeout(() => {
+                this.loginError = '';
+              }, 2000);
+
+
+            }
+          })
+        });
     } else {
       // Mark all fields as touched to show validation errors
       Object.keys(this.loginForm.controls).forEach((key) => {
@@ -117,4 +142,7 @@ export class LoginComponent {
   selectRole(role: string) {
     this.loginForm.patchValue({ role: role });
   }
+
+  // Your existing variables remain the same:
+  // focusedField, loginForm, showPassword, isLoading, features, etc.
 }

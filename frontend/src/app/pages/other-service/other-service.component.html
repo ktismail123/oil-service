@@ -88,6 +88,7 @@
       }
       <app-other-service-summary
         *ngIf="currentStep() === 3"
+        [status]="editData?.status"
         [serviceSummary]="serviceSummary()"
         [laborCost]="laborCost()"
         [initialCustomerData]="customerData()"

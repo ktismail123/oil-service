@@ -10,8 +10,18 @@
     </h2>
   </div>
 
+  
+
   <!-- Action Buttons (visible on screen, hidden when printing) -->
   <div class="text-center mb-6 print:hidden space-y-3">
+    <div *ngIf="status() === 'cancelled'" class="bg-red-50 max-w-2xl mx-auto rounded-lg p-4 border border-red-200">
+      <div class="flex items-center text-red-800">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span class="font-semibold">This booking has been cancelled and cannot be modified.</span>
+      </div>
+    </div>
     <!-- Button Container -->
     <div class="w-full max-w-2xl mx-auto space-y-4">
       <!-- Buttons Row - Responsive Grid Layout -->
@@ -19,7 +29,7 @@
         <!-- Submit Button -->
         <button
           (click)="onSubmitBooking()"
-          [disabled]="customerForm.invalid || (billNumber() && !editMode)"
+          [disabled]="customerForm.invalid || (billNumber() && !editMode) || status() === 'cancelled' "
           class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-green-300"
         >
           <span class="flex items-center justify-center">
@@ -41,7 +51,7 @@
         <!-- Print Receipt Button -->
         <button
           (click)="printReceipt()"
-          [disabled]="customerForm.invalid || !billNumber()"
+          [disabled]="customerForm.invalid || !billNumber() || status() === 'cancelled' "
           class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center group transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-blue-300"
         >
           <span class="flex items-center justify-center">
@@ -96,7 +106,7 @@
     <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center">
       CUSTOMER DETAILS
     </h3>
-    <form [formGroup]="customerForm">
+    <form [formGroup]="customerForm" [ngClass]="status() === 'cancelled' ? 'pointer-events-none' : '' ">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <!-- Plate Number -->
         <div>
@@ -311,26 +321,26 @@
     <!-- Totals -->
     <div class="space-y-2 mb-4">
       <!-- Items Total (inclusive of VAT) -->
-      <div class="flex justify-between text-sm">
+      <!-- <div class="flex justify-between text-sm">
         <span class="text-gray-600">Items Total (inc. VAT):</span>
         <span class="font-medium">
           {{ summary().itemsSubtotal | currency : "AED " }}
         </span>
-      </div>
+      </div> -->
 
       <!-- Discount (if any) -->
       <div class="flex justify-between text-sm" *ngIf="summary().discount > 0">
         <span class="text-gray-600">Discount:</span>
         <span class="font-medium text-red-600">
-          -{{ summary().discount | currency : "AED " }}
+          {{ summary().discount | currency : "AED " }}
         </span>
       </div>
 
       <!-- Subtotal after discount (showing breakdown) -->
-      <div class="border-t border-dashed border-gray-300 pt-2" *ngIf="summary().discount > 0">
+      <div class="border-t border-dashed border-gray-300 pt-2" >
         <div class="flex justify-between text-sm text-gray-600">
-          <span>Net Amount (excl. VAT):</span>
-          <span>{{ summary().netSubtotal | currency : "AED " }}</span>
+          <span>Subtotal:</span>
+          <span>{{ summary().itemsSubtotal - summary().vatAmount| currency : "AED " }}</span>
         </div>
         <div class="flex justify-between text-sm text-gray-600">
           <span>VAT (5%):</span>
@@ -361,8 +371,7 @@
     >
       <p class="mb-1">Thank you for choosing Tech Lube!</p>
       <div class="space-y-1">
-        <p>Follow us: {{ "@TechLubeUAE" }}</p>
-        <p>Visit: www.techlube.ae</p>
+        <p>{{environment.website}}</p>
       </div>
     </div>
   </div>
