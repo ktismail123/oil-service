@@ -30,13 +30,13 @@
           </div>
 
           <div class="form-group">
-            <label for="brand">Brand *</label>
+            <label for="brand">Name *</label>
             <input
               id="brand"
               type="text"
               formControlName="brand"
               class="form-input"
-              placeholder="Enter brand name">
+              placeholder="Enter name">
             <div *ngIf="isBrandInvalid()" class="error-msg">
               {{ getBrandErrorMessage() }}
             </div>
