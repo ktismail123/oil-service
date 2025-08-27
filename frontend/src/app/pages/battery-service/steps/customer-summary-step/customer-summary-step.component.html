@@ -226,157 +226,124 @@
   </div>
 
   <!-- Receipt Style Layout -->
-  <div class="max-w-md mx-auto bg-white shadow-lg p-5" id="receipt-content">
-    <!-- Receipt Header -->
-    <div class="text-center border-b-2 border-dashed border-gray-400 pb-4 mb-4">
-      <h1 class="text-2xl font-bold text-gray-800 mb-1">TECH LUBE</h1>
-      <p class="text-sm text-gray-600">Premium Auto Service Center</p>
-      <p class="text-xs text-gray-500 mt-1">
-        Tel: {{ environment.contact_number }}
-      </p>
-      <p class="text-xs text-gray-500">Email: {{ environment.email }}</p>
+<div class="max-w-md mx-auto bg-white shadow-lg p-5" id="receipt-content">
+  <!-- Receipt Header -->
+  <div class="text-center border-b-2 border-dashed border-black pb-4 mb-4">
+    <h1 class="text-2xl font-bold text-black mb-1">TECH LUBE</h1>
+    <p class="text-sm font-medium text-black">Premium Auto Service Center</p>
+    <p class="text-sm text-black mt-1">
+      Tel: {{ environment.contact_number }}
+    </p>
+    <p class="text-sm text-black">Email: {{ environment.email }}</p>
+  </div>
+
+  <!-- Receipt Number & Date -->
+  <div class="text-center mb-4">
+    <p class="text-sm font-bold text-black">RECEIPT #{{ billNumber() || "---" }}</p>
+    <p class="text-sm font-medium text-black">{{ formattedDate }}</p>
+  </div>
+
+  <!-- Service Details -->
+  <div class="border-b border-dashed border-black pb-4 mb-4">
+    <h3 class="text-base font-bold text-black mb-3 text-center">
+      SERVICE DETAILS
+    </h3>
+
+    <!-- Service Type -->
+    <div class="flex justify-between text-sm mb-2">
+      <span class="font-medium text-black">Service Type:</span>
+      <span class="font-bold text-black">Battery Replacement</span>
     </div>
 
-    <!-- Receipt Number & Date -->
-    <div class="text-center mb-4">
-      <p class="text-xs text-gray-500">RECEIPT #{{ billNumber() || "---" }}</p>
-      <p class="text-xs text-gray-500">{{ formattedDate }}</p>
-      <!-- <p class="text-xs text-gray-500">RECEIPT #TL-{{ generateReceiptNumber() }}</p>
-      <p class="text-xs text-gray-500">{{ getCurrentDate() }}</p> -->
+    <!-- Battery Capacity -->
+    <div class="flex justify-between text-sm mb-2">
+      <span class="font-medium text-black">Battery Capacity:</span>
+      <span class="font-bold text-black">{{ summary().capacityLabel }}</span>
     </div>
 
-    <!-- Service Details -->
-    <div class="border-b border-dashed border-gray-300 pb-4 mb-4">
-      <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center">
-        SERVICE DETAILS
-      </h3>
+    <!-- Battery Brand -->
+    <div
+      *ngIf="summary().batteryType"
+      class="flex justify-between text-sm mb-3"
+    >
+      <span class="font-medium text-black">Battery Brand:</span>
+      <span class="font-bold text-black">{{ summary().batteryType?.brand }}</span>
+    </div>
+  </div>
 
-      <!-- Service Type -->
-      <div class="flex justify-between text-xs mb-2">
-        <span class="text-gray-600">Service Type:</span>
-        <span class="font-medium">Battery Replacement</span>
+  <!-- Items & Services -->
+  <div class="border-b border-dashed border-black pb-4 mb-4">
+    <h3 class="text-base font-bold text-black mb-3 text-center">
+      ITEMS & SERVICES
+    </h3>
+
+    <div class="flex justify-between text-sm">
+      <div class="flex-1">
+        <p class="font-bold text-black">
+          Battery Service
+        </p>
       </div>
-
-      <!-- Battery Capacity -->
-      <div class="flex justify-between text-xs mb-2">
-        <span class="text-gray-600">Battery Capacity:</span>
-        <span class="font-medium">{{ summary().capacityLabel }}</span>
-      </div>
-
-      <!-- Battery Brand -->
-      <div
-        *ngIf="summary().batteryType"
-        class="flex justify-between text-xs mb-3"
-      >
-        <span class="text-gray-600">Battery Brand:</span>
-        <span class="font-medium">{{ summary().batteryType?.brand }}</span>
+      <div class="text-right">
+        <p class="font-bold text-black">
+          {{ (summary().subtotal - getTotalAccessoryAmount() || 0 )| currency : 'AED '}}
+        </p>
       </div>
     </div>
 
-    <!-- Items & Services -->
-    <div class="border-b border-dashed border-gray-300 pb-4 mb-4">
-      <h3 class="text-sm font-semibold text-gray-700 mb-3 text-center">
-        ITEMS & SERVICES
-      </h3>
-
-      <div class="flex justify-between text-xs">
+    <!-- Accessories -->
+    <div *ngFor="let accessory of summary().accessories" class="my-2">
+      <div class="flex justify-between text-sm">
         <div class="flex-1">
-          <p class="font-medium">
-             Battery Service
+          <p class="font-bold text-black">{{ accessory.name }}</p>
+          <p class="font-medium text-black">
+            Qty: {{ accessory.quantity || 1 }} x AED
+            {{ accessory.price || 0 }}
           </p>
         </div>
         <div class="text-right">
-          <p class="font-medium">
-             {{ (summary().subtotal - getTotalAccessoryAmount() || 0 )| currency : 'AED '}}
-             <!-- {{ formatPrice(summary().subtotal - laborCost() || 0) | currency : 'AED '}} -->
+          <p class="font-bold text-black">
+            AED
+            {{
+              ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2)
+            }}
           </p>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Battery -->
-      <!-- <div *ngIf="summary().batteryType" class="mb-3">
-        <div class="flex justify-between text-xs">
-          <div class="flex-1">
-            <p class="font-medium">
-              {{ summary().batteryType?.brand }} Battery
-            </p>
-            <p class="text-gray-500">{{ summary().capacityLabel }}</p>
-          </div>
-          <div class="text-right">
-            <p class="font-medium">
-              AED {{ formatPrice(summary().batteryType?.price || 0) }}
-            </p>
-          </div>
-        </div>
-      </div> -->
-
-      <!-- Accessories -->
-      <div *ngFor="let accessory of summary().accessories" class="my-2">
-        <div class="flex justify-between text-xs">
-          <div class="flex-1">
-            <p class="font-medium">{{ accessory.name }}</p>
-            <p class="text-gray-500">
-              Qty: {{ accessory.quantity || 1 }} x AED
-              {{ accessory.price || 0 }}
-            </p>
-          </div>
-          <div class="text-right">
-            <p class="font-medium">
-              AED
-              {{
-                ((accessory.price || 0) * (accessory.quantity || 1)).toFixed(2)
-              }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Labour Cost -->
-      <!-- <div class="mb-3">
-        <div class="flex justify-between text-xs">
-          <div class="flex-1">
-            <p class="font-medium">Labour Cost</p>
-            <p class="text-gray-500">Service charges</p>
-          </div>
-          <div class="text-right">
-            <p class="font-medium">AED {{ formatPrice(customerForm.get('laborCost')?.value || 0) }}</p>
-          </div>
-        </div>
-      </div> -->
+  <!-- Totals -->
+  <div class="space-y-2 mb-4">
+    <div class="flex justify-between text-sm">
+      <span class="font-medium text-black">Subtotal:</span>
+      <span class="font-bold text-black">
+        {{ summary().subtotal - summary().vatAmount  | currency : "AED " }}</span
+      >
     </div>
 
-    <!-- Totals -->
-    <div class="space-y-2 mb-4">
-      <div class="flex justify-between text-sm">
-        <span class="text-gray-600">Subtotal:</span>
-        <span class="font-medium">
-          {{ summary().subtotal - summary().vatAmount  | currency : "AED " }}</span
-        >
-      </div>
-
-      <div class="flex justify-between text-sm">
-        <span class="text-gray-600">VAT (5%):</span>
-        <span class="font-medium">
-          {{ summary().vatAmount | currency : "AED " }}</span
-        >
-      </div>
-
-      <div class="border-t-2 border-dashed border-gray-400 pt-2">
-        <div class="flex justify-between text-lg font-bold">
-          <span>TOTAL:</span>
-          <span>{{ summary().subtotal | currency : "AED " }}</span>
-        </div>
-      </div>
+    <div class="flex justify-between text-sm">
+      <span class="font-medium text-black">VAT (5%):</span>
+      <span class="font-bold text-black">
+        {{ summary().vatAmount | currency : "AED " }}</span
+      >
     </div>
 
-    <!-- Footer -->
-    <div
-      class="text-center border-t-2 border-dashed border-gray-400 pt-4 text-xs text-gray-500"
-    >
-      <p class="mb-1">Thank you for choosing Tech Lube!</p>
-      <div class="space-y-1">
-         <p>{{environment.website}}</p>
+    <div class="border-t-2 border-dashed border-black pt-2">
+      <div class="flex justify-between text-lg font-black">
+        <span class="text-black">TOTAL:</span>
+        <span class="text-black">{{ summary().subtotal | currency : "AED " }}</span>
       </div>
     </div>
   </div>
+
+  <!-- Footer -->
+  <div
+    class="text-center border-t-2 border-dashed border-black pt-4 text-sm"
+  >
+    <p class="mb-1 font-bold text-black">Thank you for choosing Tech Lube!</p>
+    <div class="space-y-1">
+      <p class="font-medium text-black">{{environment.website}}</p>
+    </div>
+  </div>
+</div>
 </div>

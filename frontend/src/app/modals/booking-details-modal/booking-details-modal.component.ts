@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogClose, MatDialogRef } from '@angular/material/dialog';
 import {
   CommonModule,
   CurrencyPipe,
@@ -13,7 +13,7 @@ import { finalize, take } from 'rxjs';
 
 @Component({
   selector: 'app-booking-details-modal',
-  imports: [NgIf, NgFor, CurrencyPipe, DatePipe, NgClass],
+  imports: [NgIf, NgFor, CurrencyPipe, DatePipe, NgClass, MatDialogClose],
   templateUrl: './booking-details-modal.component.html',
   styleUrl: './booking-details-modal.component.scss',
 })

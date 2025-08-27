@@ -383,7 +383,7 @@ export class OtherServiceSummaryComponent implements OnInit{
   }
 
   getOilFilterPriceAndLaborCost(): number {
-    return (Number(this.summary().oilFilter?.price)  + this.laborCost())
+    return ((Number(this.summary().oilFilter?.price)  + this.laborCost()) - (this.summary()?.discount || 0))
   }
 
   getTotalAccessoryAmount(): number {
