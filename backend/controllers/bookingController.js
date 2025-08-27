@@ -509,251 +509,6 @@ const getAllBookings = async (req, res) => {
   }
 };
 
-// const createNewBooking = async (req, res) => {
-//   const db = getDB();
-//   try {
-//     const {
-//       customer, vehicle, service, accessories = []
-//     } = req.body;
-
-//     const sanitizedService = {
-//       type: service.type,
-//       date: service.date,
-//       time: service.time,
-//       interval: service.interval || null,
-//       oilTypeId: service.oilTypeId || null,
-//       oilQuantity: service.oilQuantity || null,
-//       oilFilterId: service.oilFilterId || null,
-//       batteryTypeId: service.batteryTypeId || null,
-//       subtotal: service.subtotal,
-//       laborCost: service.laborCost || 0,
-//       oilQuantityDetails: service.oilQuantityDetails || null,
-//       memo: service.memo || null,
-//       createdBy: (service.createdBy && service.createdBy !== '') ? service.createdBy : null,
-//       // Store plate number reference for other_service
-//       referencePlateNumber: (service.type === 'other_service' && vehicle?.plateNumber) ? vehicle.plateNumber : null,
-//       discount: parseFloat(service.discount) || 0,
-//     };
-
-//     console.log('Service data with memo:', sanitizedService);
-//     console.log('Service type:', sanitizedService.type);
-//     console.log('Vehicle data:', vehicle);
-
-//     // Validate created_by user exists if provided
-//     if (sanitizedService.createdBy !== null) {
-//       const [userExists] = await db.execute(
-//         'SELECT id FROM users WHERE id = ?',
-//         [sanitizedService.createdBy]
-//       );
-      
-//       if (userExists.length === 0) {
-//         return res.status(400).json({
-//           error: 'Invalid created_by user ID',
-//           details: `User with ID ${sanitizedService.createdBy} does not exist`
-//         });
-//       }
-//       console.log('Validated created_by user:', sanitizedService.createdBy);
-//     }
-
-//     // Start transaction
-//     await db.beginTransaction();
-
-//     // Insert or get customer
-//     let customerId;
-//     const [existingCustomer] = await db.execute(
-//       'SELECT id FROM customers WHERE mobile = ?',
-//       [customer.mobile]
-//     );
-
-//     if (existingCustomer.length > 0) {
-//       customerId = existingCustomer[0].id;
-//       console.log('Found existing customer:', customerId);
-//     } else {
-//       const [customerResult] = await db.execute(
-//         'INSERT INTO customers (name, mobile) VALUES (?, ?)',
-//         [customer.name, customer.mobile]
-//       );
-//       customerId = customerResult.insertId;
-//       console.log('Created new customer:', customerId);
-//     }
-
-//     // Handle vehicle section with improved logic
-//     let vehicleId = null;
-//     let vehicleProcessed = false;
-    
-//     // Process vehicle if it exists (regardless of service type)
-//     if (vehicle && vehicle.plateNumber && vehicle.brandId && vehicle.modelId) {
-//       // Full vehicle data provided - process normally
-//       const [existingVehicle] = await db.execute(
-//         'SELECT id, customer_id, brand_id, model_id FROM customer_vehicles WHERE plate_number = ?',
-//         [vehicle.plateNumber]
-//       );
-
-//       if (existingVehicle.length > 0) {
-//         const existingVehicleId = existingVehicle[0].id;
-//         const existing = existingVehicle[0];
-
-//         // Check if any vehicle information has changed
-//         const needsUpdate = (
-//           existing.customer_id != customerId ||
-//           existing.brand_id != vehicle.brandId ||
-//           existing.model_id != vehicle.modelId
-//         );
-
-//         if (needsUpdate) {
-//           // Update the existing vehicle's information
-//           await db.execute(
-//             'UPDATE customer_vehicles SET customer_id = ?, brand_id = ?, model_id = ? WHERE id = ?',
-//             [customerId, vehicle.brandId, vehicle.modelId, existingVehicleId]
-//           );
-//           console.log('Found and updated existing vehicle:', existingVehicleId);
-//         } else {
-//           console.log('Found existing vehicle (no changes needed):', existingVehicleId);
-//         }
-
-//         // For other_service, we process the vehicle but don't associate it with the booking
-//         if (sanitizedService.type !== 'other_service') {
-//           vehicleId = existingVehicleId;
-//         }
-//         vehicleProcessed = true;
-
-//       } else {
-//         // Create new vehicle
-//         const [vehicleResult] = await db.execute(
-//           'INSERT INTO customer_vehicles (customer_id, brand_id, model_id, plate_number) VALUES (?, ?, ?, ?)',
-//           [customerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
-//         );
-//         const newVehicleId = vehicleResult.insertId;
-//         console.log('Created new vehicle:', newVehicleId);
-
-//         // For other_service, we create the vehicle but don't associate it with the booking
-//         if (sanitizedService.type !== 'other_service') {
-//           vehicleId = newVehicleId;
-//         }
-//         vehicleProcessed = true;
-//       }
-//     } else if (vehicle && vehicle.plateNumber && sanitizedService.type === 'other_service') {
-//       // For other_service: only plate number provided without full vehicle details
-//       // We'll store the plate number in the booking memo or a new field
-//       console.log('Other service with plate number only:', vehicle.plateNumber);
-      
-//       // Check if this plate number exists in the system
-//       const [existingVehicle] = await db.execute(
-//         'SELECT id, customer_id, brand_id, model_id FROM customer_vehicles WHERE plate_number = ?',
-//         [vehicle.plateNumber]
-//       );
-
-//       if (existingVehicle.length > 0) {
-//         console.log('Found existing vehicle for plate number:', vehicle.plateNumber);
-//         // Vehicle exists but we won't associate it with other_service booking
-//         vehicleProcessed = true;
-//       } else {
-//         console.log('Plate number not found in system, will store as reference only');
-//       }
-//     }
-
-//     console.log('Vehicle processing result:', {
-//       vehicleProcessed,
-//       vehicleIdForBooking: vehicleId,
-//       serviceType: sanitizedService.type,
-//       plateNumber: vehicle?.plateNumber || null
-//     });
-
-//     // Calculate totals
-//     const vatPercentage = 5.00;
-//     const subtotal = parseFloat(sanitizedService.subtotal);
-//     const laborCost = parseFloat(sanitizedService.laborCost) || 0;
-//     const vatAmount = (subtotal * vatPercentage) / 100;
-//     const totalAmount = subtotal + vatAmount;
-
-//     // Prepare parameters for booking insertion
-//     const bookingParams = [
-//       customerId,
-//       vehicleId, // null for other_service, actual ID for vehicle-based services
-//       sanitizedService.type,
-//       sanitizedService.date,
-//       sanitizedService.time,
-//       sanitizedService.interval,
-//       sanitizedService.oilTypeId,
-//       sanitizedService.oilQuantity,
-//       sanitizedService.oilFilterId,
-//       sanitizedService.batteryTypeId,
-//       sanitizedService.subtotal,
-//       vatPercentage,
-//       vatAmount,
-//       totalAmount,
-//       laborCost,
-//       sanitizedService.oilQuantityDetails,
-//       sanitizedService.memo,
-//       sanitizedService.createdBy,
-//       sanitizedService.referencePlateNumber,
-//       sanitizedService.discount
-//     ];
-
-//     console.log('Booking parameters:', bookingParams);
-
-//     // Insert service booking
-//     const [bookingResult] = await db.execute(`
-//       INSERT INTO service_bookings (
-//         customer_id, vehicle_id, service_type, service_date, service_time,
-//         service_interval, oil_type_id, oil_quantity, oil_filter_id, battery_type_id,
-//         subtotal, vat_percentage, vat_amount, total_amount, labour_cost, oil_package_details, memo, created_by, reference_plate_number, discount
-//       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-//     `, bookingParams);
-
-//     const bookingId = bookingResult.insertId;
-//     console.log('Created booking with ID:', bookingId);
-
-//     // Generate bill number
-//     const billNumber = `TKN-${bookingId}`;
-
-//     // Update bill_number for this booking
-//     await db.execute(
-//       'UPDATE service_bookings SET bill_number = ? WHERE id = ?',
-//       [billNumber, bookingId]
-//     );
-
-//     console.log('Generated bill number:', billNumber);
-
-//     // Insert accessories
-//     for (const accessory of accessories) {
-//       await db.execute(
-//         'INSERT INTO booking_accessories (booking_id, accessory_id, quantity, price) VALUES (?, ?, ?, ?)',
-//         [bookingId, accessory.id, accessory.quantity, accessory.price]
-//       );
-//     }
-
-//     console.log('Inserted accessories:', accessories.length);
-
-//     await db.commit();
-//     console.log('Transaction committed successfully');
-
-//     // Enhanced response
-//     res.json({
-//       success: true,
-//       bookingId: bookingId,
-//       billNumber: billNumber,
-//       totalAmount: totalAmount,
-//       laborCost: laborCost,
-//       memo: sanitizedService.memo,
-//       createdBy: sanitizedService.createdBy,
-//       vatAmount: vatAmount,
-//       subtotal: subtotal,
-//       vehicleId: vehicleId, // null for other_service
-//       vehicleProcessed: vehicleProcessed, // indicates if vehicle data was saved
-//       message: 'Booking created successfully'
-//     });
-
-//   } catch (error) {
-//     await db.rollback();
-//     console.error('Booking creation failed:', error);
-//     console.error('Request body:', req.body);
-//     res.status(500).json({
-//       error: 'Failed to create booking',
-//       details: error.message
-//     });
-//   }
-// };
 
 const createNewBooking = async (req, res) => {
   const pool = getDB();
@@ -777,6 +532,7 @@ const createNewBooking = async (req, res) => {
       laborCost: service.laborCost || 0,
       discount: parseFloat(service.discount) || 0,
       oilQuantityDetails: service.oilQuantityDetails || null,
+      oilRequiredQuantity: service.oilRequiredQuantity || null, // Add this field
       memo: service.memo || null,
       createdBy: (service.createdBy && service.createdBy !== '') ? service.createdBy : null,
       // Store plate number reference for other_service
@@ -788,6 +544,7 @@ const createNewBooking = async (req, res) => {
     console.log('Service data with memo:', sanitizedService);
     console.log('Service type:', sanitizedService.type);
     console.log('Vehicle data:', vehicle);
+    console.log('Oil required quantity:', sanitizedService.oilRequiredQuantity);
 
     // Validate status if provided
     const validStatuses = ['pending', 'completed', 'cancelled'];
@@ -925,6 +682,13 @@ const createNewBooking = async (req, res) => {
     const vatAmount = (subtotal * vatPercentage) / 100;
     const totalAmount = subtotal + vatAmount;
 
+    // Create oil package details object combining oilQuantityDetails and oilRequiredQuantity
+    const oilPackageDetailsObj = {
+      ...sanitizedService.oilQuantityDetails,
+      oilRequiredQuantity: sanitizedService.oilRequiredQuantity
+    };
+    const oilPackageDetailsJson = JSON.stringify(oilPackageDetailsObj);
+
     // Prepare parameters for booking insertion
     const bookingParams = [
       customerId,
@@ -942,7 +706,7 @@ const createNewBooking = async (req, res) => {
       vatAmount,
       totalAmount,
       laborCost,
-      sanitizedService.oilQuantityDetails,
+      oilPackageDetailsJson, // Store combined oil package details as JSON
       sanitizedService.memo,
       sanitizedService.createdBy,
       sanitizedService.referencePlateNumber,
@@ -951,6 +715,7 @@ const createNewBooking = async (req, res) => {
     ];
 
     console.log('Booking parameters:', bookingParams);
+    console.log('Oil package details JSON:', oilPackageDetailsJson);
 
     // Insert service booking
     const [bookingResult] = await connection.execute(`
@@ -1003,6 +768,7 @@ const createNewBooking = async (req, res) => {
       status: sanitizedService.status,
       vehicleId: vehicleId, // null for other_service
       vehicleProcessed: vehicleProcessed, // indicates if vehicle data was saved
+      oilRequiredQuantity: sanitizedService.oilRequiredQuantity,
       message: 'Booking created successfully'
     });
 
@@ -1060,6 +826,16 @@ const updateBooking = async (req, res) => {
 
     const currentBooking = existingBooking[0];
     console.log('Current booking status:', currentBooking.status);
+
+    // Parse existing oil package details to get current data
+    let currentOilPackageDetails = {};
+    try {
+      currentOilPackageDetails = currentBooking.oil_package_details ? 
+        JSON.parse(currentBooking.oil_package_details) : {};
+    } catch (e) {
+      console.warn('Failed to parse existing oil_package_details:', e);
+      currentOilPackageDetails = {};
+    }
 
     // Validate created_by user exists if provided in service
     if (service?.createdBy && service.createdBy !== '') {
@@ -1200,7 +976,8 @@ const updateBooking = async (req, res) => {
         batteryTypeId: service.batteryTypeId || currentBooking.battery_type_id,
         subtotal: service.subtotal || currentBooking.subtotal,
         laborCost: service.laborCost !== undefined ? service.laborCost : currentBooking.labour_cost,
-        oilQuantityDetails: service.oilQuantityDetails || currentBooking.oil_package_details,
+        oilQuantityDetails: service.oilQuantityDetails || currentOilPackageDetails,
+        oilRequiredQuantity: service.oilRequiredQuantity !== undefined ? service.oilRequiredQuantity : currentOilPackageDetails.oilRequiredQuantity,
         memo: service.memo !== undefined ? service.memo : currentBooking.memo,
         createdBy: service.createdBy !== undefined ? 
           (service.createdBy && service.createdBy !== '' ? service.createdBy : null) : 
@@ -1209,6 +986,7 @@ const updateBooking = async (req, res) => {
       };
 
       console.log('Sanitized service:', sanitizedService);
+      console.log('Oil required quantity:', sanitizedService.oilRequiredQuantity);
 
       // Validate labor cost
       const laborCost = parseFloat(sanitizedService.laborCost) || 0;
@@ -1240,6 +1018,13 @@ const updateBooking = async (req, res) => {
         const vatAmount = (subtotal * vatPercentage) / 100;
         const totalAmount = subtotal + vatAmount;
 
+        // Create combined oil package details object
+        const oilPackageDetailsObj = {
+          ...sanitizedService.oilQuantityDetails,
+          oilRequiredQuantity: sanitizedService.oilRequiredQuantity
+        };
+        const oilPackageDetailsJson = JSON.stringify(oilPackageDetailsObj);
+
         updateFields.push(
           'customer_id = ?', 'vehicle_id = ?', 'service_type = ?', 'service_date = ?', 'service_time = ?',
           'service_interval = ?', 'oil_type_id = ?', 'oil_quantity = ?', 'oil_filter_id = ?', 'battery_type_id = ?',
@@ -1251,7 +1036,7 @@ const updateBooking = async (req, res) => {
           sanitizedService.interval, sanitizedService.oilTypeId, sanitizedService.oilQuantity,
           sanitizedService.oilFilterId, sanitizedService.batteryTypeId,
           sanitizedService.subtotal, vatPercentage, vatAmount, totalAmount, laborCost,
-          sanitizedService.oilQuantityDetails, cleanedMemo, sanitizedService.createdBy, referencePlateNumber, sanitizedService.discount
+          oilPackageDetailsJson, cleanedMemo, sanitizedService.createdBy, referencePlateNumber, sanitizedService.discount
         );
 
       } else if (currentBooking.status === 'in_progress') {
@@ -1399,7 +1184,8 @@ const updateBooking = async (req, res) => {
     console.log('Updated booking:', {
       memo: updatedBooking[0].memo,
       reference_plate_number: updatedBooking[0].reference_plate_number,
-      vehicle_id: updatedBooking[0].vehicle_id
+      vehicle_id: updatedBooking[0].vehicle_id,
+      oil_package_details: updatedBooking[0].oil_package_details
     });
 
     res.json({

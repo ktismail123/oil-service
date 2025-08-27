@@ -333,7 +333,7 @@ export class OilServiceComponent implements OnInit {
 
     this.oilForm.patchValue({
       oilTypeId: this.editData?.oil_type_id,
-      requiredQuantity: 4,
+      requiredQuantity: this.editData?.oil_package_details?.oilRequiredQuantity,
       totalPrice: this.editData?.oil_package_details?.totalPrice,
       oilQuantityDetails: this.editData?.oil_package_details,
     });
