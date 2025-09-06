@@ -37,6 +37,7 @@ import { Step4OilTypeComponent } from './steps/step4-oil-type/step4-oil-type.com
 import { Step5OilFilterComponent } from './steps/step5-oil-filter/step5-oil-filter.component';
 import { Step6AccessoriesComponent } from './steps/step6-accessories/step6-accessories.component';
 import { Step7CustomerSummaryComponent } from './steps/step7-customer-summary/step7-customer-summary.component';
+import { getVatExclusive } from '../../utils/vat-calculation';
 
 @Component({
   selector: 'app-oil-service',
@@ -126,7 +127,10 @@ export class OilServiceComponent implements OnInit {
 
   vatAmount = computed(() => {
     const sub = this.subtotal();
-    return typeof sub === 'number' ? (sub * 5) / 100 : 0;
+    if (typeof sub !== 'number') return 0;
+
+    const { vatAmount } = getVatExclusive(sub);
+    return vatAmount;
   });
 
   // ✅ FIXED: Simple total calculation (subtotal + VAT only)
@@ -175,7 +179,6 @@ export class OilServiceComponent implements OnInit {
 
       total += Number(laborCost);
       total -= Number(discount);
-
     } catch (error) {
       return 0;
     }
@@ -304,11 +307,22 @@ export class OilServiceComponent implements OnInit {
       .pipe(take(1))
       .subscribe({
         next: (res) => {
-          if (res) {
-            this.customerForm.patchValue({
-              name: res[0]?.customer_name,
-              mobile: res[0]?.customer_mobile,
-            });
+          if (res && res[0]) {
+            const currentName = this.customerForm.get('name')?.value;
+            const currentMobile = this.customerForm.get('mobile')?.value;
+
+            const patchData: any = {};
+
+            if (!currentName && res[0]?.customer_name) {
+              patchData.name = res[0].customer_name;
+            }
+            if (!currentMobile && res[0]?.customer_mobile) {
+              patchData.mobile = res[0].customer_mobile;
+            }
+
+            if (Object.keys(patchData).length > 0) {
+              this.customerForm.patchValue(patchData);
+            }
           }
         },
       });
@@ -541,7 +555,6 @@ export class OilServiceComponent implements OnInit {
 
   // Updated validation for step 4 to handle package selections
   private validateStep4() {
-
     const oilTypeId = this.oilForm.get('oilTypeId')?.value;
     const totalPrice = this.oilForm.get('totalPrice')?.value;
     const quantity = this.oilForm.get('quantity')?.value;

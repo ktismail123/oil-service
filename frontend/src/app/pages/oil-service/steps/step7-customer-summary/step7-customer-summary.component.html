@@ -265,18 +265,21 @@
   <div class="space-y-2 mb-4">
     <div class="flex justify-between text-sm">
       <span class="font-medium text-black">Subtotal:</span>
+      <!-- <span class="font-bold text-black">AED {{ (subtotal || 0).toFixed(2) }}</span> -->
       <span class="font-bold text-black">AED {{ (subtotal - vatAmount || 0).toFixed(2) }}</span>
     </div>
 
     <div class="flex justify-between text-sm">
       <span class="font-medium text-black">VAT (5%):</span>
       <span class="font-bold text-black">AED {{ (vatAmount || 0).toFixed(2) }}</span>
+      <!-- <span class="font-bold text-black">AED {{ (vatAmount || 0).toFixed(2) }}</span> -->
     </div>
 
     <div class="border-t-2 border-dashed border-black pt-2">
       <div class="flex justify-between text-lg font-black">
         <span class="text-black">TOTAL:</span>
-        <span class="text-black">AED {{ (totalAmount - vatAmount || 0).toFixed(2) }}</span>
+        <span class="text-black">AED {{ (subtotal || 0).toFixed(2) }}</span>
+        <!-- <span class="text-black">AED {{ (totalAmount - vatAmount || 0).toFixed(2) }}</span> -->
       </div>
     </div>
   </div>

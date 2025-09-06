@@ -1,4 +1,11 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -32,7 +39,12 @@ export interface ServiceSummary {
 
 @Component({
   selector: 'app-customer-summary-step',
-  imports: [ReactiveFormsModule, CommonModule, FormFieldComponent, CurrencyPipe],
+  imports: [
+    ReactiveFormsModule,
+    CommonModule,
+    FormFieldComponent,
+    CurrencyPipe,
+  ],
   templateUrl: './customer-summary-step.component.html',
   styleUrl: './customer-summary-step.component.scss',
 })
@@ -79,12 +91,7 @@ export class CustomerSummaryStepComponent {
   private initializeForm() {
     this.customerForm = this.fb.group({
       name: [''],
-      mobile: [
-        '',
-        [
-          Validators.pattern(/^\d{10,15}$/),
-        ],
-      ],
+      mobile: ['', [Validators.pattern(/^\d{10,15}$/)]],
       plateNumber: ['', [Validators.required, Validators.minLength(1)]],
       laborCost: ['', Validators.required],
       discount: [''],
@@ -114,10 +121,21 @@ export class CustomerSummaryStepComponent {
       .subscribe({
         next: (res) => {
           if (res) {
-            this.customerForm.patchValue({
-              name: res[0]?.customer_name,
-              mobile: res[0]?.customer_mobile,
-            });
+            const currentName = this.customerForm.get('name')?.value;
+            const currentMobile = this.customerForm.get('mobile')?.value;
+
+            const patchData: any = {};
+
+            if (!currentName && res[0]?.customer_name) {
+              patchData.name = res[0].customer_name;
+            }
+            if (!currentMobile && res[0]?.customer_mobile) {
+              patchData.mobile = res[0].customer_mobile;
+            }
+
+            if (Object.keys(patchData).length > 0) {
+              this.customerForm.patchValue(patchData);
+            }
           }
         },
       });
@@ -134,7 +152,7 @@ export class CustomerSummaryStepComponent {
           plateNumber: value.plateNumber || '',
           laborCost: value.laborCost || 0,
           memo: value.memo || '',
-          discount: value?.discount || 0
+          discount: value?.discount || 0,
         });
       }
 
@@ -146,7 +164,7 @@ export class CustomerSummaryStepComponent {
           plateNumber: value.plateNumber,
           laborCost: value.laborCost,
           memo: value.memo,
-          discount: value.discount
+          discount: value.discount,
         });
       }
     });
@@ -177,7 +195,7 @@ export class CustomerSummaryStepComponent {
         plateNumber: value.plateNumber,
         laborCost: value.laborCost,
         memo: value.memo,
-        discount: value.discount
+        discount: value.discount,
       };
     }
     return null;
@@ -358,14 +376,16 @@ export class CustomerSummaryStepComponent {
   printThermalReceipt() {}
 
   getTotalAccessoryAmount(): number {
-  if (!this.summary().accessories || this.summary().accessories?.length === 0) {
-    return 0;
+    if (
+      !this.summary().accessories ||
+      this.summary().accessories?.length === 0
+    ) {
+      return 0;
+    }
+
+    return this.summary().accessories.reduce((total, item) => {
+      const qty = item.quantity ?? 1; // default 1 if not provided
+      return total + item.price * qty;
+    }, 0);
   }
-
-  return this.summary().accessories.reduce((total, item) => {
-    const qty = item.quantity ?? 1; // default 1 if not provided
-    return total + (item.price * qty);
-  }, 0);
-}
-
 }

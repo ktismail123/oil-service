@@ -14,6 +14,7 @@ import {
 } from './steps/other-service-summary/other-service-summary.component';
 import { ApiService } from '../../services/api.service';
 import { take } from 'rxjs';
+import { getVatExclusive } from '../../utils/vat-calculation';
 
 @Component({
   selector: 'app-other-service',
@@ -72,18 +73,21 @@ export class OtherServiceComponent implements OnInit {
     // Apply discount to inclusive total
     const discountedTotal = Math.max(0, totalInclusive - discount);
 
-    // Extract VAT from discounted total (VAT = 5/100 of inclusive price)
-    const vatAmount = (discountedTotal * 5) / 100;
-    const netSubtotal = discountedTotal - vatAmount;
+    // // Extract VAT from discounted total (VAT = 5/100 of inclusive price)
+    // // const vatAmount = (discountedTotal * 5) / 100;
+    // const vatAmount = (discountedTotal * 5) / 100;
+    // const netSubtotal = discountedTotal - vatAmount;
+
+    const { vatAmount, netAmount } = getVatExclusive(discountedTotal);
 
     return {
       oilFilter: oilFilter,
       accessories: accessories,
-      itemsSubtotal: totalInclusive,        // Original inclusive total
-      discount: discount,                   // Discount amount
-      netSubtotal: netSubtotal,            // Net amount (exclusive of VAT)
-      vatAmount: vatAmount,                // VAT portion
-      totalAmount: discountedTotal,        // Final inclusive total
+      itemsSubtotal: totalInclusive, // Original inclusive total
+      discount: discount, // Discount amount
+      netSubtotal: netAmount, // Net amount (exclusive of VAT)
+      vatAmount: vatAmount, // VAT portion
+      totalAmount: discountedTotal, // Final inclusive total
     };
   });
 
@@ -93,7 +97,7 @@ export class OtherServiceComponent implements OnInit {
     if (nav?.extras.state?.['item']) {
       this.editData = nav.extras.state['item'];
       console.log('Edit data received:', this.editData);
-      
+
       if (this.editData.oil_filter_id) {
         this.selectedOilFilter.set({
           brand: this.editData?.oil_filter_brand,
@@ -116,7 +120,7 @@ export class OtherServiceComponent implements OnInit {
 
       this.currentStep.set(3);
       this.loadData();
-      
+
       if (this.editData?.accessories) {
         this.selectedAccessories.set(this.editData.accessories);
       }
@@ -129,9 +133,12 @@ export class OtherServiceComponent implements OnInit {
         laborCost: this.editData?.labour_cost?.toString() || '0',
         mobile: this.editData?.customer_mobile || '',
         name: this.editData?.customer_name || '',
-        plateNumber: this.editData?.vehicle?.plate_number || this.editData?.reference_plate_number || '',
+        plateNumber:
+          this.editData?.vehicle?.plate_number ||
+          this.editData?.reference_plate_number ||
+          '',
         memo: this.editData?.memo || '',
-        discount: parseFloat(this.editData?.discount || '0')
+        discount: parseFloat(this.editData?.discount || '0'),
       };
 
       this.customerData.set(custData);
@@ -154,7 +161,7 @@ export class OtherServiceComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error loading oil filters:', error);
-        }
+        },
       });
   }
 
@@ -194,9 +201,9 @@ export class OtherServiceComponent implements OnInit {
   // Customer data handlers for summary step
   onCustomerDataChanged(data: CustomerData) {
     console.log('Customer data changed:', data);
-    
+
     this.customerData.set(data);
-    
+
     // Update labor cost from customer data
     if (data.laborCost) {
       this.laborCost.set(parseFloat(data.laborCost.toString()));
@@ -211,7 +218,12 @@ export class OtherServiceComponent implements OnInit {
       this.discount.set(0);
     }
 
-    console.log('Updated signals - Labor:', this.laborCost(), 'Discount:', this.discount());
+    console.log(
+      'Updated signals - Labor:',
+      this.laborCost(),
+      'Discount:',
+      this.discount()
+    );
   }
 
   onValidityChanged(isValid: boolean) {
@@ -272,13 +284,14 @@ export class OtherServiceComponent implements OnInit {
 
   createBooking(bookingData: any): void {
     this.isLoading.set(true);
-    
+
     this.apiService
       .createBooking(bookingData as any)
       .pipe(take(1))
       .subscribe({
         next: (response) => {
           this.billNumber.set(response.billNumber);
+          alert('Booking created successfully');
           console.log('Booking created successfully:', response);
           this.isLoading.set(false);
         },
@@ -292,7 +305,7 @@ export class OtherServiceComponent implements OnInit {
 
   updateBooking(bookingData: any): void {
     this.isLoading.set(true);
-    
+
     this.apiService
       .updateBooking(this.editData?.id, bookingData as any)
       .pipe(take(1))
@@ -300,7 +313,7 @@ export class OtherServiceComponent implements OnInit {
         next: (res) => {
           console.log('Booking updated successfully:', res);
           this.isLoading.set(false);
-          
+
           if (res.success) {
             // You might want to show a success message here
             console.log('Update completed successfully');

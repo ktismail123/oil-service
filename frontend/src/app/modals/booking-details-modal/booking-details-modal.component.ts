@@ -10,6 +10,7 @@ import {
 import { NgIf, NgFor } from '@angular/common';
 import { ApiService } from '../../services/api.service';
 import { finalize, take } from 'rxjs';
+import moment from 'moment';
 
 @Component({
   selector: 'app-booking-details-modal',
@@ -141,4 +142,10 @@ export class BookingDetailsModalComponent {
         return status;
     }
   }
+
+   formatTime(serviceTime: string): string {
+      return moment
+    .utc(serviceTime, "HH:mm:ss")          // treat string as UTC
+    .format('hh:mm:ss A');     
+    }
 }

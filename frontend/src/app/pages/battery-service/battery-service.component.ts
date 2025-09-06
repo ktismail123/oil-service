@@ -27,6 +27,7 @@ import {
   ServiceSummary,
 } from './steps/customer-summary-step/customer-summary-step.component';
 import { Accessory, BatteryType } from '../../models';
+import { getVatExclusive } from '../../utils/vat-calculation';
 
 @Component({
   selector: 'app-battery-service',
@@ -119,7 +120,17 @@ export class BatteryServiceComponent implements OnInit {
     return total;
   });
 
-  vatAmount = computed(() => (this.subtotal() * 5) / 100);
+  // vatAmount = computed(() => (this.subtotal() * 5) / 100);
+  vatAmount = computed(() => {
+    const sub = this.subtotal();
+
+    if (typeof sub !== 'number') return 0;
+
+    // ✅ If subtotal already INCLUDES VAT
+    const { vatAmount } = getVatExclusive(sub);
+
+    return vatAmount;
+  });
   totalAmount = computed(() => this.subtotal() + this.vatAmount());
 
   constructor() {
@@ -173,7 +184,7 @@ export class BatteryServiceComponent implements OnInit {
       plateNumber: this.editData?.vehicle?.plate_number,
       laborCost: this.editData?.labour_cost,
       memo: this.editData?.memo,
-      discount: this.editData?.discount
+      discount: this.editData?.discount,
     });
     this.laborCost.set(this.editData?.laborCost);
     this.discount.set(this.editData?.discount);
@@ -318,7 +329,7 @@ export class BatteryServiceComponent implements OnInit {
         laborCost: this.laborCost(),
         memo: customer.memo,
         createdBy: userData?.userId,
-        discount: this.discount()
+        discount: this.discount(),
       },
       accessories: this.selectedAccessories(),
     };

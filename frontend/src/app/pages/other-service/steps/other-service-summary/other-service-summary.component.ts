@@ -116,10 +116,21 @@ export class OtherServiceSummaryComponent implements OnInit{
       .subscribe({
         next: (res) => {
           if (res) {
-            this.customerForm.patchValue({
-              name: res[0]?.customer_name,
-              mobile: res[0]?.customer_mobile,
-            });
+            const currentName = this.customerForm.get('name')?.value;
+            const currentMobile = this.customerForm.get('mobile')?.value;
+
+            const patchData: any = {};
+
+            if (!currentName && res[0]?.customer_name) {
+              patchData.name = res[0].customer_name;
+            }
+            if (!currentMobile && res[0]?.customer_mobile) {
+              patchData.mobile = res[0].customer_mobile;
+            }
+
+            if (Object.keys(patchData).length > 0) {
+              this.customerForm.patchValue(patchData);
+            }
           }
         },
       });

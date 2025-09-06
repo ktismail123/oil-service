@@ -1,5 +1,6 @@
 
 const { getDB } = require("../config/db");
+const moment = require('moment-timezone');
 
 const getAllBookings = async (req, res) => {
   try {
@@ -41,13 +42,13 @@ const getAllBookings = async (req, res) => {
     // Build WHERE conditions safely
     let whereConditions = [];
 
-    // Search functionality - using LIKE with escaped values (including user name search)
-    // Note: Handle NULL vehicle data in search
+    // Search functionality - now includes the new customer_name column
     if (search && search.trim()) {
       const searchTerm = escapeLike(search.trim());
       whereConditions.push(`(
-        c.name LIKE ${searchTerm} OR 
-        c.mobile LIKE ${searchTerm} OR 
+        COALESCE(c.name, '') LIKE ${searchTerm} OR 
+        COALESCE(c.mobile, '') LIKE ${searchTerm} OR 
+        COALESCE(sb.customer_name, '') LIKE ${searchTerm} OR
         COALESCE(cv.plate_number, '') LIKE ${searchTerm} OR 
         COALESCE(sb.reference_plate_number, '') LIKE ${searchTerm} OR 
         COALESCE(vb.name, '') LIKE ${searchTerm} OR 
@@ -84,9 +85,8 @@ const getAllBookings = async (req, res) => {
       ? `WHERE ${whereConditions.join(' AND ')}`
       : '';
 
-    // Build the main query with user information
-    // Changed JOINs to LEFT JOINs to handle NULL vehicle_id for other_service
-    const sortColumn = sortField === 'customer_name' ? 'c.name' :
+    // Build the main query - updated to handle customer_name column
+    const sortColumn = sortField === 'customer_name' ? 'COALESCE(c.name, sb.customer_name, "No Customer")' :
       sortField === 'created_by_name' ? 'COALESCE(u.name, "Unknown")' :
         `sb.${sortField}`;
 
@@ -94,8 +94,8 @@ const getAllBookings = async (req, res) => {
       SELECT 
         sb.id,
         sb.service_type,
-        sb.service_date,
-        sb.service_time,
+        DATE_FORMAT(sb.service_date, '%Y-%m-%d') AS service_date,
+        TIME_FORMAT(sb.service_time, '%H:%i:%s') AS service_time,
         sb.service_interval,
         sb.oil_type_id,
         sb.oil_filter_id,
@@ -114,11 +114,12 @@ const getAllBookings = async (req, res) => {
         sb.memo,
         sb.vehicle_id,
         sb.customer_id,
+        sb.customer_name,
         sb.created_by,
         sb.discount,
         sb.reference_plate_number,
-        c.name as customer_name,
-        c.mobile as customer_mobile,
+        COALESCE(c.name, sb.customer_name, 'No Customer') as effective_customer_name,
+        COALESCE(c.mobile, '') as customer_mobile,
         cv.plate_number,
         cv.brand_id,
         cv.model_id,
@@ -132,7 +133,7 @@ const getAllBookings = async (req, res) => {
         u.email as created_by_email,
         u.role as created_by_role
       FROM service_bookings sb
-      INNER JOIN customers c ON sb.customer_id = c.id
+      LEFT JOIN customers c ON sb.customer_id = c.id
       LEFT JOIN customer_vehicles cv ON sb.vehicle_id = cv.id
       LEFT JOIN vehicle_brands vb ON cv.brand_id = vb.id
       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
@@ -191,8 +192,22 @@ const getAllBookings = async (req, res) => {
         results.forEach(booking => {
           booking.accessories = accessoriesMap[booking.id] || [];
 
+          // Structure customer information - now uses effective_customer_name which prioritizes 
+          // customer table name, then booking customer_name, then fallback
+          booking.customer = {
+            id: booking.customer_id,
+            name: booking.effective_customer_name,
+            mobile: booking.customer_mobile,
+            // Include source information for debugging/transparency
+            name_source: booking.customer_id ? 'customer_table' : (booking.customer_name ? 'booking_only' : 'none')
+          };
+
+          // Remove individual customer fields since we structured them
+          delete booking.effective_customer_name;
+          delete booking.customer_mobile;
+          delete booking.customer_name; // Remove the raw customer_name field
+
           // Structure vehicle information properly (handle NULL vehicle data)
-          // Only create vehicle object if vehicle_id exists, otherwise keep original fields
           if (booking.vehicle_id) {
             booking.vehicle = {
               id: booking.vehicle_id,
@@ -239,11 +254,14 @@ const getAllBookings = async (req, res) => {
           delete booking.created_by_role;
         });
 
-        // Get customer vehicles for other_service bookings
-        const otherServiceBookings = results.filter(booking => booking.service_type === 'other_service');
+        // Get customer vehicles for other_service bookings (only if they have customer_id)
+        const otherServiceBookings = results.filter(booking =>
+          booking.service_type === 'other_service' && booking.customer_id
+        );
+
         if (otherServiceBookings.length > 0) {
           const customerIds = [...new Set(otherServiceBookings.map(b => b.customer_id))];
-          
+
           const customerVehiclesQuery = `
             SELECT 
               cv.customer_id,
@@ -262,7 +280,7 @@ const getAllBookings = async (req, res) => {
 
           try {
             const [customerVehiclesResults] = await db.query(customerVehiclesQuery);
-            
+
             // Group vehicles by customer_id
             const vehiclesByCustomer = {};
             customerVehiclesResults.forEach(vehicle => {
@@ -284,60 +302,6 @@ const getAllBookings = async (req, res) => {
               booking.customer_vehicles = vehiclesByCustomer[booking.customer_id] || [];
             });
 
-            // If search term looks like a plate number, search for vehicles with that plate
-            if (search && search.trim()) {
-              const searchTerm = search.trim().toUpperCase();
-              // Check if search term could be a plate number (contains letters and numbers, or dashes)
-              if (/^[A-Z0-9\-\s]+$/i.test(searchTerm)) {
-                const plateSearchQuery = `
-                  SELECT DISTINCT
-                    cv.id as vehicle_id,
-                    cv.plate_number,
-                    cv.brand_id,
-                    cv.model_id,
-                    cv.customer_id,
-                    vb.name as brand_name,
-                    vm.name as model_name,
-                    c.name as owner_name,
-                    c.mobile as owner_mobile
-                  FROM customer_vehicles cv
-                  LEFT JOIN vehicle_brands vb ON cv.brand_id = vb.id
-                  LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
-                  LEFT JOIN customers c ON cv.customer_id = c.id
-                  WHERE UPPER(cv.plate_number) LIKE '%${searchTerm.replace(/'/g, "''")}%'
-                  ORDER BY cv.created_at DESC
-                  LIMIT 10
-                `;
-
-                try {
-                  const [plateSearchResults] = await db.query(plateSearchQuery);
-                  
-                  // Add plate search results to response for frontend to use
-                  if (plateSearchResults.length > 0) {
-                    // Add to each other_service booking for context
-                    otherServiceBookings.forEach(booking => {
-                      booking.plate_search_results = plateSearchResults.map(vehicle => ({
-                        id: vehicle.vehicle_id,
-                        plate_number: vehicle.plate_number,
-                        brand_id: vehicle.brand_id,
-                        model_id: vehicle.model_id,
-                        brand_name: vehicle.brand_name,
-                        model_name: vehicle.model_name,
-                        owner: {
-                          id: vehicle.customer_id,
-                          name: vehicle.owner_name,
-                          mobile: vehicle.owner_mobile
-                        },
-                        display_text: `${vehicle.plate_number} - ${vehicle.brand_name || 'Unknown'} ${vehicle.model_name || 'Model'} (Owner: ${vehicle.owner_name || 'Unknown'})`
-                      }));
-                    });
-                  }
-                } catch (plateSearchError) {
-                  console.error('Error searching for plate number:', plateSearchError);
-                }
-              }
-            }
-
             console.log('Added customer vehicles for other_service bookings');
           } catch (vehicleError) {
             console.error('Error fetching customer vehicles for other_service:', vehicleError);
@@ -347,12 +311,34 @@ const getAllBookings = async (req, res) => {
             });
           }
         }
+
+        // Add empty customer_vehicles array to other_service bookings without customers
+        const otherServiceWithoutCustomer = results.filter(booking =>
+          booking.service_type === 'other_service' && !booking.customer_id
+        );
+        otherServiceWithoutCustomer.forEach(booking => {
+          booking.customer_vehicles = [];
+        });
+
       } catch (accessoriesError) {
         console.error('Error fetching accessories:', accessoriesError);
-        // Continue without accessories if there's an error
+        // Continue without accessories if there's an error - duplicate the customer logic here too
         results.forEach(booking => {
           booking.accessories = [];
-          
+
+          // Structure customer information properly (handle NULL customer data and new customer_name column)
+          booking.customer = {
+            id: booking.customer_id,
+            name: booking.effective_customer_name,
+            mobile: booking.customer_mobile,
+            name_source: booking.customer_id ? 'customer_table' : (booking.customer_name ? 'booking_only' : 'none')
+          };
+
+          // Remove individual customer fields since we structured them
+          delete booking.effective_customer_name;
+          delete booking.customer_mobile;
+          delete booking.customer_name;
+
           // Structure vehicle information properly (handle NULL vehicle data)
           if (booking.vehicle_id) {
             booking.vehicle = {
@@ -399,11 +385,14 @@ const getAllBookings = async (req, res) => {
           delete booking.created_by_role;
         });
 
-        // Get customer vehicles for other_service bookings (error case too)
-        const otherServiceBookings = results.filter(booking => booking.service_type === 'other_service');
+        // Handle other_service bookings for error case too
+        const otherServiceBookings = results.filter(booking =>
+          booking.service_type === 'other_service' && booking.customer_id
+        );
+
         if (otherServiceBookings.length > 0) {
           const customerIds = [...new Set(otherServiceBookings.map(b => b.customer_id))];
-          
+
           const customerVehiclesQuery = `
             SELECT 
               cv.customer_id,
@@ -422,7 +411,7 @@ const getAllBookings = async (req, res) => {
 
           try {
             const [customerVehiclesResults] = await db.query(customerVehiclesQuery);
-            
+
             // Group vehicles by customer_id
             const vehiclesByCustomer = {};
             customerVehiclesResults.forEach(vehicle => {
@@ -453,15 +442,22 @@ const getAllBookings = async (req, res) => {
             });
           }
         }
+
+        // Add empty customer_vehicles array to other_service bookings without customers (error case)
+        const otherServiceWithoutCustomer = results.filter(booking =>
+          booking.service_type === 'other_service' && !booking.customer_id
+        );
+        otherServiceWithoutCustomer.forEach(booking => {
+          booking.customer_vehicles = [];
+        });
       }
     }
 
-    // Get total count for pagination (include user join in count query too)
-    // Use same LEFT JOINs as main query for consistency
+    // Get total count for pagination - updated to include customer_name column
     const countQuery = `
       SELECT COUNT(DISTINCT sb.id) as total
       FROM service_bookings sb
-      INNER JOIN customers c ON sb.customer_id = c.id
+      LEFT JOIN customers c ON sb.customer_id = c.id
       LEFT JOIN customer_vehicles cv ON sb.vehicle_id = cv.id
       LEFT JOIN vehicle_brands vb ON cv.brand_id = vb.id
       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
@@ -513,16 +509,19 @@ const getAllBookings = async (req, res) => {
 const createNewBooking = async (req, res) => {
   const pool = getDB();
   const connection = await pool.getConnection();
-  
+
   try {
     const {
       customer, vehicle, service, accessories = []
     } = req.body;
 
+    const serviceDate = service.date ? moment.utc(service.date).tz('Asia/Dubai').format('YYYY-MM-DD') : moment().tz('Asia/Dubai').format('YYYY-MM-DD');
+    const serviceTime = service.time ? moment(service.time, 'HH:mm:ss').tz('Asia/Dubai').format('HH:mm:ss') : moment().tz('Asia/Dubai').format('HH:mm:ss');
+
     const sanitizedService = {
       type: service.type,
-      date: service.date,
-      time: service.time,
+      date: serviceDate,
+      time: serviceTime,
       interval: service.interval || null,
       oilTypeId: service.oilTypeId || null,
       oilQuantity: service.oilQuantity || null,
@@ -532,19 +531,17 @@ const createNewBooking = async (req, res) => {
       laborCost: service.laborCost || 0,
       discount: parseFloat(service.discount) || 0,
       oilQuantityDetails: service.oilQuantityDetails || null,
-      oilRequiredQuantity: service.oilRequiredQuantity || null, // Add this field
+      oilRequiredQuantity: service.oilRequiredQuantity || null,
       memo: service.memo || null,
       createdBy: (service.createdBy && service.createdBy !== '') ? service.createdBy : null,
-      // Store plate number reference for other_service
       referencePlateNumber: (service.type === 'other_service' && vehicle?.plateNumber) ? vehicle.plateNumber : null,
-      // Accept status from payload, default to 'completed'
       status: service.status || 'completed'
     };
 
     console.log('Service data with memo:', sanitizedService);
     console.log('Service type:', sanitizedService.type);
     console.log('Vehicle data:', vehicle);
-    console.log('Oil required quantity:', sanitizedService.oilRequiredQuantity);
+    console.log('Customer data:', customer);
 
     // Validate status if provided
     const validStatuses = ['pending', 'completed', 'cancelled'];
@@ -561,7 +558,7 @@ const createNewBooking = async (req, res) => {
         'SELECT id FROM users WHERE id = ?',
         [sanitizedService.createdBy]
       );
-      
+
       if (userExists.length === 0) {
         return res.status(400).json({
           error: 'Invalid created_by user ID',
@@ -574,29 +571,63 @@ const createNewBooking = async (req, res) => {
     // Start transaction
     await connection.beginTransaction();
 
-    // Insert or get customer
-    let customerId;
-    const [existingCustomer] = await connection.execute(
-      'SELECT id FROM customers WHERE mobile = ?',
-      [customer.mobile]
-    );
+    // Handle customer - create customer record if mobile provided, store name separately if only name provided
+    let customerId = null;
+    let customerNameForBooking = null;
 
-    if (existingCustomer.length > 0) {
-      customerId = existingCustomer[0].id;
-      console.log('Found existing customer:', customerId);
-    } else {
-      const [customerResult] = await connection.execute(
-        'INSERT INTO customers (name, mobile) VALUES (?, ?)',
-        [customer.name, customer.mobile]
+    const hasCustomerName = customer && typeof customer.name === 'string' && customer.name.trim() !== '';
+    const hasCustomerMobile = customer && typeof customer.mobile === 'string' && customer.mobile.trim() !== '';
+
+    if (hasCustomerMobile) {
+      // Mobile provided - create/find customer record normally
+      const customerMobile = customer.mobile.trim();
+      const customerName = hasCustomerName ? customer.name.trim() : 'Unknown';
+
+      console.log('Processing customer with mobile:', { mobile: customerMobile, name: customerName });
+
+      const [existingCustomer] = await connection.execute(
+        'SELECT id FROM customers WHERE mobile = ?',
+        [customerMobile]
       );
-      customerId = customerResult.insertId;
-      console.log('Created new customer:', customerId);
+
+      if (existingCustomer.length > 0) {
+        customerId = existingCustomer[0].id;
+        console.log('Found existing customer by mobile:', customerId);
+
+        // Update customer name if provided and different
+        if (hasCustomerName) {
+          await connection.execute(
+            'UPDATE customers SET name = ? WHERE id = ?',
+            [customerName, customerId]
+          );
+          console.log('Updated customer name:', customerName);
+        }
+      } else {
+        // Create new customer with mobile
+        const [customerResult] = await connection.execute(
+          'INSERT INTO customers (name, mobile) VALUES (?, ?)',
+          [customerName, customerMobile]
+        );
+        customerId = customerResult.insertId;
+        console.log('Created new customer with mobile:', customerId);
+      }
+
+      customerNameForBooking = customerName;
+
+    } else if (hasCustomerName && !hasCustomerMobile) {
+      // Only name provided - store in booking's customer_name field without creating customer record
+      customerNameForBooking = customer.name.trim();
+      console.log('Customer name provided without mobile - storing in booking customer_name field:', customerNameForBooking);
+      customerId = null; // No customer record created
+
+    } else {
+      console.log('No customer data provided, booking will have null customer_id and customer_name');
     }
 
     // Handle vehicle section with improved logic
     let vehicleId = null;
     let vehicleProcessed = false;
-    
+
     // Process vehicle if it exists (regardless of service type)
     if (vehicle && vehicle.plateNumber && vehicle.brandId && vehicle.modelId) {
       // Full vehicle data provided - process normally
@@ -611,16 +642,18 @@ const createNewBooking = async (req, res) => {
 
         // Check if any vehicle information has changed
         const needsUpdate = (
-          existing.customer_id != customerId ||
+          (customerId && existing.customer_id != customerId) ||
           existing.brand_id != vehicle.brandId ||
           existing.model_id != vehicle.modelId
         );
 
         if (needsUpdate) {
           // Update the existing vehicle's information
+          // Use customerId if available, otherwise keep existing customer_id
+          const updateCustomerId = customerId || existing.customer_id;
           await connection.execute(
             'UPDATE customer_vehicles SET customer_id = ?, brand_id = ?, model_id = ? WHERE id = ?',
-            [customerId, vehicle.brandId, vehicle.modelId, existingVehicleId]
+            [updateCustomerId, vehicle.brandId, vehicle.modelId, existingVehicleId]
           );
           console.log('Found and updated existing vehicle:', existingVehicleId);
         } else {
@@ -635,9 +668,23 @@ const createNewBooking = async (req, res) => {
 
       } else {
         // Create new vehicle
+        let vehicleCustomerId = customerId;
+
+        if (!vehicleCustomerId) {
+          // For vehicle creation without customer, create a placeholder customer
+          console.log('Vehicle requires customer - creating placeholder customer');
+          const timestamp = Date.now();
+          const shortMobile = `V${timestamp.toString().slice(-8)}`;
+          const [placeholderCustomer] = await connection.execute(
+            'INSERT INTO customers (name, mobile) VALUES (?, ?)',
+            ['Vehicle Owner', shortMobile]
+          );
+          vehicleCustomerId = placeholderCustomer.insertId;
+        }
+
         const [vehicleResult] = await connection.execute(
           'INSERT INTO customer_vehicles (customer_id, brand_id, model_id, plate_number) VALUES (?, ?, ?, ?)',
-          [customerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
+          [vehicleCustomerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
         );
         const newVehicleId = vehicleResult.insertId;
         console.log('Created new vehicle:', newVehicleId);
@@ -650,9 +697,8 @@ const createNewBooking = async (req, res) => {
       }
     } else if (vehicle && vehicle.plateNumber && sanitizedService.type === 'other_service') {
       // For other_service: only plate number provided without full vehicle details
-      // We'll store the plate number in the booking memo or a new field
       console.log('Other service with plate number only:', vehicle.plateNumber);
-      
+
       // Check if this plate number exists in the system
       const [existingVehicle] = await connection.execute(
         'SELECT id, customer_id, brand_id, model_id FROM customer_vehicles WHERE plate_number = ?',
@@ -661,16 +707,17 @@ const createNewBooking = async (req, res) => {
 
       if (existingVehicle.length > 0) {
         console.log('Found existing vehicle for plate number:', vehicle.plateNumber);
-        // Vehicle exists but we won't associate it with other_service booking
         vehicleProcessed = true;
       } else {
         console.log('Plate number not found in system, will store as reference only');
       }
     }
 
-    console.log('Vehicle processing result:', {
+    console.log('Processing result:', {
+      customerId,
+      customerNameForBooking,
+      vehicleId,
       vehicleProcessed,
-      vehicleIdForBooking: vehicleId,
       serviceType: sanitizedService.type,
       plateNumber: vehicle?.plateNumber || null
     });
@@ -679,7 +726,7 @@ const createNewBooking = async (req, res) => {
     const vatPercentage = 5.00;
     const subtotal = parseFloat(sanitizedService.subtotal);
     const laborCost = parseFloat(sanitizedService.laborCost) || 0;
-    const vatAmount = (subtotal * vatPercentage) / 100;
+    const { vatAmount } = getVatExclusive(subtotal);
     const totalAmount = subtotal + vatAmount;
 
     // Create oil package details object combining oilQuantityDetails and oilRequiredQuantity
@@ -689,9 +736,10 @@ const createNewBooking = async (req, res) => {
     };
     const oilPackageDetailsJson = JSON.stringify(oilPackageDetailsObj);
 
-    // Prepare parameters for booking insertion
+    // Prepare parameters for booking insertion - now includes customer_name
     const bookingParams = [
-      customerId,
+      customerId, // Can be null
+      customerNameForBooking, // Store name in dedicated column
       vehicleId, // null for other_service, actual ID for vehicle-based services
       sanitizedService.type,
       sanitizedService.date,
@@ -706,7 +754,7 @@ const createNewBooking = async (req, res) => {
       vatAmount,
       totalAmount,
       laborCost,
-      oilPackageDetailsJson, // Store combined oil package details as JSON
+      oilPackageDetailsJson,
       sanitizedService.memo,
       sanitizedService.createdBy,
       sanitizedService.referencePlateNumber,
@@ -715,15 +763,14 @@ const createNewBooking = async (req, res) => {
     ];
 
     console.log('Booking parameters:', bookingParams);
-    console.log('Oil package details JSON:', oilPackageDetailsJson);
 
-    // Insert service booking
+    // Insert service booking - now includes customer_name column
     const [bookingResult] = await connection.execute(`
       INSERT INTO service_bookings (
-        customer_id, vehicle_id, service_type, service_date, service_time,
+        customer_id, customer_name, vehicle_id, service_type, service_date, service_time,
         service_interval, oil_type_id, oil_quantity, oil_filter_id, battery_type_id,
         subtotal, vat_percentage, vat_amount, total_amount, labour_cost, oil_package_details, memo, created_by, reference_plate_number, discount, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, bookingParams);
 
     const bookingId = bookingResult.insertId;
@@ -740,15 +787,52 @@ const createNewBooking = async (req, res) => {
 
     console.log('Generated bill number:', billNumber);
 
-    // Insert accessories
-    for (const accessory of accessories) {
-      await connection.execute(
-        'INSERT INTO booking_accessories (booking_id, accessory_id, quantity, price) VALUES (?, ?, ?, ?)',
-        [bookingId, accessory.id, accessory.quantity, accessory.price]
-      );
-    }
+    // Insert accessories - with proper validation
+    if (accessories && Array.isArray(accessories) && accessories.length > 0) {
+      console.log('Processing accessories:', accessories);
 
-    console.log('Inserted accessories:', accessories.length);
+      for (const accessory of accessories) {
+        // Validate each accessory object
+        if (accessory &&
+          accessory.id &&
+          !isNaN(accessory.id) &&
+          accessory.quantity &&
+          !isNaN(accessory.quantity) &&
+          accessory.price &&
+          !isNaN(accessory.price)) {
+
+          try {
+            // First, verify the accessory exists in the database
+            const [accessoryExists] = await connection.execute(
+              'SELECT id FROM accessories WHERE id = ?',
+              [accessory.id]
+            );
+
+            if (accessoryExists.length === 0) {
+              console.warn(`Accessory with ID ${accessory.id} does not exist, skipping...`);
+              continue;
+            }
+
+            // Insert the valid accessory
+            await connection.execute(
+              'INSERT INTO booking_accessories (booking_id, accessory_id, quantity, price) VALUES (?, ?, ?, ?)',
+              [bookingId, accessory.id, accessory.quantity, accessory.price]
+            );
+
+            console.log(`Inserted accessory: ID=${accessory.id}, Quantity=${accessory.quantity}, Price=${accessory.price}`);
+
+          } catch (accessoryError) {
+            console.error(`Error inserting accessory ${accessory.id}:`, accessoryError);
+          }
+        } else {
+          console.warn('Invalid accessory data, skipping:', accessory);
+        }
+      }
+
+      console.log('Finished processing accessories');
+    } else {
+      console.log('No accessories to process (empty or invalid array)');
+    }
 
     await connection.commit();
     console.log('Transaction committed successfully');
@@ -766,8 +850,10 @@ const createNewBooking = async (req, res) => {
       vatAmount: vatAmount,
       subtotal: subtotal,
       status: sanitizedService.status,
-      vehicleId: vehicleId, // null for other_service
-      vehicleProcessed: vehicleProcessed, // indicates if vehicle data was saved
+      vehicleId: vehicleId,
+      vehicleProcessed: vehicleProcessed,
+      customerId: customerId, // Will be null if no customer record created
+      customerName: customerNameForBooking, // Will show name even if no customer record
       oilRequiredQuantity: sanitizedService.oilRequiredQuantity,
       message: 'Booking created successfully'
     });
@@ -781,7 +867,6 @@ const createNewBooking = async (req, res) => {
       details: error.message
     });
   } finally {
-    // Always release the connection back to the pool
     connection.release();
   }
 };
@@ -789,7 +874,7 @@ const createNewBooking = async (req, res) => {
 const updateBooking = async (req, res) => {
   const pool = getDB();
   const connection = await pool.getConnection();
-  
+
   try {
     const { id } = req.params;
     const {
@@ -830,7 +915,7 @@ const updateBooking = async (req, res) => {
     // Parse existing oil package details to get current data
     let currentOilPackageDetails = {};
     try {
-      currentOilPackageDetails = currentBooking.oil_package_details ? 
+      currentOilPackageDetails = currentBooking.oil_package_details ?
         JSON.parse(currentBooking.oil_package_details) : {};
     } catch (e) {
       console.warn('Failed to parse existing oil_package_details:', e);
@@ -843,7 +928,7 @@ const updateBooking = async (req, res) => {
         'SELECT id FROM users WHERE id = ?',
         [service.createdBy]
       );
-      
+
       if (userExists.length === 0) {
         return res.status(400).json({
           error: 'Invalid created_by user ID',
@@ -870,7 +955,7 @@ const updateBooking = async (req, res) => {
     // Handle customer update/creation - Allow for all statuses except 'cancelled'
     if (currentBooking.status !== 'cancelled' && customer && customer.mobile) {
       console.log('Updating customer data');
-      
+
       const [existingCustomer] = await connection.execute(
         'SELECT id FROM customers WHERE mobile = ?',
         [customer.mobile]
@@ -898,12 +983,12 @@ const updateBooking = async (req, res) => {
     // Handle vehicle update/creation - Allow for all statuses except 'cancelled'
     if (currentBooking.status !== 'cancelled' && vehicle) {
       console.log('Updating vehicle data');
-      
+
       if (currentBooking.service_type === 'other_service') {
         // For other_service: handle plate number reference
         if (vehicle.plateNumber) {
           referencePlateNumber = vehicle.plateNumber;
-          
+
           // Check if full vehicle data is provided
           if (vehicle.brandId && vehicle.modelId) {
             // Full vehicle data provided - save to vehicles table but don't associate
@@ -979,8 +1064,8 @@ const updateBooking = async (req, res) => {
         oilQuantityDetails: service.oilQuantityDetails || currentOilPackageDetails,
         oilRequiredQuantity: service.oilRequiredQuantity !== undefined ? service.oilRequiredQuantity : currentOilPackageDetails.oilRequiredQuantity,
         memo: service.memo !== undefined ? service.memo : currentBooking.memo,
-        createdBy: service.createdBy !== undefined ? 
-          (service.createdBy && service.createdBy !== '' ? service.createdBy : null) : 
+        createdBy: service.createdBy !== undefined ?
+          (service.createdBy && service.createdBy !== '' ? service.createdBy : null) :
           currentBooking.created_by,
         discount: service.discount !== undefined ? parseFloat(service.discount) || 0 : currentBooking.discount,
       };
@@ -1008,15 +1093,16 @@ const updateBooking = async (req, res) => {
       // Clean memo text
       const cleanedMemo = sanitizedService.memo ? sanitizedService.memo.trim() : null;
 
-      if (currentBooking.status === 'pending') {
+      if (currentBooking.status === 'pending' || currentBooking.status === 'completed') {
         // Full service update for pending bookings
         console.log('Full service update for pending booking');
 
         // Calculate totals
         const vatPercentage = 5.00;
         const subtotal = parseFloat(sanitizedService.subtotal);
-        const vatAmount = (subtotal * vatPercentage) / 100;
-        const totalAmount = subtotal + vatAmount;
+        const { vatAmount } = getVatExclusive(subtotal);
+
+        const totalAmount = subtotal;
 
         // Create combined oil package details object
         const oilPackageDetailsObj = {
@@ -1042,12 +1128,12 @@ const updateBooking = async (req, res) => {
       } else if (currentBooking.status === 'in_progress') {
         // For in_progress bookings, allow memo and created_by updates only
         console.log('Limited service update for in_progress booking (memo and created_by only)');
-        
+
         if (service.memo !== undefined) {
           updateFields.push('memo = ?');
           updateValues.push(cleanedMemo);
         }
-        
+
         if (service.createdBy !== undefined) {
           updateFields.push('created_by = ?');
           updateValues.push(sanitizedService.createdBy);
@@ -1056,12 +1142,12 @@ const updateBooking = async (req, res) => {
       } else if (currentBooking.status === 'completed' || currentBooking.status === 'cancelled') {
         // For completed/cancelled bookings, allow memo and created_by updates only
         console.log('Limited service update for completed/cancelled booking (memo and created_by only)');
-        
+
         if (service.memo !== undefined) {
           updateFields.push('memo = ?');
           updateValues.push(cleanedMemo);
         }
-        
+
         if (service.createdBy !== undefined) {
           updateFields.push('created_by = ?');
           updateValues.push(sanitizedService.createdBy);
@@ -1222,11 +1308,11 @@ const updateBooking = async (req, res) => {
 const deleteBooking = async (req, res) => {
   const pool = getDB();
   const connection = await pool.getConnection();
-  
+
   try {
     const { id } = req.params; // or req.body depending on your route setup
     const bookingId = parseInt(id);
-    
+
     // Validate booking ID
     if (!bookingId) {
       return res.status(400).json({
@@ -1299,7 +1385,7 @@ const deleteBooking = async (req, res) => {
 const updateBookingStatus = async (req, res) => {
   const pool = getDB();
   const connection = await pool.getConnection();
-  
+
   try {
     const { id } = req.params;
     const { status, updatedBy } = req.body;
@@ -1333,7 +1419,7 @@ const updateBookingStatus = async (req, res) => {
         'SELECT id FROM users WHERE id = ?',
         [updatedBy]
       );
-      
+
       if (userExists.length === 0) {
         return res.status(400).json({
           error: 'Invalid updatedBy user ID',
@@ -1374,7 +1460,7 @@ const updateBookingStatus = async (req, res) => {
     const validTransitions = {
       'pending': ['in_progress', 'completed', 'cancelled'],
       'in_progress': ['completed', 'cancelled'],
-      'completed': ['pending', 'cancelled'], 
+      'completed': ['pending', 'cancelled'],
       'cancelled': [] // Cannot change from cancelled
     };
 
@@ -1394,7 +1480,7 @@ const updateBookingStatus = async (req, res) => {
       SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
-    
+
     const [updateResult] = await connection.execute(updateQuery, [status, bookingId]);
 
     if (updateResult.affectedRows === 0) {
@@ -1461,4 +1547,25 @@ module.exports = {
   updateBooking,
   deleteBooking,
   updateBookingStatus
+}
+
+/**
+ * Extract VAT and Net amount from a VAT-inclusive total.
+ * 
+ * @param {number} amount - The total amount including VAT
+ * @param {number} vatRate - VAT percentage (e.g., 5 for 5%)
+ * @returns {{ vatAmount: number, netAmount: number }}
+ */
+function getVatExclusive(amount, vatRate = 5) {
+  if (!amount || vatRate <= 0) {
+    return { vatAmount: 0, netAmount: amount || 0 };
+  }
+
+  const vatAmount = (amount * vatRate) / (100 + vatRate);
+  const netAmount = amount - vatAmount;
+
+  return {
+    vatAmount: parseFloat(vatAmount.toFixed(2)),
+    netAmount: parseFloat(netAmount.toFixed(2)),
+  };
 }

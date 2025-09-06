@@ -1,4 +1,11 @@
-import { NgFor, NgIf, TitleCasePipe, NgClass, NgStyle } from '@angular/common';
+import {
+  NgFor,
+  NgIf,
+  TitleCasePipe,
+  NgClass,
+  NgStyle,
+  DatePipe,
+} from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -9,11 +16,16 @@ import {
   computed,
   output,
 } from '@angular/core';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import {
+  MatPaginator,
+  MatPaginatorModule,
+  PageEvent,
+} from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { ActionConfig, ButtonActions } from '../../models/action';
+import * as moment from 'moment-timezone';
 
 // Interface for pagination data
 export interface PaginationData {
@@ -45,29 +57,45 @@ export interface TableEvent {
     NgClass,
     MatIconModule,
     MatButtonModule,
-    NgStyle
+    NgStyle,
+    DatePipe,
   ],
   templateUrl: './data-table.component.html',
   styleUrls: ['./data-table.component.scss'],
 })
 export class DataTableComponent implements AfterViewInit {
   // Input signals
-  displayedColumns = input<string[]>(['id', 'customer', 'vehicle', 'service_type', 'service_date', 'oil_quantity', 'subtotal', 'vat', 'total', 'status']);
+  displayedColumns = input<string[]>([
+    'id',
+    'customer',
+    'vehicle',
+    'service_type',
+    'service_date',
+    'oil_quantity',
+    'subtotal',
+    'vat',
+    'total',
+    'status',
+  ]);
   rowDatas = input<any[]>();
   showAddButton = input<boolean>(false);
   refreshButton = input<boolean>(false);
   height = input<string>('80px');
-  
+
   // NEW: Pagination inputs from parent (API response)
   totalRecords = input<number>(0);
   currentPage = input<number>(0);
   pageSize = input<number>(10);
   loading = input<boolean>(false);
-  
+
   // Output signals
-  addNew = output<{ event: ButtonActions, data?: any, customAction?: string }>();
+  addNew = output<{
+    event: ButtonActions;
+    data?: any;
+    customAction?: string;
+  }>();
   refreshTable = output();
-  
+
   // NEW: Output for pagination and search events
   tableEvent = output<TableEvent>();
 
@@ -75,13 +103,24 @@ export class DataTableComponent implements AfterViewInit {
   actionConfig = input<ActionConfig>({
     showView: true,
     showEdit: true,
-    showDelete: true
+    showDelete: true,
   });
 
   dataSource = new MatTableDataSource<any>([]);
 
   // Predefined columns that have custom templates
-  predefinedColumns = ['id', 'customer', 'vehicle', 'service_type', 'service_date', 'oil_quantity', 'subtotal', 'vat', 'total', 'status'];
+  predefinedColumns = [
+    'id',
+    'customer',
+    'vehicle',
+    'service_type',
+    'service_date',
+    'oil_quantity',
+    'subtotal',
+    'vat',
+    'total',
+    'status',
+  ];
 
   // Action menu state
   activeMenuId: number | null = null;
@@ -91,8 +130,10 @@ export class DataTableComponent implements AfterViewInit {
   currentSearchTerm = '';
 
   // Computed signal for custom columns (columns not in predefined list)
-  customDisplayedColumns = computed(() => 
-    this.displayedColumns().filter(col => !this.predefinedColumns.includes(col) && col !== 'action')
+  customDisplayedColumns = computed(() =>
+    this.displayedColumns().filter(
+      (col) => !this.predefinedColumns.includes(col) && col !== 'action'
+    )
   );
 
   // Computed signal for all columns including action
@@ -103,7 +144,7 @@ export class DataTableComponent implements AfterViewInit {
   ngAfterViewInit() {
     // Don't set paginator for dataSource since we're handling pagination externally
     // this.dataSource.paginator = this.paginator;
-    
+
     // Configure paginator with external data
     effect(() => {
       if (this.paginator) {
@@ -112,7 +153,7 @@ export class DataTableComponent implements AfterViewInit {
         this.paginator.pageSize = this.pageSize();
       }
     });
-    
+
     // Close menu when clicking outside
     document.addEventListener('click', () => {
       this.closeActionMenu();
@@ -135,14 +176,14 @@ export class DataTableComponent implements AfterViewInit {
   // NEW: Handle pagination events
   onPageChange(event: PageEvent) {
     console.log('Page change event:', event);
-    
+
     this.tableEvent.emit({
       type: 'pagination',
       data: {
         pageIndex: event.pageIndex,
         pageSize: event.pageSize,
-        length: event.length
-      }
+        length: event.length,
+      },
     });
   }
 
@@ -181,12 +222,12 @@ export class DataTableComponent implements AfterViewInit {
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.currentSearchTerm = filterValue.trim();
-    
+
     // Clear previous timeout
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
-    
+
     // Debounce search to avoid too many API calls
     this.searchTimeout = setTimeout(() => {
       this.emitSearchEvent(this.currentSearchTerm);
@@ -201,45 +242,49 @@ export class DataTableComponent implements AfterViewInit {
   // NEW: Emit search event
   private emitSearchEvent(searchTerm: string) {
     console.log('Search event:', searchTerm);
-    
+
     this.tableEvent.emit({
       type: 'search',
       data: {
-        searchTerm: searchTerm
-      }
+        searchTerm: searchTerm,
+      },
     });
   }
-formatServiceType(service: string): string {
-  switch (service) {
-    case 'battery_replacement':
-      return 'BATTERY';
-    case 'other_service':
-      return 'OTHER';
-    default:
-      return 'OIL';
+  formatServiceType(service: string): string {
+    switch (service) {
+      case 'battery_replacement':
+        return 'BATTERY';
+      case 'other_service':
+        return 'OTHER';
+      default:
+        return 'OIL';
+    }
   }
-}
 
-getServiceTypeClass(service: string): string {
-  switch (service) {
-    case 'battery_replacement':
-      return 'bg-green-500';  // ✅ green badge
-    case 'other_service':
-      return 'bg-orange-500'; // ✅ orange badge
-    default:
-      return 'bg-blue-500';   // ✅ blue badge for oil
+  getServiceTypeClass(service: string): string {
+    switch (service) {
+      case 'battery_replacement':
+        return 'bg-green-500'; // ✅ green badge
+      case 'other_service':
+        return 'bg-orange-500'; // ✅ orange badge
+      default:
+        return 'bg-blue-500'; // ✅ blue badge for oil
+    }
   }
-}
-
-
 
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
+  }
+
+  formatTime(serviceTime: string): string {
+    return moment
+      .utc(serviceTime, 'HH:mm:ss') // treat string as UTC
+      .format('hh:mm:ss A');
   }
 
   // Method to get nested values from object
@@ -279,12 +324,14 @@ getServiceTypeClass(service: string): string {
   // Get display name for item being deleted
   getDeleteItemName(): string {
     if (!this.itemToDelete) return '';
-    
-    return this.itemToDelete.customer_name || 
-           this.itemToDelete.name || 
-           this.itemToDelete.title || 
-           `Record #${this.itemToDelete.id}` ||
-           'this item';
+
+    return (
+      this.itemToDelete.customer_name ||
+      this.itemToDelete.name ||
+      this.itemToDelete.title ||
+      `Record #${this.itemToDelete.id}` ||
+      'this item'
+    );
   }
 
   // Cancel delete operation
@@ -303,10 +350,10 @@ getServiceTypeClass(service: string): string {
 
   // Custom action handler
   onCustomAction(actionKey: string, element: any) {
-    this.addNew.emit({ 
-      event: 'custom', 
-      data: element, 
-      customAction: actionKey 
+    this.addNew.emit({
+      event: 'custom',
+      data: element,
+      customAction: actionKey,
     });
   }
 
