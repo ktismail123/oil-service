@@ -327,9 +327,17 @@
         <div>
           <span class="text-gray-600">Service Type:</span>
           <span class="ml-2 font-medium capitalize">{{
-            getServiceTypeDisplayName(injectedData.service_type)
+            getServiceTypeDisplayName(injectedData?.service_type)
           }}</span>
         </div>
+        @if(injectedData.service_type == 'oil_change'){
+        <div>
+          <span class="text-gray-600">Service Interval:</span>
+          <span class="ml-2 font-medium capitalize">{{
+            injectedData?.service_interval
+          }} KM</span>
+        </div>
+        }  
         <div>
           <span class="text-gray-600">Service Date:</span>
           <span class="ml-2 font-medium">{{

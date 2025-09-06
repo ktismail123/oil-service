@@ -100,4 +100,8 @@ export class BatteryTypesComponent {
       )
     );
   }
+
+  refreshData() {
+    this.loadBatteryTpes();
+  }
 }

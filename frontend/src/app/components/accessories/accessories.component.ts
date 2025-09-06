@@ -94,10 +94,14 @@ export class AccessoriesComponent {
     this.filteredAccessories.set(
       this.accessories().filter(
         (b) =>
-          b.name.toLowerCase().includes(term) || 
-          b.price.toString().includes(term) || 
+          b.name.toLowerCase().includes(term) ||
+          b.price.toString().includes(term) ||
           b.id.toString().includes(term)
       )
     );
+  }
+
+  refreshData() {
+    this.loadAccessories();
   }
 }

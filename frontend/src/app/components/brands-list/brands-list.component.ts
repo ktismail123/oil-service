@@ -118,5 +118,9 @@ export class BrandsListComponent implements OnInit, OnChanges, OnDestroy {
     );
   }
 
+  refreshData(){
+    this.loadBrands();
+  }
+
   ngOnDestroy(): void {}
 }

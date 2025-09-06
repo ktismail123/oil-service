@@ -106,4 +106,8 @@ export class OilTypesListComponent implements OnInit {
       )
     );
   }
+
+  refreshData(){
+    this.loadOilTypes();
+  }
 }

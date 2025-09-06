@@ -100,4 +100,8 @@ export class ModelListComponent implements OnInit {
       )
     );
   }
+
+  refreshData(){
+    this.loadModels();
+  }
 }
