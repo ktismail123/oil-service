@@ -332,6 +332,14 @@
         </div>
         @if(injectedData.service_type == 'oil_change'){
         <div>
+          <span class="text-gray-600">Oil Type:</span>
+          <span class="ml-2 font-medium capitalize">{{
+            injectedData?.oilType?.brand
+          }} - {{
+            injectedData?.oilType?.grade
+          }}</span>
+        </div>
+        <div>
           <span class="text-gray-600">Service Interval:</span>
           <span class="ml-2 font-medium capitalize">{{
             injectedData?.service_interval

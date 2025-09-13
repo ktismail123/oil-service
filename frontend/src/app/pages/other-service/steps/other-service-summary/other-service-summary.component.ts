@@ -87,8 +87,8 @@ export class OtherServiceSummaryComponent implements OnInit{
           Validators.pattern(/^\d{10,15}$/),
         ],
       ],
-      plateNumber: ['', [Validators.required, Validators.minLength(1)]],
-      laborCost: ['', [Validators.required, Validators.min(0)]],
+      plateNumber: [''],
+      laborCost: [0],
       discount: [''],
       memo: ['', [Validators.maxLength(500)]],
     });

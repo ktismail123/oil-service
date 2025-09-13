@@ -234,22 +234,22 @@ export class OtherServiceComponent implements OnInit {
     const customer = this.customerData();
     const summary = this.serviceSummary();
 
-    console.log('Submitting booking with summary:', summary);
-    console.log('Customer data:', customer);
+    // console.log('Submitting booking with summary:', summary);
+    // console.log('Customer data:', customer);
 
-    if (!customer) {
-      console.error('Customer data is missing');
-      return;
-    }
+    // if (!customer) {
+    //   console.error('Customer data is missing');
+    //   return;
+    // }
 
     // Prepare booking data for other service
     const bookingData = {
       customer: {
-        name: customer.name,
-        mobile: customer.mobile,
+        name: customer?.name || '',
+        mobile: customer?.mobile || '',
       },
       vehicle: {
-        plateNumber: customer.plateNumber,
+        plateNumber: customer?.plateNumber,
         // These will be null for other_service, handled by backend
         brandId: null,
         modelId: null,
@@ -260,9 +260,9 @@ export class OtherServiceComponent implements OnInit {
         time: new Date().toTimeString().split(' ')[0],
         oilFilterId: summary.oilFilter?.id || null,
         subtotal: summary.totalAmount, // Send final total (inclusive, after discount)
-        laborCost: parseFloat(customer.laborCost || '0'),
+        laborCost: parseFloat(customer?.laborCost || '0'),
         discount: summary.discount,
-        memo: customer.memo || null,
+        memo: customer?.memo || null,
         createdBy: this.getCurrentUserId(),
       },
       accessories: summary.accessories.map((acc) => ({

@@ -85,7 +85,7 @@ const getAllBookings = async (req, res) => {
       ? `WHERE ${whereConditions.join(' AND ')}`
       : '';
 
-    // Build the main query - updated to handle customer_name column
+    // Build the main query - updated to include oil_types table
     const sortColumn = sortField === 'customer_name' ? 'COALESCE(c.name, sb.customer_name, "No Customer")' :
       sortField === 'created_by_name' ? 'COALESCE(u.name, "Unknown")' :
         `sb.${sortField}`;
@@ -129,6 +129,9 @@ const getAllBookings = async (req, res) => {
         oil_f.brand as oil_filter_brand,
         bt.capacity as battery_capacity,
         bt.brand as battery_brand,
+        ot.name as oil_type_name,
+        ot.grade as oil_type_grade,
+        ot.brand as oil_type_brand,
         u.name as created_by_name,
         u.email as created_by_email,
         u.role as created_by_role
@@ -139,6 +142,7 @@ const getAllBookings = async (req, res) => {
       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
       LEFT JOIN oil_filters oil_f ON sb.oil_filter_id = oil_f.id
       LEFT JOIN battery_types bt ON sb.battery_type_id = bt.id
+      LEFT JOIN oil_types ot ON sb.oil_type_id = ot.id
       LEFT JOIN users u ON sb.created_by = u.id
       ${whereClause}
       ORDER BY ${sortColumn} ${sortDirection}
@@ -206,6 +210,19 @@ const getAllBookings = async (req, res) => {
           delete booking.effective_customer_name;
           delete booking.customer_mobile;
           delete booking.customer_name; // Remove the raw customer_name field
+
+          // Structure oil type information
+          booking.oilType = booking.oil_type_id ? {
+            id: booking.oil_type_id,
+            name: booking.oil_type_name,
+            grade: booking.oil_type_grade,
+            brand: booking.oil_type_brand
+          } : null;
+
+          // Remove individual oil type fields since we structured them
+          delete booking.oil_type_name;
+          delete booking.oil_type_grade;
+          delete booking.oil_type_brand;
 
           // Structure vehicle information properly (handle NULL vehicle data)
           if (booking.vehicle_id) {
@@ -339,6 +356,19 @@ const getAllBookings = async (req, res) => {
           delete booking.customer_mobile;
           delete booking.customer_name;
 
+          // Structure oil type information (error recovery)
+          booking.oilType = booking.oil_type_id ? {
+            id: booking.oil_type_id,
+            name: booking.oil_type_name,
+            grade: booking.oil_type_grade,
+            brand: booking.oil_type_brand
+          } : null;
+
+          // Remove individual oil type fields
+          delete booking.oil_type_name;
+          delete booking.oil_type_grade;
+          delete booking.oil_type_brand;
+
           // Structure vehicle information properly (handle NULL vehicle data)
           if (booking.vehicle_id) {
             booking.vehicle = {
@@ -453,7 +483,7 @@ const getAllBookings = async (req, res) => {
       }
     }
 
-    // Get total count for pagination - updated to include customer_name column
+    // Get total count for pagination - updated to include oil_types table
     const countQuery = `
       SELECT COUNT(DISTINCT sb.id) as total
       FROM service_bookings sb
@@ -463,6 +493,7 @@ const getAllBookings = async (req, res) => {
       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
       LEFT JOIN oil_filters oil_f ON sb.oil_filter_id = oil_f.id
       LEFT JOIN battery_types bt ON sb.battery_type_id = bt.id
+      LEFT JOIN oil_types ot ON sb.oil_type_id = ot.id
       LEFT JOIN users u ON sb.created_by = u.id
       ${whereClause}
     `;
