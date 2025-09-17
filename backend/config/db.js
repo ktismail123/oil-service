@@ -15,7 +15,7 @@ const dbConfig = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || '',
-  // timezone: '+04:00', // UAE timezone (UTC+4)
+  // timezone: '+04:00', // UAE timezone (UTC+4) - COMMENTED OUT
   
   // Connection pool settings to handle idle connections
   waitForConnections: process.env.DB_WAIT_FOR_CONNECTIONS === 'true',
@@ -54,11 +54,11 @@ async function initDB() {
     await connection.ping();
     connection.release();
     
-    // Set timezone for the pool
+    // Set timezone for the pool - COMMENTED OUT
     // await pool.execute("SET time_zone = '+04:00'");
     
     console.log(`✅ Connected to MySQL database: ${dbConfig.database}`);
-    console.log(`✅ Database timezone set to UAE (+04:00)`);
+    console.log(`✅ Database using system timezone (no offset applied)`);
     
     // Handle pool events
     pool.on('connection', (connection) => {

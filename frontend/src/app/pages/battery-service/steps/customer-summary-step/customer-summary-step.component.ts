@@ -67,6 +67,7 @@ export class CustomerSummaryStepComponent {
   validityChanged = output<boolean>();
   submitBooking = output();
   billNumber = input('');
+  createdAt = input('');
   status = input('');
 
   // Signals
@@ -129,9 +130,9 @@ export class CustomerSummaryStepComponent {
             if (!currentName && res[0]?.customer_name) {
               patchData.name = res[0].customer_name;
             }
-            if (!currentMobile && res[0]?.customer_mobile) {
+            if (!currentMobile && res[0]?.customer_mobile && !res[0]?.customer_mobile.startsWith('NA')) {
               patchData.mobile = res[0].customer_mobile;
-            }
+            }            
 
             if (Object.keys(patchData).length > 0) {
               this.customerForm.patchValue(patchData);

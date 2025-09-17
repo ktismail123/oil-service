@@ -869,6 +869,15 @@ const createNewBooking = async (req, res) => {
     await connection.commit();
     console.log('Transaction committed successfully');
 
+    // Fetch the created booking to get the created_at timestamp
+    const [createdBooking] = await connection.execute(
+      'SELECT created_at, updated_at FROM service_bookings WHERE id = ?',
+      [bookingId]
+    );
+
+    const bookingTimestamps = createdBooking[0] || {};
+
+
     // Enhanced response
     res.json({
       success: true,
@@ -887,6 +896,8 @@ const createNewBooking = async (req, res) => {
       customerId: customerId, // Will be null if no customer record created
       customerName: customerNameForBooking, // Will show name even if no customer record
       oilRequiredQuantity: sanitizedService.oilRequiredQuantity,
+      created_at: bookingTimestamps.created_at,
+      updated_at: bookingTimestamps.updated_at,
       message: 'Booking created successfully'
     });
 
@@ -943,6 +954,8 @@ const updateBooking = async (req, res) => {
 
     const currentBooking = existingBooking[0];
     console.log('Current booking status:', currentBooking.status);
+    console.log('Current customer_id:', currentBooking.customer_id);
+    console.log('Current customer_name:', currentBooking.customer_name);
 
     // Parse existing oil package details to get current data
     let currentOilPackageDetails = {};
@@ -980,46 +993,85 @@ const updateBooking = async (req, res) => {
     // Start transaction
     await connection.beginTransaction();
 
-    let customerId = currentBooking.customer_id;
+    let customerId = currentBooking.customer_id;    
     let vehicleId = currentBooking.vehicle_id;
     let referencePlateNumber = currentBooking.reference_plate_number;
+    let customerNameForBooking = currentBooking.customer_name;
 
-    // Handle customer update/creation - Allow for all statuses except 'cancelled'
-    if (currentBooking.status !== 'cancelled' && customer && customer.mobile) {
-      console.log('Updating customer data');
+    // Declare customer validation variables at the beginning
+    const hasCustomerName = customer && customer.name && typeof customer.name === 'string' && customer.name.trim() !== '';
+    const hasCustomerMobile = customer && customer.mobile && typeof customer.mobile === 'string' && customer.mobile.trim() !== '';
 
-      const [existingCustomer] = await connection.execute(
-        'SELECT id FROM customers WHERE mobile = ?',
-        [customer.mobile]
-      );
+    // FIXED: Handle customer update/creation logic
+    if (currentBooking.status !== 'cancelled' && customer) {
+      console.log('Processing customer update...');
 
-      if (existingCustomer.length > 0) {
-        customerId = existingCustomer[0].id;
-        // Update customer name if different
-        if (customer.name) {
-          await connection.execute(
-            'UPDATE customers SET name = ? WHERE id = ?',
-            [customer.name, customerId]
-          );
-        }
-      } else {
-        const [customerResult] = await connection.execute(
-          'INSERT INTO customers (name, mobile) VALUES (?, ?)',
-          [customer.name || '', customer.mobile]
+      if (hasCustomerMobile) {
+        // Mobile provided - create/find customer record
+        const customerMobile = customer.mobile.trim();
+        const customerName = hasCustomerName ? customer.name.trim() : 'Unknown';
+
+        console.log('Processing customer with mobile:', { mobile: customerMobile, name: customerName });
+
+        const [existingCustomer] = await connection.execute(
+          'SELECT id FROM customers WHERE mobile = ?',
+          [customerMobile]
         );
-        customerId = customerResult.insertId;
+
+        if (existingCustomer.length > 0) {
+          customerId = existingCustomer[0].id;
+          console.log('Found existing customer by mobile:', customerId);
+
+          // Update customer name if provided and different
+          if (hasCustomerName) {
+            await connection.execute(
+              'UPDATE customers SET name = ? WHERE id = ?',
+              [customerName, customerId]
+            );
+            console.log('Updated customer name:', customerName);
+          }
+        } else {
+          // Create new customer with mobile
+          const [customerResult] = await connection.execute(
+            'INSERT INTO customers (name, mobile) VALUES (?, ?)',
+            [customerName, customerMobile]
+          );
+          customerId = customerResult.insertId;
+          console.log('Created new customer with mobile:', customerId);
+        }
+
+        // Update customerNameForBooking to match customer table
+        customerNameForBooking = customerName;
+
+      } else if (hasCustomerName && !hasCustomerMobile) {
+        // Only name provided - store in booking's customer_name field without creating customer record
+        customerNameForBooking = customer.name.trim();
+        console.log('Customer name provided without mobile - storing in booking customer_name field:', customerNameForBooking);
+        // customerId remains unchanged (could be null)
+
+      } else if (!hasCustomerName && !hasCustomerMobile) {
+        // No customer data provided - clear customer fields
+        console.log('No customer data provided - clearing customer fields');
+        customerId = null;
+        customerNameForBooking = null;
       }
-      console.log('Customer updated/created with ID:', customerId);
+
+      console.log('Customer processing result:', {
+        customerId,
+        customerNameForBooking,
+        hasCustomerName,
+        hasCustomerMobile
+      });
     }
 
-    // Handle vehicle update/creation - Allow for all statuses except 'cancelled'
+    // FIXED: Handle vehicle update/creation
     if (currentBooking.status !== 'cancelled' && vehicle) {
       console.log('Updating vehicle data');
 
-      if (currentBooking.service_type === 'other_service') {
+      if (currentBooking.service_type === 'other_service' || currentBooking.service_type === 'battery_replacement') {
         // For other_service: handle plate number reference
-        if (vehicle.plateNumber) {
-          referencePlateNumber = vehicle.plateNumber;
+        if (vehicle.plateNumber && vehicle.plateNumber.trim()) {
+          referencePlateNumber = vehicle.plateNumber.trim();
 
           // Check if full vehicle data is provided
           if (vehicle.brandId && vehicle.modelId) {
@@ -1029,17 +1081,30 @@ const updateBooking = async (req, res) => {
               [vehicle.plateNumber]
             );
 
+            let vehicleCustomerId = customerId;
+            if (!vehicleCustomerId) {
+              // For vehicle creation without customer, create a placeholder customer
+              console.log('Vehicle requires customer - creating placeholder customer');
+              const timestamp = Date.now();
+              const shortMobile = `NA-${timestamp.toString().slice(-8)}`;
+              const [placeholderCustomer] = await connection.execute(
+                'INSERT INTO customers (name, mobile) VALUES (?, ?)',
+                ['Vehicle Owner', shortMobile]
+              );
+              vehicleCustomerId = placeholderCustomer.insertId;
+            }
+
             if (existingVehicle.length > 0) {
               const existingVehicleId = existingVehicle[0].id;
               await connection.execute(
                 'UPDATE customer_vehicles SET customer_id = ?, brand_id = ?, model_id = ? WHERE id = ?',
-                [customerId, vehicle.brandId, vehicle.modelId, existingVehicleId]
+                [vehicleCustomerId, vehicle.brandId, vehicle.modelId, existingVehicleId]
               );
               console.log('Updated existing vehicle for other_service (not associated)');
             } else {
               const [vehicleResult] = await connection.execute(
                 'INSERT INTO customer_vehicles (customer_id, brand_id, model_id, plate_number) VALUES (?, ?, ?, ?)',
-                [customerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
+                [vehicleCustomerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
               );
               console.log('Created new vehicle for other_service (not associated):', vehicleResult.insertId);
             }
@@ -1051,24 +1116,61 @@ const updateBooking = async (req, res) => {
         }
       } else {
         // For oil_change and battery_replacement: handle normal vehicle association
-        if (vehicle.plateNumber && vehicle.brandId && vehicle.modelId) {
+        if (vehicle.plateNumber && vehicle.plateNumber.trim()) {
           const [existingVehicle] = await connection.execute(
-            'SELECT id FROM customer_vehicles WHERE plate_number = ?',
+            'SELECT id, customer_id FROM customer_vehicles WHERE plate_number = ?',
             [vehicle.plateNumber]
           );
 
+          console.log('Existing vehicle lookup result:', existingVehicle);
+          
+          // Use existing vehicle's customer if no customer provided for this booking
+          if (!customerId && existingVehicle.length > 0 && existingVehicle[0].customer_id) {
+            customerId = existingVehicle[0].customer_id;
+            console.log('Using existing vehicle customer:', customerId);
+          }
+
+          // Update customer name if we have both customer and name
+          if (customerId && hasCustomerName) {
+            await connection.execute(
+              'UPDATE customers SET name = ? WHERE id = ?',
+              [customer.name.trim(), customerId]
+            );
+            console.log('Updated customer name from vehicle association');
+          }
+          
           if (existingVehicle.length > 0) {
             vehicleId = existingVehicle[0].id;
-            await connection.execute(
-              'UPDATE customer_vehicles SET customer_id = ?, brand_id = ?, model_id = ? WHERE id = ?',
-              [customerId, vehicle.brandId, vehicle.modelId, vehicleId]
-            );
-          } else {
+            
+            // Update vehicle details if provided
+            if (vehicle.brandId && vehicle.modelId) {
+              await connection.execute(
+                'UPDATE customer_vehicles SET customer_id = ?, brand_id = ?, model_id = ? WHERE id = ?',
+                [customerId, vehicle.brandId, vehicle.modelId, vehicleId]
+              );
+              console.log('Updated existing vehicle:', vehicleId);
+            }
+          } else if (vehicle.brandId && vehicle.modelId) {
+            // Create new vehicle - need customer for vehicle creation
+            let vehicleCustomerId = customerId;
+            if (!vehicleCustomerId) {
+              // Create placeholder customer for vehicle
+              const timestamp = Date.now();
+              const shortMobile = `NA-${timestamp.toString().slice(-8)}`;
+              const [placeholderCustomer] = await connection.execute(
+                'INSERT INTO customers (name, mobile) VALUES (?, ?)',
+                ['Vehicle Owner', shortMobile]
+              );
+              vehicleCustomerId = placeholderCustomer.insertId;
+              customerId = vehicleCustomerId; // Update booking's customer too
+            }
+
             const [vehicleResult] = await connection.execute(
               'INSERT INTO customer_vehicles (customer_id, brand_id, model_id, plate_number) VALUES (?, ?, ?, ?)',
-              [customerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
+              [vehicleCustomerId, vehicle.brandId, vehicle.modelId, vehicle.plateNumber]
             );
             vehicleId = vehicleResult.insertId;
+            console.log('Created new vehicle:', vehicleId);
           }
           // Clear reference plate for regular services
           referencePlateNumber = null;
@@ -1133,7 +1235,6 @@ const updateBooking = async (req, res) => {
         const vatPercentage = 5.00;
         const subtotal = parseFloat(sanitizedService.subtotal);
         const { vatAmount } = getVatExclusive(subtotal);
-
         const totalAmount = subtotal;
 
         // Create combined oil package details object
@@ -1144,13 +1245,13 @@ const updateBooking = async (req, res) => {
         const oilPackageDetailsJson = JSON.stringify(oilPackageDetailsObj);
 
         updateFields.push(
-          'customer_id = ?', 'vehicle_id = ?', 'service_type = ?', 'service_date = ?', 'service_time = ?',
+          'customer_id = ?', 'customer_name = ?', 'vehicle_id = ?', 'service_type = ?', 'service_date = ?', 'service_time = ?',
           'service_interval = ?', 'oil_type_id = ?', 'oil_quantity = ?', 'oil_filter_id = ?', 'battery_type_id = ?',
           'subtotal = ?', 'vat_percentage = ?', 'vat_amount = ?', 'total_amount = ?', 'labour_cost = ?',
           'oil_package_details = ?', 'memo = ?', 'created_by = ?', 'reference_plate_number = ?', 'discount = ?'
         );
         updateValues.push(
-          customerId, vehicleId, sanitizedService.type, sanitizedService.date, sanitizedService.time,
+          customerId, customerNameForBooking, vehicleId, sanitizedService.type, sanitizedService.date, sanitizedService.time,
           sanitizedService.interval, sanitizedService.oilTypeId, sanitizedService.oilQuantity,
           sanitizedService.oilFilterId, sanitizedService.batteryTypeId,
           sanitizedService.subtotal, vatPercentage, vatAmount, totalAmount, laborCost,
@@ -1171,6 +1272,17 @@ const updateBooking = async (req, res) => {
           updateValues.push(sanitizedService.createdBy);
         }
 
+        // Still allow customer updates for in_progress bookings
+        if (customerId !== currentBooking.customer_id) {
+          updateFields.push('customer_id = ?');
+          updateValues.push(customerId);
+        }
+
+        if (customerNameForBooking !== currentBooking.customer_name) {
+          updateFields.push('customer_name = ?');
+          updateValues.push(customerNameForBooking);
+        }
+
       } else if (currentBooking.status === 'completed' || currentBooking.status === 'cancelled') {
         // For completed/cancelled bookings, allow memo and created_by updates only
         console.log('Limited service update for completed/cancelled booking (memo and created_by only)');
@@ -1187,32 +1299,31 @@ const updateBooking = async (req, res) => {
       }
     }
 
-    // Update customer_id and vehicle_id if they were changed (even for non-pending bookings)
-    if (customerId !== currentBooking.customer_id) {
-      console.log('Customer ID changed:', currentBooking.customer_id, '->', customerId);
-      // Only add if not already in updateFields
-      if (!updateFields.includes('customer_id = ?')) {
+    // FIXED: Always update customer fields if they changed (for all statuses except cancelled when updating customer info)
+    if (currentBooking.status !== 'cancelled') {
+      if (customerId !== currentBooking.customer_id && !updateFields.includes('customer_id = ?')) {
+        console.log('Customer ID changed:', currentBooking.customer_id, '->', customerId);
         updateFields.push('customer_id = ?');
         updateValues.push(customerId);
       }
+
+      if (customerNameForBooking !== currentBooking.customer_name && !updateFields.includes('customer_name = ?')) {
+        console.log('Customer name changed:', currentBooking.customer_name, '->', customerNameForBooking);
+        updateFields.push('customer_name = ?');
+        updateValues.push(customerNameForBooking);
+      }
     }
 
-    if (vehicleId !== currentBooking.vehicle_id) {
+    if (vehicleId !== currentBooking.vehicle_id && !updateFields.includes('vehicle_id = ?')) {
       console.log('Vehicle ID changed:', currentBooking.vehicle_id, '->', vehicleId);
-      // Only add if not already in updateFields
-      if (!updateFields.includes('vehicle_id = ?')) {
-        updateFields.push('vehicle_id = ?');
-        updateValues.push(vehicleId);
-      }
+      updateFields.push('vehicle_id = ?');
+      updateValues.push(vehicleId);
     }
 
-    if (referencePlateNumber !== currentBooking.reference_plate_number) {
+    if (referencePlateNumber !== currentBooking.reference_plate_number && !updateFields.includes('reference_plate_number = ?')) {
       console.log('Reference plate changed:', currentBooking.reference_plate_number, '->', referencePlateNumber);
-      // Only add if not already in updateFields
-      if (!updateFields.includes('reference_plate_number = ?')) {
-        updateFields.push('reference_plate_number = ?');
-        updateValues.push(referencePlateNumber);
-      }
+      updateFields.push('reference_plate_number = ?');
+      updateValues.push(referencePlateNumber);
     }
 
     // Update status if provided
@@ -1234,7 +1345,9 @@ const updateBooking = async (req, res) => {
           providedCustomer: !!customer,
           providedVehicle: !!vehicle,
           providedService: !!service,
-          providedStatus: !!status
+          providedStatus: !!status,
+          customerIdChanged: customerId !== currentBooking.customer_id,
+          customerNameChanged: customerNameForBooking !== currentBooking.customer_name
         }
       });
     }
@@ -1285,26 +1398,19 @@ const updateBooking = async (req, res) => {
     const [updatedBooking] = await pool.execute(
       `SELECT 
         sb.*,
-        c.name as customer_name,
+        c.name as customer_table_name,
         c.mobile as customer_mobile,
         cv.plate_number,
         vb.name as brand_name,
         vm.name as model_name
       FROM service_bookings sb
-      JOIN customers c ON sb.customer_id = c.id
+      LEFT JOIN customers c ON sb.customer_id = c.id
       LEFT JOIN customer_vehicles cv ON sb.vehicle_id = cv.id
       LEFT JOIN vehicle_brands vb ON cv.brand_id = vb.id
       LEFT JOIN vehicle_models vm ON cv.model_id = vm.id
       WHERE sb.id = ?`,
       [bookingId]
     );
-
-    // console.log('Updated booking:', {
-    //   memo: updatedBooking[0].memo,
-    //   reference_plate_number: updatedBooking[0].reference_plate_number,
-    //   vehicle_id: updatedBooking[0].vehicle_id,
-    //   oil_package_details: updatedBooking[0].oil_package_details
-    // });
 
     res.json({
       success: true,
@@ -1319,6 +1425,7 @@ const updateBooking = async (req, res) => {
         memoUpdated: service?.memo !== undefined && service?.memo !== currentBooking?.memo,
         referencePlateUpdated: referencePlateNumber !== currentBooking?.reference_plate_number,
         customerUpdated: customerId !== currentBooking?.customer_id,
+        customerNameUpdated: customerNameForBooking !== currentBooking?.customer_name,
         vehicleUpdated: vehicleId !== currentBooking?.vehicle_id
       }
     });

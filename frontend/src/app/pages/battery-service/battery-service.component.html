@@ -80,6 +80,7 @@
           <app-customer-summary-step
             *ngIf="currentStep() === 4"
             [billNumber]="billNumber()"
+            [createdAt]="createdAt()"
             [laborCost]="laborCost()"
             [status]="editData?.status"
             [initialCustomerData]="customerData()"

@@ -59,6 +59,7 @@ export class BatteryServiceComponent implements OnInit {
   isLoading = signal(false);
   isSubmitting = signal(false);
   billNumber = signal('');
+  createdAt = signal('');
 
   // Data signals
   batteryTypes = signal<BatteryType[]>([]);
@@ -190,6 +191,7 @@ export class BatteryServiceComponent implements OnInit {
     this.discount.set(this.editData?.discount);
     this.currentStep.set(4);
     this.billNumber.set(this.editData?.bill_number);
+    this.createdAt.set(this.editData?.created_at);
   }
 
   private async loadInitialData() {
@@ -362,6 +364,7 @@ export class BatteryServiceComponent implements OnInit {
             if (res.success) {
               alert('Successfully Created');
               this.billNumber.set(res?.billNumber);
+              this.createdAt.set(res?.created_at);
             }
           },
         });

@@ -241,7 +241,8 @@
   <!-- Receipt Number & Date -->
   <div class="text-center mb-4">
     <p class="text-sm font-bold text-black">RECEIPT #{{ billNumber() || "---" }}</p>
-    <p class="text-sm font-medium text-black">{{ formattedDate | date : "dd-MM-yyyy"}}</p>
+    <!-- <p class="text-sm font-medium text-black">{{ formattedDate | date : "dd-MM-yyyy"}}</p> -->
+    <p class="text-sm font-bold text-black">{{ createdAt() | date : "medium"}}</p>
   </div>
 
   <!-- Service Details -->
@@ -252,13 +253,13 @@
 
     <!-- Service Type -->
     <div class="flex justify-between text-sm mb-2">
-      <span class="font-medium text-black">Service Type:</span>
+      <span class="font-bold text-black">Service Type:</span>
       <span class="font-bold text-black">Battery Replacement</span>
     </div>
 
     <!-- Battery Capacity -->
     <div class="flex justify-between text-sm mb-2">
-      <span class="font-medium text-black">Battery Capacity:</span>
+      <span class="font-bold text-black">Battery Capacity:</span>
       <span class="font-bold text-black">{{ summary().capacityLabel }}</span>
     </div>
 
@@ -267,7 +268,7 @@
       *ngIf="summary().batteryType"
       class="flex justify-between text-sm mb-3"
     >
-      <span class="font-medium text-black">Battery Brand:</span>
+      <span class="font-bold text-black">Battery Brand:</span>
       <span class="font-bold text-black">{{ summary().batteryType?.brand }}</span>
     </div>
 
@@ -275,7 +276,7 @@
       *ngIf="customerForm.get('plateNumber')?.value?.length > 0"
       class="flex justify-between text-sm mb-3"
     >
-      <span class="font-medium text-black">Vehicle No:</span>
+      <span class="font-bold text-black">Vehicle No:</span>
       <span class="font-bold text-black">{{ customerForm.get('plateNumber')?.value }}</span>
     </div>
   </div>
@@ -324,14 +325,14 @@
   <!-- Totals -->
   <div class="space-y-2 mb-4">
     <div class="flex justify-between text-sm">
-      <span class="font-medium text-black">Subtotal:</span>
+      <span class="font-bold text-black">Subtotal:</span>
       <span class="font-bold text-black">
         {{ summary().subtotal - summary().vatAmount  | currency : "AED " }}</span
       >
     </div>
 
     <div class="flex justify-between text-sm">
-      <span class="font-medium text-black">VAT (5%):</span>
+      <span class="font-bold text-black">VAT (5%):</span>
       <span class="font-bold text-black">
         {{ summary().vatAmount | currency : "AED " }}</span
       >
@@ -351,7 +352,7 @@
   >
     <p class="mb-1 font-bold text-black">Thank you for choosing Tech Lube!</p>
     <div class="space-y-1">
-      <p class="font-medium text-black">{{environment.website}}</p>
+      <p class="font-bold text-black">{{environment.website}}</p>
     </div>
   </div>
 </div>

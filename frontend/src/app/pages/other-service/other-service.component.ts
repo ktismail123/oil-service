@@ -49,6 +49,7 @@ export class OtherServiceComponent implements OnInit {
   discount = signal<number>(0);
   customerData = signal<CustomerData | null>(null);
   billNumber = signal<string>('');
+  createdAt = signal<string>('');
 
   // Computed service summary for the summary component
   serviceSummary = computed((): OtherServiceSummary => {
@@ -131,8 +132,8 @@ export class OtherServiceComponent implements OnInit {
 
       const custData: CustomerData = {
         laborCost: this.editData?.labour_cost?.toString() || '0',
-        mobile: this.editData?.customer_mobile || '',
-        name: this.editData?.customer_name || '',
+        mobile: this.editData?.customer?.mobile || '',
+        name: this.editData?.customer?.name || '',
         plateNumber:
           this.editData?.vehicle?.plate_number ||
           this.editData?.reference_plate_number ||
@@ -143,6 +144,7 @@ export class OtherServiceComponent implements OnInit {
 
       this.customerData.set(custData);
       this.billNumber.set(this.editData?.bill_number || '');
+      this.createdAt.set(this.editData?.created_at || '');
     }
   }
 
@@ -290,7 +292,8 @@ export class OtherServiceComponent implements OnInit {
       .pipe(take(1))
       .subscribe({
         next: (response) => {
-          this.billNumber.set(response.billNumber);
+          this.billNumber.set(response?.billNumber);
+          this.createdAt.set(response?.created_at);
           alert('Booking created successfully');
           console.log('Booking created successfully:', response);
           this.isLoading.set(false);
@@ -311,12 +314,11 @@ export class OtherServiceComponent implements OnInit {
       .pipe(take(1))
       .subscribe({
         next: (res) => {
-          console.log('Booking updated successfully:', res);
           this.isLoading.set(false);
 
           if (res.success) {
             // You might want to show a success message here
-            console.log('Update completed successfully');
+            alert('Update completed successfully');
           }
         },
         error: (error) => {

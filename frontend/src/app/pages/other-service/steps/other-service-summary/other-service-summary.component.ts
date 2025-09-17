@@ -58,6 +58,7 @@ export class OtherServiceSummaryComponent implements OnInit{
   validityChanged = output<boolean>();
   submitBooking = output();
   billNumber = input('');
+  createdAt = input('');
 
   // Signals
   customerForm!: FormGroup;

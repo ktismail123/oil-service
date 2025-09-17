@@ -77,6 +77,7 @@ export class OilServiceComponent implements OnInit {
   isLoading = signal(false);
   isSubmitting = signal(false);
   billNumber = signal<string>('');
+  createdAt = signal<string>('');
 
   brands = signal<VehicleBrand[]>([]);
   models = signal<VehicleModel[]>([]);
@@ -329,6 +330,7 @@ export class OilServiceComponent implements OnInit {
 
   patchValues() {
     this.billNumber.set(this.editData?.bill_number);
+    this.createdAt.set(this.editData?.created_at);
 
     this.brandForm.patchValue({
       brandId: this.editData?.vehicle?.brand_id,
@@ -360,8 +362,8 @@ export class OilServiceComponent implements OnInit {
     this.selectedAccessories.set(this.editData?.accessories);
 
     this.customerForm.patchValue({
-      name: this.editData?.customer_name || null,
-      mobile: this.editData?.customer_mobile || null,
+      name: this.editData?.customer?.name || null,
+      mobile: this.editData?.customer?.mobile || null,
       plateNumber: this.editData?.vehicle?.plate_number,
       laborCost: this.editData?.labour_cost,
       memo: this.editData?.memo,
@@ -732,6 +734,7 @@ export class OilServiceComponent implements OnInit {
           if (res.success) {
             alert(`Booking created successfully!`);
             this.billNumber.set(res?.billNumber);
+            this.createdAt.set(res?.created_at);
           }
         },
         error: (err) => {

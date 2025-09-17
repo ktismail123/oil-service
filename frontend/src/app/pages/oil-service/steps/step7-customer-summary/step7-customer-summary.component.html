@@ -198,7 +198,8 @@
   <!-- Receipt Number & Date -->
   <div class="text-center mb-4">
     <p class="text-sm font-bold text-black">RECEIPT #{{ billNumber || "----" }}</p>
-    <p class="text-sm font-medium text-black">{{ formattedDate | date : "dd-MM-yyyy" }}</p>
+    <!-- <p class="text-sm font-medium text-black">{{ formattedDate | date : "dd-MM-yyyy" }}</p> -->
+    <p class="text-sm font-medium text-black">{{ createdAt | date : "medium" }}</p>
   </div>
 
   <!-- Service Details -->
@@ -278,8 +279,8 @@
 
     <div class="border-t-2 border-dashed border-black pt-2">
       <div class="flex justify-between text-lg font-black">
-        <span class="text-black">TOTAL:</span>
-        <span class="text-black">AED {{ (subtotal || 0).toFixed(2) }}</span>
+        <span class="font-bold text-black">TOTAL:</span>
+        <span class="font-bold text-black">AED {{ (subtotal || 0).toFixed(2) }}</span>
         <!-- <span class="text-black">AED {{ (totalAmount - vatAmount || 0).toFixed(2) }}</span> -->
       </div>
     </div>

@@ -120,6 +120,7 @@
         [laborCost]="customerForm.get('laborCost')?.value || 0"
         [totalAmount]="totalAmount()"
         [billNumber]="billNumber()"
+        [createdAt]="createdAt()"
         [oilQuantity]="oilForm.get('quantity')?.value || 0"
         (submitBooking)="submitBooking()"
         (updateBooking)="updateBooking()">
