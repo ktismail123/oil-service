@@ -86,8 +86,12 @@
               {{ element.vehicle.model_name }}</span
             >
             <span class="plate-number">{{ element.vehicle.plate_number }}</span>
-            } @else if(element.service_type === 'other_service') {
-            <span class="no-vehicle-text text-gray-500 italic">No vehicle</span>
+            } @else if(element.service_type === 'other_service' || element.service_type === 'battery_replacement') {
+              @if(element?.vehicle?.plate_number){
+                <span class="plate-number">{{ element.vehicle.plate_number }}</span>
+              }@else {
+                <span class="no-vehicle-text text-gray-500 italic">{{ 'No vehicle'}}</span>
+              }
             } @else {
             <span class="no-vehicle-text text-gray-500">-</span>
             }

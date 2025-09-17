@@ -565,7 +565,7 @@ const createNewBooking = async (req, res) => {
       oilRequiredQuantity: service.oilRequiredQuantity || null,
       memo: service.memo || null,
       createdBy: (service.createdBy && service.createdBy !== '') ? service.createdBy : null,
-      referencePlateNumber: (service.type === 'other_service' && vehicle?.plateNumber) ? vehicle.plateNumber : null,
+      referencePlateNumber: ((service.type === 'other_service' || service.type === 'battery_replacement') && vehicle?.plateNumber) ? vehicle.plateNumber : null,
       status: service.status || 'completed'
     };
 
@@ -705,7 +705,7 @@ const createNewBooking = async (req, res) => {
           // For vehicle creation without customer, create a placeholder customer
           console.log('Vehicle requires customer - creating placeholder customer');
           const timestamp = Date.now();
-          const shortMobile = `V${timestamp.toString().slice(-8)}`;
+          const shortMobile = `NA-${timestamp.toString().slice(-8)}`;
           const [placeholderCustomer] = await connection.execute(
             'INSERT INTO customers (name, mobile) VALUES (?, ?)',
             ['Vehicle Owner', shortMobile]
@@ -726,7 +726,7 @@ const createNewBooking = async (req, res) => {
         }
         vehicleProcessed = true;
       }
-    } else if (vehicle && vehicle.plateNumber && sanitizedService.type === 'other_service') {
+    } else if (vehicle && vehicle.plateNumber && (sanitizedService.type === 'other_service' || sanitizedService.type === 'battery_replacement') ) {
       // For other_service: only plate number provided without full vehicle details
       console.log('Other service with plate number only:', vehicle.plateNumber);
 
@@ -763,8 +763,9 @@ const createNewBooking = async (req, res) => {
     // Create oil package details object combining oilQuantityDetails and oilRequiredQuantity
     const oilPackageDetailsObj = {
       ...sanitizedService.oilQuantityDetails,
-      oilRequiredQuantity: sanitizedService.oilRequiredQuantity
+      oilRequiredQuantity: sanitizedService.oilRequiredQuantity,
     };
+
     const oilPackageDetailsJson = JSON.stringify(oilPackageDetailsObj);
 
     // Prepare parameters for booking insertion - now includes customer_name
@@ -1298,27 +1299,27 @@ const updateBooking = async (req, res) => {
       [bookingId]
     );
 
-    console.log('Updated booking:', {
-      memo: updatedBooking[0].memo,
-      reference_plate_number: updatedBooking[0].reference_plate_number,
-      vehicle_id: updatedBooking[0].vehicle_id,
-      oil_package_details: updatedBooking[0].oil_package_details
-    });
+    // console.log('Updated booking:', {
+    //   memo: updatedBooking[0].memo,
+    //   reference_plate_number: updatedBooking[0].reference_plate_number,
+    //   vehicle_id: updatedBooking[0].vehicle_id,
+    //   oil_package_details: updatedBooking[0].oil_package_details
+    // });
 
     res.json({
       success: true,
       message: 'Booking updated successfully',
       bookingId: bookingId,
       booking: updatedBooking[0],
-      memo: updatedBooking[0].memo,
-      referencePlateNumber: updatedBooking[0].reference_plate_number,
+      memo: updatedBooking[0]?.memo,
+      referencePlateNumber: updatedBooking[0]?.reference_plate_number,
       changes: {
         fieldsUpdated: updateFields.filter(field => field !== 'updated_at = CURRENT_TIMESTAMP'),
-        statusChanged: status && status !== currentBooking.status,
-        memoUpdated: service?.memo !== undefined && service.memo !== currentBooking.memo,
-        referencePlateUpdated: referencePlateNumber !== currentBooking.reference_plate_number,
-        customerUpdated: customerId !== currentBooking.customer_id,
-        vehicleUpdated: vehicleId !== currentBooking.vehicle_id
+        statusChanged: status && status !== currentBooking?.status,
+        memoUpdated: service?.memo !== undefined && service?.memo !== currentBooking?.memo,
+        referencePlateUpdated: referencePlateNumber !== currentBooking?.reference_plate_number,
+        customerUpdated: customerId !== currentBooking?.customer_id,
+        vehicleUpdated: vehicleId !== currentBooking?.vehicle_id
       }
     });
 
@@ -1465,7 +1466,7 @@ const updateBookingStatus = async (req, res) => {
         sb.id, sb.status, sb.bill_number, sb.customer_id, sb.service_type,
         c.name as customer_name, c.mobile as customer_mobile
       FROM service_bookings sb
-      JOIN customers c ON sb.customer_id = c.id
+      LEFT JOIN customers c ON sb.customer_id = c.id
       WHERE sb.id = ?`,
       [bookingId]
     );

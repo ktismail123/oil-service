@@ -1,5 +1,5 @@
 import { environment } from './../../../../../environments/environment.prod';
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Accessory, OilFilter, OilType } from '../../../../models';
 import { FormFieldComponent } from '../../../../shared/components/form-field/form-field.component';
@@ -20,7 +20,7 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './step7-customer-summary.component.html',
   styleUrl: './step7-customer-summary.component.scss',
 })
-export class Step7CustomerSummaryComponent {
+export class Step7CustomerSummaryComponent implements OnChanges {
   private route = inject(ActivatedRoute);
 
   editMode = this.route.snapshot.queryParams['mode'];
@@ -45,6 +45,21 @@ export class Step7CustomerSummaryComponent {
 
   @Output() submitBooking = new EventEmitter();
   @Output() updateBooking = new EventEmitter();
+  
+  ngOnChanges(changes: SimpleChanges): void {
+      console.log(this.customerForm.invalid);
+      const invalid = [];
+    const controls = this.customerForm.controls;
+    for (const name in controls) {
+      if (controls[name].invalid) {
+        invalid.push(name);
+      }
+    }
+    console.log(invalid);
+    console.log(this.customerForm.invalid);
+    
+  }
+  
 
   buttonText = this.editMode === 'edit' ? 'Update' : 'Confirm Booking';
   formattedDate: string;

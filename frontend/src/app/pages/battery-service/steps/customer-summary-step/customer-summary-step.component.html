@@ -241,7 +241,7 @@
   <!-- Receipt Number & Date -->
   <div class="text-center mb-4">
     <p class="text-sm font-bold text-black">RECEIPT #{{ billNumber() || "---" }}</p>
-    <p class="text-sm font-medium text-black">{{ formattedDate }}</p>
+    <p class="text-sm font-medium text-black">{{ formattedDate | date : "dd-MM-yyyy"}}</p>
   </div>
 
   <!-- Service Details -->
@@ -269,6 +269,14 @@
     >
       <span class="font-medium text-black">Battery Brand:</span>
       <span class="font-bold text-black">{{ summary().batteryType?.brand }}</span>
+    </div>
+
+    <div
+      *ngIf="customerForm.get('plateNumber')?.value?.length > 0"
+      class="flex justify-between text-sm mb-3"
+    >
+      <span class="font-medium text-black">Vehicle No:</span>
+      <span class="font-bold text-black">{{ customerForm.get('plateNumber')?.value }}</span>
     </div>
   </div>
 

@@ -316,10 +316,9 @@ export class OilServiceComponent implements OnInit {
             if (!currentName && res[0]?.customer_name) {
               patchData.name = res[0].customer_name;
             }
-            if (!currentMobile && res[0]?.customer_mobile) {
+            if (!currentMobile && res[0]?.customer_mobile && !res[0]?.customer_mobile.startsWith('NA')) {
               patchData.mobile = res[0].customer_mobile;
-            }
-
+            }            
             if (Object.keys(patchData).length > 0) {
               this.customerForm.patchValue(patchData);
             }
@@ -361,8 +360,8 @@ export class OilServiceComponent implements OnInit {
     this.selectedAccessories.set(this.editData?.accessories);
 
     this.customerForm.patchValue({
-      name: this.editData?.customer_name,
-      mobile: this.editData?.customer_mobile,
+      name: this.editData?.customer_name || null,
+      mobile: this.editData?.customer_mobile || null,
       plateNumber: this.editData?.vehicle?.plate_number,
       laborCost: this.editData?.labour_cost,
       memo: this.editData?.memo,

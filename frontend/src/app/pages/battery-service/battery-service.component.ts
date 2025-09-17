@@ -179,8 +179,8 @@ export class BatteryServiceComponent implements OnInit {
 
     this.selectedAccessories.set(this.editData?.accessories);
     this.customerData.set({
-      name: this.editData?.customer_name,
-      mobile: this.editData?.customer_mobile,
+      name: this.editData?.customer?.name,
+      mobile: this.editData?.customer?.mobile,
       plateNumber: this.editData?.vehicle?.plate_number,
       laborCost: this.editData?.labour_cost,
       memo: this.editData?.memo,
@@ -314,8 +314,8 @@ export class BatteryServiceComponent implements OnInit {
         mobile: customer.mobile,
       },
       vehicle: {
-        brandId: 1, // Default brand for battery service
-        modelId: 1, // Default model for battery service
+        brandId: null, // Default brand for battery service
+        modelId: null, // Default model for battery service
         plateNumber: customer.plateNumber,
       },
       service: {
