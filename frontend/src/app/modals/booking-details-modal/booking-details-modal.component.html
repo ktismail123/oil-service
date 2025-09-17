@@ -348,13 +348,13 @@
         <div>
           <span class="text-gray-600">Service Date:</span>
           <span class="ml-2 font-medium">{{
-            injectedData.service_date | date : "mediumDate"
+            injectedData.created_at | date : "short"
           }}</span>
         </div>
-        <div>
+        <!-- <div>
           <span class="text-gray-600">Service Time:</span>
           <span class="ml-2 font-medium">{{ formatTime(injectedData.service_time) }}</span>
-        </div>
+        </div> -->
         <div *ngIf="injectedData.service_type === 'oil_change'">
           <span class="text-gray-600">Oil Quantity Used:</span>
           @if(this.injectedData.oil_package_details?.oilRequiredQuantity){
